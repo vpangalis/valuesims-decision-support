@@ -48,15 +48,16 @@ function addAction() {
   const row = document.createElement("div");
   row.className = "action-row";
 
-  row.innerHTML = `
-    <input type="text" placeholder="Action description"
-           oninput="updateSection('section-actions')" />
-    <input type="text" placeholder="Responsible"
-           oninput="updateSection('section-actions')" />
-    <input type="date"
-           oninput="updateSection('section-actions')" />
-    <button class="remove-btn" onclick="removeAction(this)">−</button>
-  `;
+row.innerHTML = `
+  <input type="text" placeholder="Action description"
+         oninput="updateSection('section-actions')" />
+  <input type="text" placeholder="Responsible"
+         oninput="updateSection('section-actions')" />
+  <input type="date"
+         oninput="updateSection('section-actions')" />
+  <button type="button" class="remove-btn" onclick="removeAction(this)">−</button>
+`;
+
 
   table.appendChild(row);
 }
