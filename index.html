@@ -82,17 +82,30 @@
     </div>
 
     <!-- SECTION 3 -->
-    <div class="section" id="section-actions">
-      <div class="section-header" onclick="toggleSection(this)">
-        <span class="step-number">3</span>
-        <span class="section-title">Immediate Actions</span>
-        <span class="status-indicator"></span>
-      </div>
-      <div class="section-body">
-        <label>Actions taken so far</label>
-        <textarea oninput="updateSection('section-actions')"></textarea>
+<div class="section" id="section-actions">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="step-number">3</span>
+    <span class="section-title">Immediate Actions</span>
+    <span class="status-indicator"></span>
+  </div>
+
+  <div class="section-body">
+    <div class="actions-table" id="actions-table">
+      <div class="action-row">
+        <input type="text" placeholder="Action description"
+               oninput="updateSection('section-actions')" />
+        <input type="text" placeholder="Responsible"
+               oninput="updateSection('section-actions')" />
+        <input type="date"
+               oninput="updateSection('section-actions')" />
+        <button class="remove-btn" onclick="removeAction(this)">−</button>
       </div>
     </div>
+
+    <button class="secondary-btn" onclick="addAction()">+ Add Action</button>
+  </div>
+</div>
+
 
     <!-- SECTION 4 -->
     <div class="section" id="section-investigation">
