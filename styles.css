@@ -167,3 +167,52 @@ textarea {
   background: #0f172a;
   color: #e5e7eb;
 }
+/* ============================
+   Mobile & Tablet Responsiveness
+   ============================ */
+
+@media (max-width: 1024px) {
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .left-panel,
+  .right-panel {
+    flex: none;
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+
+  .right-panel {
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-header {
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+  }
+
+  .row {
+    flex-direction: column;
+  }
+
+  input,
+  textarea {
+    font-size: 14px;
+  }
+
+  .section-header {
+    font-size: 15px;
+  }
+
+  .primary-btn {
+    font-size: 14px;
+  }
+}
+
