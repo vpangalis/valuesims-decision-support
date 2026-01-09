@@ -3,189 +3,144 @@
 <head>
   <meta charset="UTF-8" />
   <title>ValueSims – AI-Assisted Decision Support</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 
 <body>
-
 <header class="topbar">
   <h1>AI-Assisted Decision Support</h1>
-  <p>Structured problem & incident resolution — human-led, AI-assisted</p>
+  <p>Structured problem & incident resolution</p>
 </header>
 
 <div class="layout">
 
-  <!-- LEFT PANEL -->
-  <div class="left-panel">
+<div class="left-panel">
 
-    <!-- SECTION 1 -->
-    <section class="section open completed" id="section-case">
-      <div class="section-header" onclick="toggleSection(this)">
-        <span class="step">1</span>
-        <h2>Case Information</h2>
-      </div>
-      <div class="section-body">
-        <div class="row">
-          <div>
-            <label>Case / Reference Number</label>
-            <input type="text" oninput="updateState()" />
-          </div>
-          <div>
-            <label>Date</label>
-            <input type="date" oninput="updateState()" />
-          </div>
-        </div>
-
-        <label>Problem Title (High-level)</label>
-        <input type="text" oninput="updateState()" />
-
-        <label>Team Members</label>
-        <input type="text" oninput="updateState()" />
-      </div>
-    </section>
-
-    <!-- SECTION 2 -->
-    <section class="section" id="section-incident">
-      <div class="section-header" onclick="toggleSection(this)">
-        <span class="step">2</span>
-        <h2>Incident / Problem Description (5W2H)</h2>
-      </div>
-      <div class="section-body">
-        <label>What is the problem?</label>
-        <textarea oninput="updateState()"></textarea>
-
-        <label>Why is this a problem?</label>
-        <textarea oninput="updateState()"></textarea>
-
-        <label>When did it occur?</label>
-        <input type="text" oninput="updateState()" />
-
-        <label>Where did it occur?</label>
-        <input type="text" oninput="updateState()" />
-
-        <label>Who identified it?</label>
-        <input type="text" oninput="updateState()" />
-
-        <label>How was it identified?</label>
-        <textarea oninput="updateState()"></textarea>
-
-        <label>How many occurrences / impact?</label>
-        <input type="text" oninput="updateState()" />
-      </div>
-    </section>
-
-    <!-- SECTION 3 -->
-    <section class="section" id="section-actions">
-      <div class="section-header" onclick="toggleSection(this)">
-        <span class="step">3</span>
-        <h2>Immediate Actions</h2>
-      </div>
-      <div class="section-body">
-        <table id="actionsTable">
-          <thead>
-            <tr>
-              <th>Action</th>
-              <th>Owner</th>
-              <th>Due Date</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-        <button onclick="addAction()">+ Add Action</button>
-      </div>
-    </section>
-
-    <!-- SECTION 4 -->
-    <section class="section" id="section-investigation">
-      <div class="section-header" onclick="toggleSection(this)">
-        <span class="step">4</span>
-        <h2>Investigation & Analysis</h2>
-      </div>
-
-      <div class="section-body">
-
-        <div class="tabs">
-          <button class="tab active" onclick="openTab(event,'tab-tasks')">Investigation Tasks</button>
-          <button class="tab" onclick="openTab(event,'tab-fishbone')">Fishbone</button>
-          <button class="tab" onclick="openTab(event,'tab-factors')">Factors</button>
-          <button class="tab" onclick="openTab(event,'tab-why')">5 Whys</button>
-        </div>
-
-        <!-- TASKS -->
-        <div class="tab-content active" id="tab-tasks">
-          <table id="investigationTable">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Owner</th>
-                <th>Due</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-          <button onclick="addInvestigation()">+ Add Investigation Item</button>
-        </div>
-
-        <!-- FISHBONE -->
-        <div class="tab-content" id="tab-fishbone">
-          <label>People</label><textarea oninput="updateState()"></textarea>
-          <label>Process</label><textarea oninput="updateState()"></textarea>
-          <label>Product</label><textarea oninput="updateState()"></textarea>
-          <label>Procedure</label><textarea oninput="updateState()"></textarea>
-          <label>Policy</label><textarea oninput="updateState()"></textarea>
-          <label>Place / Environment</label><textarea oninput="updateState()"></textarea>
-        </div>
-
-        <!-- FACTORS -->
-        <div class="tab-content" id="tab-factors">
-          <table>
-            <tr>
-              <th>Factor</th>
-              <th>Expected</th>
-              <th>Actual</th>
-              <th>Relevant</th>
-            </tr>
-            <tr>
-              <td><input oninput="updateState()"></td>
-              <td><input oninput="updateState()"></td>
-              <td><input oninput="updateState()"></td>
-              <td><input oninput="updateState()"></td>
-            </tr>
-          </table>
-        </div>
-
-        <!-- 5 WHYS -->
-        <div class="tab-content" id="tab-why">
-          <div class="why-chain">
-            <label>Why 1</label><input oninput="updateState()" />
-            <label>Why 2</label><input oninput="updateState()" />
-            <label>Why 3</label><input oninput="updateState()" />
-            <label>Why 4</label><input oninput="updateState()" />
-            <label>Why 5</label><input oninput="updateState()" />
-          </div>
-        </div>
-
-      </div>
-    </section>
-
+<!-- SECTION 1 -->
+<section class="section open completed" data-section="case_information">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="step">1</span><h2>Case Information</h2>
   </div>
+  <div class="section-body">
+    <label>Case Number</label>
+    <input data-field="case_id" oninput="updateState()"/>
 
-  <!-- RIGHT PANEL -->
-  <div class="right-panel">
-    <h3>AI Decision Support</h3>
+    <label>Date</label>
+    <input type="date" data-field="date" oninput="updateState()"/>
 
-    <button onclick="runAI()">Request AI Decision Support</button>
+    <label>Problem Title</label>
+    <input data-field="problem_title" oninput="updateState()"/>
 
-    <div id="progress" class="hidden">
-      <p>AI analysis in progress…</p>
+    <label>Team Members</label>
+    <input data-field="team_members" oninput="updateState()"/>
+  </div>
+</section>
+
+<!-- SECTION 2 -->
+<section class="section" data-section="incident">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="step">2</span><h2>Incident / Problem Description</h2>
+  </div>
+  <div class="section-body">
+    <label>What is the problem?</label>
+    <textarea data-field="what" oninput="updateState()"></textarea>
+
+    <label>Why is it a problem?</label>
+    <textarea data-field="why_problem" oninput="updateState()"></textarea>
+
+    <label>When did it occur?</label>
+    <input data-field="when" oninput="updateState()"/>
+
+    <label>Where did it occur?</label>
+    <input data-field="where" oninput="updateState()"/>
+
+    <label>Who identified it?</label>
+    <input data-field="who" oninput="updateState()"/>
+
+    <label>How was it identified?</label>
+    <textarea data-field="how_identified" oninput="updateState()"></textarea>
+
+    <label>Impact / frequency</label>
+    <input data-field="impact" oninput="updateState()"/>
+  </div>
+</section>
+
+<!-- SECTION 3 -->
+<section class="section" data-section="immediate_actions">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="step">3</span><h2>Immediate Actions</h2>
+  </div>
+  <div class="section-body">
+    <table id="immediateActions">
+      <thead>
+        <tr><th>Action</th><th>Owner</th><th>Due</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button onclick="addRow('immediateActions')">+ Add Action</button>
+  </div>
+</section>
+
+<!-- SECTION 4 -->
+<section class="section" data-section="investigation">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="step">4</span><h2>Investigation & Analysis</h2>
+  </div>
+  <div class="section-body">
+
+    <h4>Investigation Tasks</h4>
+    <table id="investigationTasks">
+      <thead>
+        <tr><th>Item</th><th>Owner</th><th>Due</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button onclick="addRow('investigationTasks')">+ Add Task</button>
+
+    <h4>Fishbone (Causes)</h4>
+    <div class="fishbone">
+      <div><h5>People</h5><ul id="fish-people"></ul><button onclick="addListItem('fish-people')">+</button></div>
+      <div><h5>Process</h5><ul id="fish-process"></ul><button onclick="addListItem('fish-process')">+</button></div>
+      <div><h5>Product</h5><ul id="fish-product"></ul><button onclick="addListItem('fish-product')">+</button></div>
+      <div><h5>Procedure</h5><ul id="fish-procedure"></ul><button onclick="addListItem('fish-procedure')">+</button></div>
+      <div><h5>Policy</h5><ul id="fish-policy"></ul><button onclick="addListItem('fish-policy')">+</button></div>
+      <div><h5>Place</h5><ul id="fish-place"></ul><button onclick="addListItem('fish-place')">+</button></div>
     </div>
 
-    <div id="aiOutput"></div>
+    <h4>5 Whys</h4>
+    <div id="fiveWhyContainer"></div>
+    <button onclick="addWhyChain()">+ Add 5-Why Chain</button>
 
-    <h4>Payload Preview (JSON)</h4>
-    <textarea id="jsonPreview" rows="18" readonly></textarea>
   </div>
+</section>
+
+<!-- SECTION 5 -->
+<section class="section" data-section="corrective_actions">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="step">5</span><h2>Corrective & Preventive Actions</h2>
+  </div>
+  <div class="section-body">
+    <table id="correctiveActions">
+      <thead>
+        <tr><th>Action</th><th>Owner</th><th>Due</th><th>Verification</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button onclick="addRow('correctiveActions')">+ Add Action</button>
+  </div>
+</section>
+
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right-panel">
+  <h3>AI Decision Support</h3>
+  <button onclick="runAI()">Request AI Decision Support</button>
+
+  <h4>Payload Preview (JSON)</h4>
+  <textarea id="jsonPreview" rows="20" readonly></textarea>
+</div>
 
 </div>
 
