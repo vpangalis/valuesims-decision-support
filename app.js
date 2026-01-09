@@ -1,98 +1,171 @@
-function toggleSection(header) {
-  header.parentElement.classList.toggle("open");
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ValueSims – AI-Assisted Decision Support</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
 
-function addRow(tableId) {
-  const tbody = document.getElementById(tableId).querySelector("tbody");
-  const cols = document.getElementById(tableId).querySelectorAll("thead th").length;
-  const tr = document.createElement("tr");
-  tr.innerHTML = Array(cols).fill(0).map(() => `<td><input oninput="updateState()"></td>`).join("");
-  tbody.appendChild(tr);
-  updateState();
-}
+<body>
 
-function addListItem(id) {
-  const li = document.createElement("li");
-  li.innerHTML = `<input oninput="updateState()">`;
-  document.getElementById(id).appendChild(li);
-  updateState();
-}
+<header class="topbar">
+  <h1>AI-Assisted Decision Support</h1>
+  <p>Structured problem & incident resolution</p>
+</header>
 
-function addWhyChain() {
-  const container = document.getElementById("fiveWhyContainer");
-  const div = document.createElement("div");
-  div.className = "why-chain";
-  div.innerHTML = `
-    ${[1,2,3,4,5].map(i => `Why ${i}: <input oninput="updateState()">`).join("<br>")}
-    <hr>`;
-  container.appendChild(div);
-  updateState();
-}
+<div class="layout">
 
-function updateState() {
-  buildPayload();
-}
+<!-- LEFT PANEL -->
+<div class="left-panel">
 
-function buildPayload() {
-  const payload = {
-    meta: {
-      timestamp: new Date().toISOString(),
-      completed_sections: []
-    },
-    case_information: {},
-    incident: {},
-    immediate_actions: [],
-    investigation: {
-      tasks: [],
-      fishbone: {
-        people: getList("fish-people"),
-        process: getList("fish-process"),
-        product: getList("fish-product"),
-        procedure: getList("fish-procedure"),
-        policy: getList("fish-policy"),
-        place: getList("fish-place")
-      },
-      five_whys: getWhyChains()
-    },
-    corrective_actions: []
-  };
+<!-- SECTION 1 -->
+<section class="section open completed" data-section="case_information">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="step">1</span><h2>Case Information</h2>
+  </div>
+  <div class="section-body">
+    <label>Case Number</label>
+    <input data-field="case_id" oninput="updateState()"/>
 
-  document.querySelectorAll("[data-section]").forEach(section => {
-    const key = section.dataset.section;
-    const fields = section.querySelectorAll("[data-field]");
-    if (fields.length) {
-      payload[key] = {};
-      fields.forEach(f => payload[key][f.dataset.field] = f.value);
-    }
-  });
+    <label>Date</label>
+    <input type="date" data-field="date" oninput="updateState()"/>
 
-  payload.immediate_actions = readTable("immediateActions");
-  payload.investigation.tasks = readTable("investigationTasks");
-  payload.corrective_actions = readTable("correctiveActions");
+    <label>Problem Title</label>
+    <input data-field="problem_title" oninput="updateState()"/>
 
-  document.getElementById("jsonPreview").value =
-    JSON.stringify(payload, null, 2);
-}
+    <label>Team Members</label>
+    <input data-field="team_members" oninput="updateState()"/>
+  </div>
+</section>
 
-function readTable(id) {
-  const rows = [];
-  document.querySelectorAll(`#${id} tbody tr`).forEach(tr => {
-    const cells = [...tr.querySelectorAll("input")].map(i => i.value);
-    rows.push(cells);
-  });
-  return rows;
-}
+<!-- SECTION 2 -->
+<section class="section" data-section="incident">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="step">2</span><h2>Incident / Problem Description (5W2H)</h2>
+  </div>
+  <div class="section-body">
+    <label>What is the problem?</label>
+    <textarea data-field="what" oninput="updateState()"></textarea>
 
-function getList(id) {
-  return [...document.querySelectorAll(`#${id} input`)].map(i => i.value);
-}
+    <label>Why is it a problem?</label>
+    <textarea data-field="why_problem" oninput="updateState()"></textarea>
 
-function getWhyChains() {
-  return [...document.querySelectorAll(".why-chain")].map(chain =>
-    [...chain.querySelectorAll("input")].map(i => i.value)
-  );
-}
+    <label>When did it occur?</label>
+    <input data-field="when" oninput="updateState()"/>
 
-function runAI() {
-  alert("This would POST the JSON payload to FastAPI on Azure.");
-}
+    <label>Where did it occur?</label>
+    <input data-field="where" oninput="updateState()"/>
+
+    <label>Who identified it?</label>
+    <input data-field="who" oninput="updateState()"/>
+
+    <label>How was it identified?</label>
+    <textarea data-field="how_identified" oninput="updateState()"></textarea>
+
+    <label>Impact / frequency</label>
+    <input data-field="impact" oninput="updateState()"/>
+  </div>
+</section>
+
+<!-- SECTION 3 -->
+<section class="section" data-section="immediate_actions">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="step">3</span><h2>Immediate Actions</h2>
+  </div>
+  <div class="section-body">
+    <table id="immediateActions">
+      <thead>
+        <tr><th>Action</th><th>Owner</th><th>Due</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button onclick="addRow('immediateActions')">+ Add Action</button>
+  </div>
+</section>
+
+<!-- SECTION 4 -->
+<section class="section" data-section="investigation">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="step">4</span><h2>Investigation & Analysis</h2>
+  </div>
+
+  <div class="section-body">
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="openTab(event,'tab-tasks')">Investigation Tasks</button>
+      <button class="tab" onclick="openTab(event,'tab-fishbone')">Fishbone</button>
+      <button class="tab" onclick="openTab(event,'tab-factors')">Factors</button>
+      <button class="tab" onclick="openTab(event,'tab-why')">5 Whys</button>
+    </div>
+
+    <!-- TAB 1 -->
+    <div class="tab-content active" id="tab-tasks">
+      <table id="investigationTasks">
+        <thead><tr><th>Item</th><th>Owner</th><th>Due</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <button onclick="addRow('investigationTasks')">+ Add Task</button>
+    </div>
+
+    <!-- TAB 2 -->
+    <div class="tab-content" id="tab-fishbone">
+      <div class="fishbone">
+        <div><h4>People</h4><ul id="fish-people"></ul><button onclick="addListItem('fish-people')">+</button></div>
+        <div><h4>Process</h4><ul id="fish-process"></ul><button onclick="addListItem('fish-process')">+</button></div>
+        <div><h4>Product</h4><ul id="fish-product"></ul><button onclick="addListItem('fish-product')">+</button></div>
+        <div><h4>Procedure</h4><ul id="fish-procedure"></ul><button onclick="addListItem('fish-procedure')">+</button></div>
+        <div><h4>Policy</h4><ul id="fish-policy"></ul><button onclick="addListItem('fish-policy')">+</button></div>
+        <div><h4>Place</h4><ul id="fish-place"></ul><button onclick="addListItem('fish-place')">+</button></div>
+      </div>
+    </div>
+
+    <!-- TAB 3 -->
+    <div class="tab-content" id="tab-factors">
+      <table id="factorTable">
+        <thead><tr><th>Factor</th><th>Expected</th><th>Actual</th><th>Relevant</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <button onclick="addRow('factorTable')">+ Add Factor</button>
+    </div>
+
+    <!-- TAB 4 -->
+    <div class="tab-content" id="tab-why">
+      <div id="fiveWhyContainer"></div>
+      <button onclick="addWhyChain()">+ Add 5-Why Chain</button>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 5 -->
+<section class="section" data-section="corrective_actions">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="step">5</span><h2>Corrective & Preventive Actions</h2>
+  </div>
+  <div class="section-body">
+    <table id="correctiveActions">
+      <thead><tr><th>Action</th><th>Owner</th><th>Due</th><th>Verification</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <button onclick="addRow('correctiveActions')">+ Add Action</button>
+  </div>
+</section>
+
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right-panel">
+  <h3>AI Decision Support</h3>
+  <button onclick="runAI()">Request AI Decision Support</button>
+
+  <h4>Payload Preview (JSON)</h4>
+  <textarea id="jsonPreview" rows="20" readonly></textarea>
+</div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
