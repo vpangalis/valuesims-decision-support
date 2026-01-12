@@ -117,3 +117,27 @@ button:hover { background: #1e40af; }
   .right-panel { position: relative; top: auto; }
   .fishbone-grid { grid-template-columns: 1fr; }
 }
+
+.fishbone-cause {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.fishbone-cause input {
+  flex: 1;
+}
+
+.remove-btn {
+  background: #e11d48;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+.remove-btn:hover {
+  background: #be123c;
+}
+
