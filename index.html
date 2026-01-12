@@ -92,7 +92,6 @@
 
   <div class="section-body">
 
-    <!-- TABS -->
     <div class="tabs">
       <button class="tab active" onclick="openTab(event,'tab-tasks')">Investigation Tasks</button>
       <button class="tab" onclick="openTab(event,'tab-fishbone')">Fishbone</button>
@@ -100,7 +99,7 @@
       <button class="tab" onclick="openTab(event,'tab-why')">5 Whys</button>
     </div>
 
-    <!-- TAB 1 -->
+    <!-- TASKS -->
     <div class="tab-content active" id="tab-tasks">
       <table id="investigationTasks">
         <thead><tr><th>Item</th><th>Owner</th><th>Due</th></tr></thead>
@@ -109,51 +108,19 @@
       <button onclick="addRow('investigationTasks')">+ Add Task</button>
     </div>
 
-    <!-- TAB 2 -->
+    <!-- FISHBONE -->
     <div class="tab-content" id="tab-fishbone">
-    <div class="fishbone-grid">
-
-  <div class="fishbone-card">
-    <h4>People</h4>
-    <ul id="fish-people"></ul>
-    <button onclick="addListItem('fish-people')">+ Add cause</button>
-  </div>
-
-  <div class="fishbone-card">
-    <h4>Process</h4>
-    <ul id="fish-process"></ul>
-    <button onclick="addListItem('fish-process')">+ Add cause</button>
-  </div>
-
-  <div class="fishbone-card">
-    <h4>Product</h4>
-    <ul id="fish-product"></ul>
-    <button onclick="addListItem('fish-product')">+ Add cause</button>
-  </div>
-
-  <div class="fishbone-card">
-    <h4>Procedure</h4>
-    <ul id="fish-procedure"></ul>
-    <button onclick="addListItem('fish-procedure')">+ Add cause</button>
-  </div>
-
-  <div class="fishbone-card">
-    <h4>Policy</h4>
-    <ul id="fish-policy"></ul>
-    <button onclick="addListItem('fish-policy')">+ Add cause</button>
-  </div>
-
-  <div class="fishbone-card">
-    <h4>Place</h4>
-    <ul id="fish-place"></ul>
-    <button onclick="addListItem('fish-place')">+ Add cause</button>
-  </div>
-
-</div>
-
+      <div class="fishbone-grid">
+        <div class="fishbone-card"><h4>People</h4><ul id="fish-people"></ul><button onclick="addListItem('fish-people')">+ Add cause</button></div>
+        <div class="fishbone-card"><h4>Process</h4><ul id="fish-process"></ul><button onclick="addListItem('fish-process')">+ Add cause</button></div>
+        <div class="fishbone-card"><h4>Product</h4><ul id="fish-product"></ul><button onclick="addListItem('fish-product')">+ Add cause</button></div>
+        <div class="fishbone-card"><h4>Procedure</h4><ul id="fish-procedure"></ul><button onclick="addListItem('fish-procedure')">+ Add cause</button></div>
+        <div class="fishbone-card"><h4>Policy</h4><ul id="fish-policy"></ul><button onclick="addListItem('fish-policy')">+ Add cause</button></div>
+        <div class="fishbone-card"><h4>Place</h4><ul id="fish-place"></ul><button onclick="addListItem('fish-place')">+ Add cause</button></div>
+      </div>
     </div>
 
-    <!-- TAB 3 -->
+    <!-- FACTORS -->
     <div class="tab-content" id="tab-factors">
       <table id="factorTable">
         <thead><tr><th>Factor</th><th>Expected</th><th>Actual</th><th>Relevant</th></tr></thead>
@@ -162,7 +129,7 @@
       <button onclick="addRow('factorTable')">+ Add Factor</button>
     </div>
 
-    <!-- TAB 4 -->
+    <!-- 5 WHYS -->
     <div class="tab-content" id="tab-why">
       <div id="fiveWhyContainer"></div>
       <button onclick="addWhyChain()">+ Add 5-Why Chain</button>
@@ -189,6 +156,11 @@
 
 <!-- RIGHT PANEL -->
 <div class="right-panel">
+
+  <div id="caseStatus" class="case-status in-progress">
+    Status: In Progress
+  </div>
+
   <h3>AI Decision Support</h3>
   <button onclick="runAI()">Request AI Decision Support</button>
 
