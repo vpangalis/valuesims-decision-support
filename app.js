@@ -82,12 +82,12 @@ function buildPayload() {
     investigation: {
       tasks: readTable("investigationTasks", ["item","owner","due"]),
       fishbone: {
-        people: readList("fish-people"),
-        process: readList("fish-process"),
-        product: readList("fish-product"),
-        procedure: readList("fish-procedure"),
-        policy: readList("fish-policy"),
-        place: readList("fish-place")
+        people: readFishbone("fish-people"),
+        process: readFishbone("fish-process"),
+        product: readFishbone("fish-product"),
+        procedure: readFishbone("fish-procedure"),
+        policy: readFishbone("fish-policy"),
+        place: readFishbone("fish-place")
       },
       factors: readTable("factorTable", ["factor","expected","actual","relevant"]),
       five_whys: [...document.querySelectorAll(".why-chain")].map(c =>
