@@ -140,4 +140,16 @@ button:hover { background: #1e40af; }
 .remove-btn:hover {
   background: #be123c;
 }
+@media (max-width: 768px) {
+
+  .right-panel {
+    order: 2;
+    border-top: 2px solid #e5e7eb;
+    background: #f8fafc;
+  }
+
+  .left-panel {
+    order: 1;
+  }
+}
 
