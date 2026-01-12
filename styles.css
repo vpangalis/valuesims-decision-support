@@ -146,3 +146,38 @@ button:hover {
 .hidden {
   display: none;
 }
+
+
+/* ===============================
+   MOBILE RESPONSIVE FIX
+   =============================== */
+
+@media (max-width: 768px) {
+
+  .layout {
+    flex-direction: column;
+    padding: 12px;
+  }
+
+  .left-panel,
+  .right-panel {
+    flex: none;
+    width: 100%;
+  }
+
+  .right-panel {
+    position: relative; /* disable sticky on mobile */
+    top: auto;
+    margin-top: 16px;
+  }
+
+  .tabs {
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    flex: 1 1 45%;
+    text-align: center;
+  }
+}
+
