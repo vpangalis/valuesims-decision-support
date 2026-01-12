@@ -19,10 +19,19 @@ function addRow(tableId) {
   updateState();
 }
 
-function addListItem(id) {
+function addFishboneCause(listId) {
+  const ul = document.getElementById(listId);
+  if (!ul) return;
+
   const li = document.createElement("li");
-  li.innerHTML = `<input oninput="updateState()">`;
-  document.getElementById(id).appendChild(li);
+  li.className = "fishbone-cause";
+
+  li.innerHTML = `
+    <input placeholder="Describe potential cause" oninput="updateState()" />
+    <button class="remove-btn" onclick="this.parentElement.remove(); updateState()">✕</button>
+  `;
+
+  ul.appendChild(li);
   updateState();
 }
 
@@ -55,6 +64,15 @@ function updateStatus(state) {
     "Status: In Progress";
 }
 
+function readFishbone(listId) {
+  const ul = document.getElementById(listId);
+  if (!ul) return [];
+
+  return [...ul.querySelectorAll("input")]
+    .map(i => i.value.trim())
+    .filter(Boolean)
+    .map(v => ({ cause: v }));
+}
 function buildPayload() {
   const payload = {
     meta: { timestamp: new Date().toISOString() },
