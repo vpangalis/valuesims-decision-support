@@ -56,9 +56,11 @@ function readList(id) {
 }
 
 function updateStatus(state) {
-  const el = document.getElementById("caseStatus");
+const el = document.getElementById("caseStatus");
   el.className = "case-status " + state;
+
   el.textContent =
+    state === "new" ? "Status: New" :
     state === "ready" ? "Status: Ready for Closure" :
     state === "closed" ? "Status: Closed" :
     "Status: In Progress";
@@ -74,6 +76,10 @@ function readFishbone(listId) {
     .map(v => ({ cause: v }));
 }
 function buildPayload() {
+  const status = determineCaseStatus(payload);
+payload.meta.closure_status = status;
+updateStatus(status);
+
   const payload = {
     meta: { timestamp: new Date().toISOString() },
     case_information: {},
@@ -102,12 +108,20 @@ function buildPayload() {
       payload[sec.dataset.section][f.dataset.field]=f.value||"";
     });
   });
+ @media (max-width: 768px) {
 
-  const ready = payload.corrective_actions.length &&
-    payload.corrective_actions.every(a=>a.action && a.owner && a.due && a.verification);
+  .right-panel {
+    order: 2;
+    border-top: 2px solid #e5e7eb;
+    background: #f8fafc;
+  }
 
-  payload.meta.closure_status = ready ? "ready" : "in-progress";
-  updateStatus(payload.meta.closure_status);
+  .left-panel {
+    order: 1;
+  }
+}
+
+
 
   document.getElementById("jsonPreview").value = JSON.stringify(payload,null,2);
   window.currentPayload = payload;
