@@ -1,177 +1,103 @@
-/*********************************
- * SECTION TOGGLING
- *********************************/
 function toggleSection(header) {
   header.parentElement.classList.toggle("open");
 }
 
-/*********************************
- * TABS (INVESTIGATION SECTION)
- *********************************/
 function openTab(evt, id) {
-  const sectionBody = evt.target.closest(".section-body");
-  if (!sectionBody) return;
-
-  sectionBody.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  sectionBody.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-
+  const body = evt.target.closest(".section-body");
+  body.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  body.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
   evt.target.classList.add("active");
-  const content = sectionBody.querySelector("#" + id);
-  if (content) content.classList.add("active");
+  body.querySelector("#" + id).classList.add("active");
 }
 
-/*********************************
- * DYNAMIC UI BUILDERS
- *********************************/
 function addRow(tableId) {
   const table = document.getElementById(tableId);
-  if (!table) return;
-
-  const tbody = table.querySelector("tbody");
   const cols = table.querySelectorAll("thead th").length;
-
   const tr = document.createElement("tr");
-  tr.innerHTML = Array(cols)
-    .fill(0)
-    .map(() => `<td><input oninput="updateState()"></td>`)
-    .join("");
-
-  tbody.appendChild(tr);
+  tr.innerHTML = Array(cols).fill(0).map(() => `<td><input oninput="updateState()"></td>`).join("");
+  table.querySelector("tbody").appendChild(tr);
   updateState();
 }
 
 function addListItem(id) {
-  const list = document.getElementById(id);
-  if (!list) return;
-
   const li = document.createElement("li");
   li.innerHTML = `<input oninput="updateState()">`;
-  list.appendChild(li);
-
+  document.getElementById(id).appendChild(li);
   updateState();
 }
 
 function addWhyChain() {
-  const container = document.getElementById("fiveWhyContainer");
-  if (!container) return;
-
   const div = document.createElement("div");
   div.className = "why-chain";
-  div.innerHTML = `
-    ${[1, 2, 3, 4, 5]
-      .map(i => `Why ${i}: <input oninput="updateState()">`)
-      .join("<br>")}
-    <hr>
-  `;
-  container.appendChild(div);
-
+  div.innerHTML = [1,2,3,4,5].map(i => `Why ${i}: <input oninput="updateState()">`).join("<br>") + "<hr>";
+  document.getElementById("fiveWhyContainer").appendChild(div);
   updateState();
 }
 
-/*********************************
- * SAFE READERS (SEMANTIC)
- *********************************/
-function readTableAsObjects(tableId, fields) {
-  const table = document.getElementById(tableId);
-  if (!table) return [];
-
-  return [...table.querySelectorAll("tbody tr")].map(tr => {
-    const inputs = [...tr.querySelectorAll("input")];
+function readTable(tableId, fields) {
+  return [...document.querySelectorAll(`#${tableId} tbody tr`)].map(tr => {
     const obj = {};
-    fields.forEach((field, i) => {
-      obj[field] = inputs[i]?.value || "";
-    });
+    fields.forEach((f,i)=> obj[f] = tr.querySelectorAll("input")[i]?.value || "");
     return obj;
   });
 }
 
-function readFishbone(categoryId) {
-  const list = document.getElementById(categoryId);
-  if (!list) return [];
-
-  return [...list.querySelectorAll("input")]
-    .map(i => i.value.trim())
-    .filter(v => v !== "")
-    .map(v => ({ cause: v }));
+function readList(id) {
+  return [...document.querySelectorAll(`#${id} input`)].map(i => i.value).filter(Boolean);
 }
 
-function readFiveWhyChains() {
-  return [...document.querySelectorAll(".why-chain")].map((chain, index) => ({
-    chain_id: String.fromCharCode(65 + index), // A, B, C…
-    whys: [...chain.querySelectorAll("input")].map(i => i.value || "")
-  }));
-}
-
-/*********************************
- * STATE & PAYLOAD
- *********************************/
-function updateState() {
-  buildPayload();
+function updateStatus(state) {
+  const el = document.getElementById("caseStatus");
+  el.className = "case-status " + state;
+  el.textContent =
+    state === "ready" ? "Status: Ready for Closure" :
+    state === "closed" ? "Status: Closed" :
+    "Status: In Progress";
 }
 
 function buildPayload() {
   const payload = {
-    meta: {
-      timestamp: new Date().toISOString(),
-      current_stage: "investigation"
-    },
+    meta: { timestamp: new Date().toISOString() },
     case_information: {},
     incident: {},
-    immediate_actions: readTableAsObjects(
-      "immediateActions",
-      ["action", "owner", "due_date", "status"]
-    ),
+    immediate_actions: readTable("immediateActions", ["action","owner","due"]),
     investigation: {
-      tasks: readTableAsObjects(
-        "investigationTasks",
-        ["item", "owner", "due_date", "status"]
-      ),
+      tasks: readTable("investigationTasks", ["item","owner","due"]),
       fishbone: {
-        people: readFishbone("fish-people"),
-        process: readFishbone("fish-process"),
-        product: readFishbone("fish-product"),
-        procedure: readFishbone("fish-procedure"),
-        policy: readFishbone("fish-policy"),
-        place: readFishbone("fish-place")
+        people: readList("fish-people"),
+        process: readList("fish-process"),
+        product: readList("fish-product"),
+        procedure: readList("fish-procedure"),
+        policy: readList("fish-policy"),
+        place: readList("fish-place")
       },
-      factors: readTableAsObjects(
-        "factorTable",
-        ["factor", "expected", "actual", "relevant"]
-      ),
-      five_whys: readFiveWhyChains()
+      factors: readTable("factorTable", ["factor","expected","actual","relevant"]),
+      five_whys: [...document.querySelectorAll(".why-chain")].map(c =>
+        [...c.querySelectorAll("input")].map(i => i.value))
     },
-    corrective_actions: readTableAsObjects(
-      "correctiveActions",
-      ["action", "owner", "due_date", "verification"]
-    )
+    corrective_actions: readTable("correctiveActions", ["action","owner","due","verification"])
   };
 
-  // Read simple input fields by section
-  document.querySelectorAll("[data-section]").forEach(section => {
-    const key = section.dataset.section;
-    const fields = section.querySelectorAll("[data-field]");
-    if (!fields.length) return;
-
-    payload[key] = payload[key] || {};
-    fields.forEach(f => {
-      payload[key][f.dataset.field] = f.value || "";
+  document.querySelectorAll("[data-section]").forEach(sec=>{
+    payload[sec.dataset.section] ||= {};
+    sec.querySelectorAll("[data-field]").forEach(f=>{
+      payload[sec.dataset.section][f.dataset.field]=f.value||"";
     });
   });
 
-  // Update JSON preview
-  const preview = document.getElementById("jsonPreview");
-  if (preview) {
-    preview.value = JSON.stringify(payload, null, 2);
-  }
+  const ready = payload.corrective_actions.length &&
+    payload.corrective_actions.every(a=>a.action && a.owner && a.due && a.verification);
 
-  // Store globally for button action
+  payload.meta.closure_status = ready ? "ready" : "in-progress";
+  updateStatus(payload.meta.closure_status);
+
+  document.getElementById("jsonPreview").value = JSON.stringify(payload,null,2);
   window.currentPayload = payload;
 }
 
-/*********************************
- * ACTION BUTTON
- *********************************/
-function runAI() {
-  console.log("Payload sent to backend:", window.currentPayload);
-  alert("This would POST the payload to FastAPI on Azure.");
+function updateState(){ buildPayload(); }
+
+function runAI(){
+  console.log(window.currentPayload);
+  alert("Payload ready for FastAPI");
 }
