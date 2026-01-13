@@ -54,22 +54,58 @@
   </div>
 </section>
 
-
-
 <section class="section" data-section="incident">
   <div class="section-header" onclick="toggleSection(this)">
     <span class="step">2</span><h2>Incident / Problem Description (5W2H)</h2>
   </div>
+
   <div class="section-body">
-    <textarea data-field="what" placeholder="What happened?" oninput="updateState()"></textarea>
-    <textarea data-field="why_problem" placeholder="Why is it a problem?" oninput="updateState()"></textarea>
-    <input data-field="when" placeholder="When?" oninput="updateState()"/>
-    <input data-field="where" placeholder="Where?" oninput="updateState()"/>
-    <input data-field="who" placeholder="Who identified?" oninput="updateState()"/>
-    <textarea data-field="how_identified" placeholder="How identified?" oninput="updateState()"></textarea>
-    <input data-field="impact" placeholder="Impact" oninput="updateState()"/>
+
+    <div class="incident-grid">
+
+      <div class="full">
+        <label>What happened?</label>
+        <textarea data-field="what" oninput="updateState()"></textarea>
+      </div>
+
+      <div class="full">
+        <label>Why is it a problem?</label>
+        <textarea data-field="why_problem" oninput="updateState()"></textarea>
+      </div>
+
+      <div>
+        <label>When?</label>
+        <input data-field="when" oninput="updateState()"/>
+      </div>
+
+      <div>
+        <label>Where?</label>
+        <input data-field="where" oninput="updateState()"/>
+      </div>
+
+      <div>
+        <label>Who identified?</label>
+        <input data-field="who" oninput="updateState()"/>
+      </div>
+
+      <div>
+        <label>How identified?</label>
+        <textarea data-field="how_identified" oninput="updateState()"></textarea>
+      </div>
+
+      <div class="full">
+        <label>Impact</label>
+        <input data-field="impact" oninput="updateState()"/>
+      </div>
+
+    </div>
+
   </div>
 </section>
+
+
+
+
 
 <section class="section" data-section="immediate_actions">
   <div class="section-header" onclick="toggleSection(this)">
