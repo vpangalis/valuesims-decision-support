@@ -18,20 +18,26 @@ function addRow(id) {
 
   headers.forEach(th => {
     const cell = document.createElement("td");
-    const label = th.textContent.trim().toLowerCase();
+    const headerText = th.textContent.toLowerCase();
 
-    if (label === "due") {
-      cell.innerHTML = `<input type="date" oninput="updateState()">`;
+    let input;
+
+    if (headerText.includes("due")) {
+      input = document.createElement("input");
+      input.type = "date";
     } else {
-      cell.innerHTML = `<input oninput="updateState()">`;
+      input = document.createElement("input");
     }
 
+    input.setAttribute("oninput", "updateState()");
+    cell.appendChild(input);
     tr.appendChild(cell);
   });
 
   table.querySelector("tbody").appendChild(tr);
   updateState();
 }
+
 
 
 function addFishboneCause(id) {
