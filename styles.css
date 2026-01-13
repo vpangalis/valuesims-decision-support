@@ -1,93 +1,73 @@
-function toggleSection(header) {
-  header.parentElement.classList.toggle("open");
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
 }
 
-function addRow(tableId, evt) {
-  evt.stopPropagation();
-  const table = document.getElementById(tableId);
-  const cols = table.querySelectorAll("thead th").length;
-
-  const tr = document.createElement("tr");
-  tr.innerHTML = Array(cols)
-    .fill(0)
-    .map(() => `<td><input oninput="updateState()"></td>`)
-    .join("");
-
-  table.querySelector("tbody").appendChild(tr);
-  updateState();
+.topbar {
+  background: #0f172a;
+  color: white;
+  padding: 20px;
 }
 
-function readTable(id, fields) {
-  return [...document.querySelectorAll(`#${id} tbody tr`)].map(tr => {
-    const obj = {};
-    fields.forEach((f,i)=> obj[f] = tr.querySelectorAll("input")[i]?.value || "");
-    return obj;
-  });
+.layout {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
 }
 
-function determineCaseStatus(payload) {
-  const hasIncident = Object.values(payload.incident).some(v => v);
-  const corrective = payload.corrective_actions;
-
-  if (!hasIncident && corrective.length === 0) return "new";
-
-  const ready =
-    corrective.length > 0 &&
-    corrective.every(a => a.action && a.owner && a.due && a.verification);
-
-  return ready ? "ready" : "in_progress";
+.left-panel { flex: 2; }
+.right-panel {
+  flex: 1;
+  background: white;
+  padding: 16px;
+  border-radius: 10px;
 }
 
-function updateSectionState(section) {
-  const inputs = section.querySelectorAll("input, textarea");
-  const filled = [...inputs].filter(i => i.value.trim());
-
-  section.classList.remove("started", "completed");
-
-  if (filled.length === 0) return;
-
-  if (filled.length === inputs.length) {
-    section.classList.add("completed");
-  } else {
-    section.classList.add("started");
-  }
+.section {
+  background: white;
+  margin-bottom: 16px;
+  border-left: 8px solid #e5e7eb;
+  border-radius: 10px;
 }
 
-function updateState() {
-  document.querySelectorAll(".section").forEach(updateSectionState);
+.section.open .section-body { display: block; }
+.section-body { display: none; padding: 16px; }
 
-  const payload = {
-    meta: { timestamp: new Date().toISOString() },
-    case_information: {},
-    incident: {},
-    corrective_actions: readTable("correctiveActions", ["action","owner","due","verification"])
-  };
+.section.started { border-left-color: #f59e0b; }
+.section.completed { border-left-color: #16a34a; }
 
-  document.querySelectorAll("[data-section]").forEach(sec => {
-    payload[sec.dataset.section] ||= {};
-    sec.querySelectorAll("[data-field]").forEach(f => {
-      payload[sec.dataset.section][f.dataset.field] = f.value || "";
-    });
-  });
-
-  const status = determineCaseStatus(payload);
-  const statusEl = document.getElementById("caseStatus");
-
-  statusEl.className = `case-status ${status}`;
-  statusEl.innerText =
-    status === "new" ? "Status: New" :
-    status === "ready" ? "Status: Ready for Closure" :
-    "Status: In Progress";
-
-  document.getElementById("jsonPreview").value =
-    JSON.stringify(payload, null, 2);
-
-  window.currentPayload = payload;
+.step {
+  width: 30px;
+  height: 30px;
+  background: #e5e7eb;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
 }
 
-function runAI() {
-  console.log(window.currentPayload);
-  alert("Payload ready for backend");
+.section.started .step { background: #f59e0b; color: white; }
+.section.completed .step { background: #16a34a; color: white; }
+
+.case-status {
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-weight: bold;
 }
 
-window.addEventListener("DOMContentLoaded", updateState);
+.case-status.new { background: #f1f5f9; }
+.case-status.in_progress { background: #fef3c7; }
+.case-status.ready { background: #dcfce7; }
+
+input, textarea {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .layout { flex-direction: column; }
+}
