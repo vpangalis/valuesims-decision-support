@@ -19,34 +19,34 @@
 <div class="left-panel">
 
 <section class="section open" data-section="case_information">
-  <div class="section-header" onclick="toggleSection(this)">
+  <div class="section-header" onclick="openSection(this)">
     <span class="step">1</span><h2>Case Information</h2>
   </div>
   <div class="section-body">
-    <input placeholder="Case ID" data-field="case_id" oninput="updateState()">
-    <input type="date" data-field="date" oninput="updateState()">
-    <input placeholder="Problem Title" data-field="problem_title" oninput="updateState()">
-    <input placeholder="Team Members" data-field="team_members" oninput="updateState()">
+    <input placeholder="Case ID" data-field="case_id" oninput="updateState()"/>
+    <input type="date" data-field="date" oninput="updateState()"/>
+    <input placeholder="Problem Title" data-field="problem_title" oninput="updateState()"/>
+    <input placeholder="Team Members" data-field="team_members" oninput="updateState()"/>
   </div>
 </section>
 
 <section class="section" data-section="incident">
-  <div class="section-header" onclick="toggleSection(this)">
+  <div class="section-header" onclick="openSection(this)">
     <span class="step">2</span><h2>Incident (5W2H)</h2>
   </div>
   <div class="section-body">
     <textarea placeholder="What?" data-field="what" oninput="updateState()"></textarea>
     <textarea placeholder="Why?" data-field="why_problem" oninput="updateState()"></textarea>
-    <input placeholder="When?" data-field="when" oninput="updateState()">
-    <input placeholder="Where?" data-field="where" oninput="updateState()">
-    <input placeholder="Who?" data-field="who" oninput="updateState()">
+    <input placeholder="When?" data-field="when" oninput="updateState()"/>
+    <input placeholder="Where?" data-field="where" oninput="updateState()"/>
+    <input placeholder="Who?" data-field="who" oninput="updateState()"/>
     <textarea placeholder="How identified?" data-field="how_identified" oninput="updateState()"></textarea>
-    <input placeholder="Impact" data-field="impact" oninput="updateState()">
+    <input placeholder="Impact" data-field="impact" oninput="updateState()"/>
   </div>
 </section>
 
 <section class="section" data-section="corrective_actions">
-  <div class="section-header" onclick="toggleSection(this)">
+  <div class="section-header" onclick="openSection(this)">
     <span class="step">3</span><h2>Corrective Actions</h2>
   </div>
   <div class="section-body">
@@ -54,20 +54,11 @@
       <thead><tr><th>Action</th><th>Owner</th><th>Due</th><th>Verification</th></tr></thead>
       <tbody></tbody>
     </table>
-    <button onclick="addRow('correctiveActions', event)">+ Add Action</button>
+    <button onclick="addRow('correctiveActions')">+ Add Action</button>
   </div>
 </section>
 
 </div>
 
 <div class="right-panel">
-  <div id="caseStatus" class="case-status new">Status: New</div>
-  <button onclick="runAI()">Request AI Decision Support</button>
-  <textarea id="jsonPreview" rows="20" readonly></textarea>
-</div>
-
-</div>
-
-<script src="app.js"></script>
-</body>
-</html>
+ 
