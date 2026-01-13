@@ -30,6 +30,7 @@ function addFishboneCause(id) {
 
 function addWhyChain() {
   const div = document.createElement("div");
+  div.className = "why-chain";
   div.innerHTML = [1,2,3,4,5].map(i => `Why ${i}: <input oninput="updateState()">`).join("<br>") + "<hr>";
   document.getElementById("fiveWhyContainer").appendChild(div);
   updateState();
