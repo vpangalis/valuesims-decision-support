@@ -1,8 +1,17 @@
+/* =========================
+   Global
+   ========================= */
+
 body {
   margin: 0;
-  font-family: Segoe UI, Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
   background: #f5f7fb;
+  color: #0f172a;
 }
+
+/* =========================
+   Top Bar
+   ========================= */
 
 .topbar {
   background: #0f172a;
@@ -10,13 +19,29 @@ body {
   padding: 20px;
 }
 
+.topbar h1 {
+  margin: 0;
+}
+
+.topbar p {
+  margin: 4px 0 0;
+  opacity: 0.8;
+}
+
+/* =========================
+   Layout
+   ========================= */
+
 .layout {
   display: flex;
   gap: 24px;
   padding: 24px;
 }
 
-.left-panel { flex: 2; }
+.left-panel {
+  flex: 2;
+}
+
 .right-panel {
   flex: 1;
   background: white;
@@ -26,24 +51,44 @@ body {
   top: 24px;
 }
 
+/* =========================
+   Sections
+   ========================= */
+
 .section {
   background: white;
   border-radius: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   border-left: 8px solid #e5e7eb;
 }
 
-.section.open .section-body { display: block; }
-.section-body { display: none; padding: 16px; }
+.section.open .section-body {
+  display: block;
+}
 
-.section.started { border-left-color: #f59e0b; }
-.section.completed { border-left-color: #16a34a; }
+.section-body {
+  display: none;
+  padding: 20px;
+}
+
+.section.started {
+  border-left-color: #f59e0b;
+}
+
+.section.completed {
+  border-left-color: #16a34a;
+}
+
+/* =========================
+   Section Header
+   ========================= */
 
 .section-header {
   display: flex;
   gap: 12px;
   padding: 16px;
   cursor: pointer;
+  align-items: center;
 }
 
 .step {
@@ -57,18 +102,67 @@ body {
   font-weight: bold;
 }
 
-.section.started .step { background: #f59e0b; color: white; }
-.section.completed .step { background: #16a34a; color: white; }
+.section.started .step {
+  background: #f59e0b;
+  color: white;
+}
 
-.tabs { display: flex; gap: 8px; margin-bottom: 12px; }
-.tab { padding: 6px 12px; background: #e5e7eb; border-radius: 6px; }
-.tab.active { background: #2563eb; color: white; }
+.section.completed .step {
+  background: #16a34a;
+  color: white;
+}
 
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+/* =========================
+   Tabs
+   ========================= */
 
-table { width: 100%; border-collapse: collapse; }
-th, td { border: 1px solid #e5e7eb; padding: 8px; }
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  padding: 6px 12px;
+  background: #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+}
+
+.tab.active {
+  background: #2563eb;
+  color: white;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* =========================
+   Tables
+   ========================= */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+}
+
+th,
+td {
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+  text-align: left;
+}
+
+/* =========================
+   Buttons
+   ========================= */
 
 button {
   background: #2563eb;
@@ -79,6 +173,14 @@ button {
   cursor: pointer;
 }
 
+button:hover {
+  opacity: 0.9;
+}
+
+/* =========================
+   Case Status
+   ========================= */
+
 .case-status {
   padding: 10px;
   border-radius: 8px;
@@ -86,64 +188,95 @@ button {
   font-weight: 600;
 }
 
-.case-status.new { background: #f1f5f9; }
-.case-status.in_progress { background: #fef3c7; }
-.case-status.ready { background: #dcfce7; }
+.case-status.new {
+  background: #f1f5f9;
+}
+
+.case-status.in_progress {
+  background: #fef3c7;
+}
+
+.case-status.ready {
+  background: #dcfce7;
+}
+
+/* =========================
+   Fishbone
+   ========================= */
 
 .fishbone-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
-.case-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
 
-.case-grid label {
-  font-weight: 600;
-  font-size: 0.9rem;
-}
+/* =========================
+   Form Grids (Case + Incident)
+   ========================= */
 
-.case-grid input {
-  width: 100%;
-  padding: 6px 8px;
-}
-.why-chain {
-  margin-bottom: 16px;
-}
+.case-grid,
 .incident-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 16px;
 }
 
 .incident-grid .full {
   grid-column: span 2;
 }
 
-.incident-grid input,
-.incident-grid textarea {
-  width: 100%;
-  padding: 6px 8px;
-}
-.incident-grid label {
-  font-weight: 600;
-  font-size: 0.9rem;
-}
+/* Stack label + field vertically */
 .case-grid > div,
 .incident-grid > div {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
+
+/* Labels */
+.case-grid label,
+.incident-grid label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Inputs & textareas */
 .case-grid input,
 .incident-grid input,
 .incident-grid textarea {
-  min-height: 34px;
+  width: 100%;
+  min-height: 36px;
 }
 
-.incident-grid textarea {
+/* =========================
+   Inputs
+   ========================= */
+
+input,
+textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+textarea {
   resize: vertical;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+}
+
+/* =========================
+   Five Whys
+   ========================= */
+
+.why-chain {
+  margin-bottom: 16px;
 }
