@@ -24,20 +24,37 @@
   <div class="section-header" onclick="toggleSection(this)">
     <span class="step">1</span><h2>Case Information</h2>
   </div>
+
   <div class="section-body">
-    <label>Case Number</label>
-    <input data-field="case_id" oninput="updateState()"/>
 
-    <label>Date</label>
-    <input type="date" data-field="date" oninput="updateState()"/>
+    <div class="case-grid">
 
-    <label>Problem Title</label>
-    <input data-field="problem_title" oninput="updateState()"/>
+      <div>
+        <label>Case Number</label>
+        <input data-field="case_id" oninput="updateState()"/>
+      </div>
 
-    <label>Team Members</label>
-    <input data-field="team_members" oninput="updateState()"/>
+      <div>
+        <label>Date</label>
+        <input type="date" data-field="date" oninput="updateState()"/>
+      </div>
+
+      <div>
+        <label>Problem Title</label>
+        <input data-field="problem_title" oninput="updateState()"/>
+      </div>
+
+      <div>
+        <label>Team Members</label>
+        <input data-field="team_members" oninput="updateState()"/>
+      </div>
+
+    </div>
+
   </div>
 </section>
+
+
 
 <section class="section" data-section="incident">
   <div class="section-header" onclick="toggleSection(this)">
