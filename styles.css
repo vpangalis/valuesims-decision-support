@@ -109,3 +109,23 @@ button {
   .right-panel { position: relative; }
   .fishbone-grid { grid-template-columns: 1fr; }
 }
+
+/* SECTION STATE COLORS */
+.section.started {
+  border-left-color: #f59e0b; /* amber */
+}
+
+.section.completed {
+  border-left-color: #16a34a; /* green */
+}
+
+.section.started .step {
+  background: #f59e0b;
+  color: white;
+}
+
+.section.completed .step {
+  background: #16a34a;
+  color: white;
+}
+
