@@ -2,21 +2,22 @@ function toggleSection(header) {
   header.parentElement.classList.toggle("open");
 }
 
+window.addEventListener("DOMContentLoaded", () => {
+  updateState();
+});
+
+
 function openTab(evt, id) {
+  evt.stopPropagation(); // 🔑 PREVENT SECTION COLLAPSE
+
   const body = evt.target.closest(".section-body");
+  if (!body) return;
+
   body.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   body.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+
   evt.target.classList.add("active");
   body.querySelector("#" + id).classList.add("active");
-}
-
-function addRow(tableId) {
-  const table = document.getElementById(tableId);
-  const cols = table.querySelectorAll("thead th").length;
-  const tr = document.createElement("tr");
-  tr.innerHTML = Array(cols).fill(0).map(() => `<td><input oninput="updateState()"></td>`).join("");
-  table.querySelector("tbody").appendChild(tr);
-  updateState();
 }
 
 function addFishboneCause(id) {
