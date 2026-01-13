@@ -95,3 +95,40 @@ button {
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
+.case-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.case-grid label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.case-grid input {
+  width: 100%;
+  padding: 6px 8px;
+}
+.why-chain {
+  margin-bottom: 16px;
+}
+.incident-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.incident-grid .full {
+  grid-column: span 2;
+}
+
+.incident-grid input,
+.incident-grid textarea {
+  width: 100%;
+  padding: 6px 8px;
+}
+.incident-grid label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
