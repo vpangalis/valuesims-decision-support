@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ValueSims – AI-Assisted Decision Support</title>
+  <title>AI-Assisted Decision Support</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" href="styles.css"/>
 </head>
@@ -16,49 +16,54 @@
 
 <div class="layout">
 
-<div class="left-panel">
+  <div class="left-panel">
 
-<section class="section open" data-section="case_information">
-  <div class="section-header" onclick="openSection(this)">
-    <span class="step">1</span><h2>Case Information</h2>
-  </div>
-  <div class="section-body">
-    <input placeholder="Case ID" data-field="case_id" oninput="updateState()"/>
-    <input type="date" data-field="date" oninput="updateState()"/>
-    <input placeholder="Problem Title" data-field="problem_title" oninput="updateState()"/>
-    <input placeholder="Team Members" data-field="team_members" oninput="updateState()"/>
-  </div>
-</section>
+    <section class="section open" data-section="case_information">
+      <div class="section-header" onclick="toggleSection(this)">
+        <span class="step">1</span><h2>Case Information</h2>
+      </div>
+      <div class="section-body">
+        <input placeholder="Case ID" data-field="case_id" oninput="updateState()">
+        <input type="date" data-field="date" oninput="updateState()">
+        <input placeholder="Problem Title" data-field="problem_title" oninput="updateState()">
+        <input placeholder="Team Members" data-field="team_members" oninput="updateState()">
+      </div>
+    </section>
 
-<section class="section" data-section="incident">
-  <div class="section-header" onclick="openSection(this)">
-    <span class="step">2</span><h2>Incident (5W2H)</h2>
-  </div>
-  <div class="section-body">
-    <textarea placeholder="What?" data-field="what" oninput="updateState()"></textarea>
-    <textarea placeholder="Why?" data-field="why_problem" oninput="updateState()"></textarea>
-    <input placeholder="When?" data-field="when" oninput="updateState()"/>
-    <input placeholder="Where?" data-field="where" oninput="updateState()"/>
-    <input placeholder="Who?" data-field="who" oninput="updateState()"/>
-    <textarea placeholder="How identified?" data-field="how_identified" oninput="updateState()"></textarea>
-    <input placeholder="Impact" data-field="impact" oninput="updateState()"/>
-  </div>
-</section>
+    <section class="section" data-section="incident">
+      <div class="section-header" onclick="toggleSection(this)">
+        <span class="step">2</span><h2>Incident (5W2H)</h2>
+      </div>
+      <div class="section-body">
+        <textarea placeholder="What?" data-field="what" oninput="updateState()"></textarea>
+        <textarea placeholder="Why?" data-field="why_problem" oninput="updateState()"></textarea>
+      </div>
+    </section>
 
-<section class="section" data-section="corrective_actions">
-  <div class="section-header" onclick="openSection(this)">
-    <span class="step">3</span><h2>Corrective Actions</h2>
+    <section class="section" data-section="corrective_actions">
+      <div class="section-header" onclick="toggleSection(this)">
+        <span class="step">3</span><h2>Corrective Actions</h2>
+      </div>
+      <div class="section-body">
+        <table id="correctiveActions">
+          <thead>
+            <tr><th>Action</th><th>Owner</th><th>Due</th><th>Verification</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <button onclick="addRow('correctiveActions')">+ Add Action</button>
+      </div>
+    </section>
+
   </div>
-  <div class="section-body">
-    <table id="correctiveActions">
-      <thead><tr><th>Action</th><th>Owner</th><th>Due</th><th>Verification</th></tr></thead>
-      <tbody></tbody>
-    </table>
-    <button onclick="addRow('correctiveActions')">+ Add Action</button>
+
+  <div class="right-panel">
+    <div id="caseStatus" class="case-status new">Status: New</div>
+    <textarea id="jsonPreview" rows="20" readonly></textarea>
   </div>
-</section>
 
 </div>
 
-<div class="right-panel">
- 
+<script src="app.js"></script>
+</body>
+</html>
