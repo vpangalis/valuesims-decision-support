@@ -1,13 +1,13 @@
 body {
   margin: 0;
-  font-family: "Segoe UI", Arial, sans-serif;
+  font-family: Segoe UI, Arial, sans-serif;
   background: #f5f7fb;
 }
 
 .topbar {
-  background: linear-gradient(90deg,#0f172a,#1e293b);
+  background: #0f172a;
   color: white;
-  padding: 20px 32px;
+  padding: 20px;
 }
 
 .layout {
@@ -20,76 +20,78 @@ body {
 .right-panel {
   flex: 1;
   background: white;
-  padding: 20px;
   border-radius: 12px;
+  padding: 16px;
+  position: sticky;
+  top: 24px;
 }
 
 .section {
   background: white;
   border-radius: 12px;
-  margin-bottom: 20px;
-  border-left: 6px solid #e5e7eb;
+  margin-bottom: 16px;
+  border-left: 8px solid #e5e7eb;
 }
 
 .section.open .section-body { display: block; }
 .section-body { display: none; padding: 16px; }
 
+.section.started { border-left-color: #f59e0b; }
+.section.completed { border-left-color: #16a34a; }
+
 .section-header {
   display: flex;
   gap: 12px;
-  cursor: pointer;
   padding: 16px;
+  cursor: pointer;
 }
 
 .step {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: bold;
 }
 
+.section.started .step { background: #f59e0b; color: white; }
+.section.completed .step { background: #16a34a; color: white; }
+
 .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
-.tab { background: #e5e7eb; padding: 6px 12px; border-radius: 6px; }
+.tab { padding: 6px 12px; background: #e5e7eb; border-radius: 6px; }
 .tab.active { background: #2563eb; color: white; }
 
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-.fishbone-grid {
-  display: grid;
-  grid-template-columns: repeat(2,1fr);
-  gap: 16px;
-}
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid #e5e7eb; padding: 8px; }
 
-.fishbone-card {
-  background: #f8fafc;
-  padding: 12px;
-  border-radius: 10px;
-}
-
-input, textarea {
-  width: 100%;
-  padding: 8px;
-  margin: 6px 0 10px;
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
   border-radius: 6px;
-  border: 1px solid #cbd5e1;
+  padding: 8px 14px;
+  cursor: pointer;
 }
 
 .case-status {
-  font-weight: bold;
   padding: 10px;
   border-radius: 8px;
   margin-bottom: 12px;
+  font-weight: 600;
 }
 
 .case-status.new { background: #f1f5f9; }
-.case-status.in-progress { background: #fef3c7; }
+.case-status.in_progress { background: #fef3c7; }
 .case-status.ready { background: #dcfce7; }
 
-@media (max-width: 768px) {
-  .layout { flex-direction: column; }
-  .fishbone-grid { grid-template-columns: 1fr; }
+.fishbone-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
