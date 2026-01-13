@@ -1,5 +1,12 @@
 function toggleSection(header) {
-  header.parentElement.classList.toggle("open");
+  const section = header.parentElement;
+
+  // Close others (accordion behavior)
+  document.querySelectorAll(".section").forEach(s => {
+    if (s !== section) s.classList.remove("open");
+  });
+
+  section.classList.add("open"); // always open, never auto-close
 }
 
 function addRow(tableId, evt) {
