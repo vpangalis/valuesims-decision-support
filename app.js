@@ -123,3 +123,28 @@ function runAI() {
   console.log(window.currentPayload);
   alert("Payload ready for FastAPI");
 }
+
+function updateSectionState(section) {
+  const inputs = section.querySelectorAll("input, textarea");
+
+  const values = [...inputs].map(i => i.value?.trim()).filter(Boolean);
+
+  section.classList.remove("started", "completed");
+
+  if (values.length === 0) {
+    // untouched → no class
+    return;
+  }
+
+  // Some data entered
+  section.classList.add("started");
+
+  // All inputs filled → completed
+  const allFilled = [...inputs].every(i => i.value?.trim());
+
+  if (allFilled) {
+    section.classList.remove("started");
+    section.classList.add("completed");
+  }
+}
+
