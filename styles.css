@@ -17,7 +17,6 @@ body {
 }
 
 .left-panel { flex: 2; }
-
 .right-panel {
   flex: 1;
   background: white;
@@ -25,7 +24,6 @@ body {
   padding: 20px;
   position: sticky;
   top: 24px;
-  height: fit-content;
 }
 
 .section {
@@ -37,10 +35,9 @@ body {
 
 .section-header {
   display: flex;
-  align-items: center;
+  gap: 12px;
   cursor: pointer;
   padding: 16px;
-  gap: 12px;
 }
 
 .section-body { display: none; padding: 16px; }
@@ -48,41 +45,37 @@ body {
 
 .step {
   background: #e5e7eb;
-  border-radius: 50%;
   width: 34px;
   height: 34px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
 }
 
-label { font-weight: 600; margin-top: 12px; display: block; }
-
 input, textarea {
   width: 100%;
   padding: 8px;
-  margin-top: 6px;
-  margin-bottom: 10px;
+  margin: 6px 0 10px;
   border-radius: 6px;
   border: 1px solid #cbd5e1;
 }
 
-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+table { width: 100%; border-collapse: collapse; }
 th, td { border: 1px solid #e5e7eb; padding: 8px; }
 
 button {
-  padding: 10px 16px;
   background: #2563eb;
   color: white;
   border: none;
   border-radius: 6px;
+  padding: 8px 14px;
   cursor: pointer;
 }
-button:hover { background: #1e40af; }
 
 .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
-.tab { background: #e5e7eb; border-radius: 6px; padding: 8px 12px; }
+.tab { padding: 6px 12px; background: #e5e7eb; border-radius: 6px; }
 .tab.active { background: #2563eb; color: white; }
 
 .tab-content { display: none; }
@@ -90,72 +83,29 @@ button:hover { background: #1e40af; }
 
 .fishbone-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2,1fr);
   gap: 16px;
 }
 
 .fishbone-card {
   background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
   padding: 12px;
+  border-radius: 10px;
 }
 
 .case-status {
-  padding: 10px 14px;
-  border-radius: 8px;
   font-weight: 600;
+  padding: 10px;
+  border-radius: 8px;
   margin-bottom: 12px;
 }
 
-.case-status.in-progress { background: #fef3c7; color: #92400e; }
-.case-status.ready { background: #dbeafe; color: #1e40af; }
-.case-status.closed { background: #dcfce7; color: #166534; }
+.case-status.new { background: #f1f5f9; }
+.case-status.in_progress { background: #fef3c7; }
+.case-status.ready { background: #dcfce7; }
 
 @media (max-width: 768px) {
-  .layout { flex-direction: column; padding: 12px; }
-  .right-panel { position: relative; top: auto; }
+  .layout { flex-direction: column; }
+  .right-panel { position: relative; }
   .fishbone-grid { grid-template-columns: 1fr; }
 }
-
-.fishbone-cause {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.fishbone-cause input {
-  flex: 1;
-}
-
-.remove-btn {
-  background: #e11d48;
-  border: none;
-  color: white;
-  border-radius: 6px;
-  padding: 0 10px;
-  cursor: pointer;
-}
-
-.remove-btn:hover {
-  background: #be123c;
-}
-@media (max-width: 768px) {
-
-  .right-panel {
-    order: 2;
-    border-top: 2px solid #e5e7eb;
-    background: #f8fafc;
-  }
-
-  .left-panel {
-    order: 1;
-  }
-}
-
-.case-status.new {
-  background: #f1f5f9;
-  color: #334155;
-}
-
-
