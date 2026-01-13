@@ -1,13 +1,13 @@
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
   background: #f5f7fb;
 }
 
 .topbar {
-  background: #0f172a;
+  background: linear-gradient(90deg,#0f172a,#1e293b);
   color: white;
-  padding: 20px;
+  padding: 20px 32px;
 }
 
 .layout {
@@ -20,14 +20,14 @@ body {
 .right-panel {
   flex: 1;
   background: white;
-  padding: 16px;
-  border-radius: 10px;
+  padding: 20px;
+  border-radius: 12px;
 }
 
 .section {
   background: white;
   border-radius: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   border-left: 6px solid #e5e7eb;
 }
 
@@ -51,13 +51,45 @@ body {
   justify-content: center;
 }
 
+.tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.tab { background: #e5e7eb; padding: 6px 12px; border-radius: 6px; }
+.tab.active { background: #2563eb; color: white; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.fishbone-grid {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 16px;
+}
+
+.fishbone-card {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+}
+
 .case-status {
+  font-weight: bold;
   padding: 10px;
   border-radius: 8px;
   margin-bottom: 12px;
-  font-weight: bold;
 }
 
 .case-status.new { background: #f1f5f9; }
 .case-status.in-progress { background: #fef3c7; }
 .case-status.ready { background: #dcfce7; }
+
+@media (max-width: 768px) {
+  .layout { flex-direction: column; }
+  .fishbone-grid { grid-template-columns: 1fr; }
+}
