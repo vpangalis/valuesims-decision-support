@@ -1,100 +1,73 @@
 function toggleSection(header) {
   const section = header.parentElement;
-
-  // Close others (accordion behavior)
   document.querySelectorAll(".section").forEach(s => {
     if (s !== section) s.classList.remove("open");
   });
-
-  section.classList.add("open"); // always open, never auto-close
+  section.classList.add("open");
 }
 
-function addRow(tableId, evt) {
-  evt.stopPropagation();
+function addRow(tableId) {
   const table = document.getElementById(tableId);
   const cols = table.querySelectorAll("thead th").length;
-
   const tr = document.createElement("tr");
-  tr.innerHTML = Array(cols)
-    .fill(0)
+  tr.innerHTML = Array(cols).fill(0)
     .map(() => `<td><input oninput="updateState()"></td>`)
     .join("");
-
   table.querySelector("tbody").appendChild(tr);
   updateState();
 }
 
-function readTable(id, fields) {
-  return [...document.querySelectorAll(`#${id} tbody tr`)].map(tr => {
-    const obj = {};
-    fields.forEach((f,i)=> obj[f] = tr.querySelectorAll("input")[i]?.value || "");
-    return obj;
-  });
-}
-
 function determineCaseStatus(payload) {
-  const hasIncident = Object.values(payload.incident).some(v => v);
+  const hasData =
+    Object.values(payload.case_information).some(Boolean) ||
+    Object.values(payload.incident).some(Boolean);
+
+  if (!hasData) return "new";
+
   const corrective = payload.corrective_actions;
-
-  if (!hasIncident && corrective.length === 0) return "new";
-
   const ready =
     corrective.length > 0 &&
     corrective.every(a => a.action && a.owner && a.due && a.verification);
 
-  return ready ? "ready" : "in_progress";
-}
-
-function updateSectionState(section) {
-  const inputs = section.querySelectorAll("input, textarea");
-  const filled = [...inputs].filter(i => i.value.trim());
-
-  section.classList.remove("started", "completed");
-
-  if (filled.length === 0) return;
-
-  if (filled.length === inputs.length) {
-    section.classList.add("completed");
-  } else {
-    section.classList.add("started");
-  }
+  return ready ? "ready" : "in-progress";
 }
 
 function updateState() {
-  document.querySelectorAll(".section").forEach(updateSectionState);
-
   const payload = {
-    meta: { timestamp: new Date().toISOString() },
     case_information: {},
     incident: {},
-    corrective_actions: readTable("correctiveActions", ["action","owner","due","verification"])
+    corrective_actions: []
   };
 
-  document.querySelectorAll("[data-section]").forEach(sec => {
-    payload[sec.dataset.section] ||= {};
-    sec.querySelectorAll("[data-field]").forEach(f => {
-      payload[sec.dataset.section][f.dataset.field] = f.value || "";
+  document.querySelectorAll("[data-section]").forEach(section => {
+    const key = section.dataset.section;
+    payload[key] = {};
+    section.querySelectorAll("[data-field]").forEach(f => {
+      payload[key][f.dataset.field] = f.value || "";
     });
   });
 
-  const status = determineCaseStatus(payload);
-  const statusEl = document.getElementById("caseStatus");
+  payload.corrective_actions = [...document.querySelectorAll("#correctiveActions tbody tr")]
+    .map(tr => {
+      const inputs = tr.querySelectorAll("input");
+      return {
+        action: inputs[0]?.value || "",
+        owner: inputs[1]?.value || "",
+        due: inputs[2]?.value || "",
+        verification: inputs[3]?.value || ""
+      };
+    });
 
-  statusEl.className = `case-status ${status}`;
-  statusEl.innerText =
+  const status = determineCaseStatus(payload);
+  const el = document.getElementById("caseStatus");
+  el.className = `case-status ${status}`;
+  el.textContent =
     status === "new" ? "Status: New" :
     status === "ready" ? "Status: Ready for Closure" :
     "Status: In Progress";
 
   document.getElementById("jsonPreview").value =
     JSON.stringify(payload, null, 2);
-
-  window.currentPayload = payload;
-}
-
-function runAI() {
-  console.log(window.currentPayload);
-  alert("Payload ready for backend");
 }
 
 window.addEventListener("DOMContentLoaded", updateState);
