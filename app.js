@@ -76,11 +76,16 @@ function determineCaseStatus(payload) {
   }
 
   // 3️⃣ Otherwise → IN PROGRESS
-  return "in_progress";
+  return "in-progress";
 }
 
 
 function updateState() {
+
+  // 1️⃣ Update section visual states
+  document.querySelectorAll(".section").forEach(updateSectionState);
+
+  // 2️⃣ Build payload
   const payload = {
     meta: { timestamp: new Date().toISOString() },
     case_information: {},
@@ -102,6 +107,32 @@ function updateState() {
     },
     corrective_actions: readTable("correctiveActions", ["action","owner","due","verification"])
   };
+
+  // 3️⃣ Read simple fields
+  document.querySelectorAll("[data-section]").forEach(sec => {
+    payload[sec.dataset.section] ||= {};
+    sec.querySelectorAll("[data-field]").forEach(f => {
+      payload[sec.dataset.section][f.dataset.field] = f.value || "";
+    });
+  });
+
+  // 4️⃣ Determine & render status
+  const status = determineCaseStatus(payload);
+
+  const statusEl = document.getElementById("caseStatus");
+  statusEl.className = `case-status ${status}`;
+  statusEl.innerText =
+    status === "new" ? "Status: New" :
+    status === "ready" ? "Status: Ready for Closure" :
+    "Status: In Progress";
+
+  // 5️⃣ Preview
+  document.getElementById("jsonPreview").value =
+    JSON.stringify(payload, null, 2);
+
+  window.currentPayload = payload;
+}
+
 
   document.querySelectorAll("[data-section]").forEach(sec => {
     payload[sec.dataset.section] ||= {};
@@ -147,4 +178,58 @@ function updateSectionState(section) {
     section.classList.add("completed");
   }
 }
+
+function updateState() {
+
+  // 1️⃣ Update section visual states
+  document.querySelectorAll(".section").forEach(updateSectionState);
+
+  // 2️⃣ Build payload
+  const payload = {
+    meta: { timestamp: new Date().toISOString() },
+    case_information: {},
+    incident: {},
+    immediate_actions: readTable("immediateActions", ["action","owner","due"]),
+    investigation: {
+      tasks: readTable("investigationTasks", ["item","owner","due"]),
+      fishbone: {
+        people: readList("fish-people"),
+        process: readList("fish-process"),
+        product: readList("fish-product"),
+        procedure: readList("fish-procedure"),
+        policy: readList("fish-policy"),
+        place: readList("fish-place")
+      },
+      factors: readTable("factorTable", ["factor","expected","actual","relevant"]),
+      five_whys: [...document.querySelectorAll(".why-chain")].map(c =>
+        [...c.querySelectorAll("input")].map(i => i.value))
+    },
+    corrective_actions: readTable("correctiveActions", ["action","owner","due","verification"])
+  };
+
+  // 3️⃣ Read simple fields
+  document.querySelectorAll("[data-section]").forEach(sec => {
+    payload[sec.dataset.section] ||= {};
+    sec.querySelectorAll("[data-field]").forEach(f => {
+      payload[sec.dataset.section][f.dataset.field] = f.value || "";
+    });
+  });
+
+  // 4️⃣ Determine & render status
+  const status = determineCaseStatus(payload);
+
+  const statusEl = document.getElementById("caseStatus");
+  statusEl.className = `case-status ${status}`;
+  statusEl.innerText =
+    status === "new" ? "Status: New" :
+    status === "ready" ? "Status: Ready for Closure" :
+    "Status: In Progress";
+
+  // 5️⃣ Preview
+  document.getElementById("jsonPreview").value =
+    JSON.stringify(payload, null, 2);
+
+  window.currentPayload = payload;
+}
+
 
