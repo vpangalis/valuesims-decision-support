@@ -13,12 +13,26 @@ function openTab(evt, id) {
 
 function addRow(id) {
   const table = document.getElementById(id);
-  const cols = table.querySelectorAll("thead th").length;
+  const headers = table.querySelectorAll("thead th");
   const tr = document.createElement("tr");
-  tr.innerHTML = Array(cols).fill(0).map(() => `<td><input oninput="updateState()"></td>`).join("");
+
+  headers.forEach(th => {
+    const cell = document.createElement("td");
+    const label = th.textContent.trim().toLowerCase();
+
+    if (label === "due") {
+      cell.innerHTML = `<input type="date" oninput="updateState()">`;
+    } else {
+      cell.innerHTML = `<input oninput="updateState()">`;
+    }
+
+    tr.appendChild(cell);
+  });
+
   table.querySelector("tbody").appendChild(tr);
   updateState();
 }
+
 
 function addFishboneCause(id) {
   const ul = document.getElementById(id);
