@@ -132,3 +132,18 @@ button {
   font-weight: 600;
   font-size: 0.9rem;
 }
+.case-grid > div,
+.incident-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.case-grid input,
+.incident-grid input,
+.incident-grid textarea {
+  min-height: 34px;
+}
+
+.incident-grid textarea {
+  resize: vertical;
+}
