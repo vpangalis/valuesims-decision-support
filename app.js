@@ -47,11 +47,38 @@ function readList(id) {
   return [...document.querySelectorAll(`#${id} input`)].map(i => i.value).filter(Boolean);
 }
 
-function determineCaseStatus(p) {
-  if (!Object.values(p.incident).some(v => v)) return "new";
-  if (p.corrective_actions.every(a => a.action && a.owner && a.due && a.verification)) return "ready";
+function determineCaseStatus(payload) {
+  // 1️⃣ NEW — nothing meaningful filled yet
+  const hasIncidentData = Object.values(payload.incident || {}).some(v => v && v.trim?.());
+  const hasActions =
+    payload.immediate_actions.length > 0 ||
+    payload.corrective_actions.length > 0;
+
+  if (!hasIncidentData && !hasActions) {
+    return "new";
+  }
+
+  // 2️⃣ READY FOR CLOSURE — ONLY if corrective actions are complete
+  const corrective = payload.corrective_actions || [];
+  const hasCorrectiveActions = corrective.length > 0;
+
+  const allCorrectiveComplete =
+    hasCorrectiveActions &&
+    corrective.every(a =>
+      a.action &&
+      a.owner &&
+      a.due &&
+      a.verification
+    );
+
+  if (allCorrectiveComplete) {
+    return "ready";
+  }
+
+  // 3️⃣ Otherwise → IN PROGRESS
   return "in_progress";
 }
+
 
 function updateState() {
   const payload = {
