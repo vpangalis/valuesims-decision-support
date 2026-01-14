@@ -63,7 +63,7 @@ html, body {
   padding: 16px;
   width: 100%;
   min-width: 0;
-  /* 🔑 IMPORTANT for grid */
+
 }
 
 .panel h2 {
@@ -316,7 +316,7 @@ button.primary {
 #department {
   width: 100%;
 }
-.row {
+.form-row {
   display: grid;
   grid-template-columns: 28% 72%;
   gap: 16px;
@@ -324,4 +324,15 @@ button.primary {
   align-items: start;   /* 🔑 THIS IS THE FIX */
 }
 
+.main-row {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+  align-items: stretch; /* 🔑 same height */
+}
 
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
