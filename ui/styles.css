@@ -347,12 +347,6 @@ button.primary {
 }
 
 
-.bottom-row {
-  display: grid;
-  grid-template-columns: 320px 1fr;  /* 🔑 SAME AS TOP ROW */
-  gap: 16px;
-  align-items: stretch;
-}
 
 
 .phase-wide {
@@ -362,4 +356,10 @@ button.primary {
   flex: 1 1 auto;
   overflow-y: auto;
   min-height :0;
+}
+.phases-container {
+  position: relative;
+}
+.bottom-row .ai-output {
+  margin-left: 0;
 }
