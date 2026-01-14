@@ -346,6 +346,7 @@ button.primary {
   flex: 0 0 640px;   /* wider, still horizontal */
 }
 .phase-content {
-  flex: 1;
+  flex: 1 1 auto;
   overflow-y: auto;
+  min-height :0;
 }
