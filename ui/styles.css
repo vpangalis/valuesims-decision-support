@@ -185,7 +185,7 @@ button.primary {
 }
 
 .phase textarea {
-  flex: 1;
+  
   resize: none;
   font-size: 13px;
   padding: 8px;
@@ -272,6 +272,7 @@ button.primary {
 .d12 {
   flex: 0 0 calc(220px * 4 + 12px * 3); /* span 4 columns + gaps */
   min-height: 520px;
+  overflow-y: auto;
 }
 
 
@@ -279,6 +280,7 @@ button.primary {
 
 #problem_description {
   min-height: 120px;
+  max-height: 180px;
 }
 
 #team_members {
