@@ -10,6 +10,9 @@
   --accent-d4: #16a34a;
   --accent-d5: #7c3aed;
 }
+body {
+  background: red !important;
+}
 
 /* BASE */
 body {
