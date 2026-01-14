@@ -108,14 +108,18 @@ button.primary {
   cursor: pointer;
 }
 
-button.secondary {
+.secondary {
   padding: 8px 12px;
   font-size: 13px;
   border-radius: 6px;
   border: 1px solid var(--border-soft);
   background: #f8fafc;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
+
 
 /* ================= FILE BUTTONS ================= */
 .file-button {
