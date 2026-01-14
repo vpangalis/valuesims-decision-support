@@ -167,7 +167,7 @@ button.primary {
 
   overflow-x: auto;
   overflow-y: hidden;
-
+  align-items : stretch;
   padding-bottom: 8px;
  }
 
@@ -179,11 +179,12 @@ button.primary {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  min-height: 320px;
+  min-height: 420px;
   border-top: 5px solid;
   flex: 0 0 280px;
   /* 🔑 fixed column width */
   max-width:none;
+  height :70vh;
 
 }
 
