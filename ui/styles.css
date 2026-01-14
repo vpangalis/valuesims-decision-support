@@ -10,11 +10,8 @@
   --accent-d4: #16a34a;
   --accent-d5: #7c3aed;
 }
-body {
-  background: red !important;
-}
 
-/* BASE */
+/* ================= BASE ================= */
 body {
   margin: 0;
   font-family: Inter, system-ui, sans-serif;
@@ -22,7 +19,7 @@ body {
   color: var(--text-main);
 }
 
-/* HEADER */
+/* ================= HEADER ================= */
 .topbar {
   padding: 16px 24px;
   background: linear-gradient(90deg, #0f172a, #020617);
@@ -40,7 +37,7 @@ body {
   opacity: 0.8;
 }
 
-/* WORKSPACE (PPT LAYOUT) */
+/* ================= WORKSPACE (PPT LAYOUT) ================= */
 .workspace {
   display: flex;
   flex-direction: column;
@@ -52,14 +49,17 @@ body {
   display: grid;
   grid-template-columns: 28% 72%;
   gap: 16px;
+  align-items: stretch; /* 🔑 IMPORTANT */
 }
 
-/* PANELS */
+/* ================= PANELS ================= */
 .panel {
   background: var(--bg-panel);
   border: 1px solid var(--border-soft);
   border-radius: 10px;
   padding: 16px;
+  width: 100%;
+  min-width: 0; /* 🔑 IMPORTANT for grid */
 }
 
 .panel h2 {
@@ -70,7 +70,7 @@ body {
   color: #475569;
 }
 
-/* INCIDENT CONTEXT */
+/* ================= INCIDENT CONTEXT ================= */
 .context-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -96,7 +96,7 @@ body {
   margin-top: 12px;
 }
 
-/* BUTTONS */
+/* ================= BUTTONS ================= */
 button.primary {
   width: 100%;
   padding: 12px;
@@ -117,15 +117,33 @@ button.secondary {
   cursor: pointer;
 }
 
-/* D1–D8 SCROLLABLE AREA */
+/* ================= FILE BUTTONS ================= */
+.file-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.file-button input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* ================= D1–D8 SCROLLABLE WALL ================= */
 .phases-container {
   display: flex;
   flex-direction: column;
-  height: 520px; /* matches PPT proportions */
+  height: 520px;
+  width: 100%;
+  min-width: 0; /* 🔑 CRITICAL */
 }
 
 .phases-scroll {
-  flex: 1 1 auto;
+  flex: 1;
   overflow-y: auto;
   padding-right: 8px;
 
@@ -134,7 +152,7 @@ button.secondary {
   gap: 12px;
 }
 
-/* PHASE CARDS */
+/* ================= PHASE CARDS ================= */
 .phase {
   background: white;
   border-radius: 10px;
@@ -165,7 +183,13 @@ button.secondary {
 .d4 { border-color: var(--accent-d4); }
 .d5 { border-color: var(--accent-d5); }
 
-/* AI OUTPUT */
+/* ================= AI + RUN ANALYSIS ================= */
+.run-ai-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .ai-output h3 {
   margin-top: 0;
   font-size: 15px;
@@ -174,24 +198,4 @@ button.secondary {
 .ai-output ul {
   padding-left: 18px;
   font-size: 14px;
-}
-
-/* RUN AI PANEL */
-.run-ai-panel {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.file-button {
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  position:relative
-}
-.file-button input[type="file"] {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
 }
