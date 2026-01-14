@@ -187,4 +187,11 @@ button.secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  position:relative
+}
+.file-button input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
 }
