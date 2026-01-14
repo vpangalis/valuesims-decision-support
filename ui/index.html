@@ -1,9 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI-Assisted Decision Support – Collaborative Intelligence Workspace</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <h1>AI-Assisted Decision Support</h1>
+  <p>Collaborative Intelligence Workspace</p>
+</header>
+
 <main class="workspace">
 
   <!-- ROW 1 -->
   <section class="row top-row">
 
-    <!-- Incident Context -->
+    <!-- INCIDENT CONTEXT (LEFT) -->
     <div class="panel incident-context">
       <h2>Incident Context</h2>
 
@@ -28,29 +42,36 @@
       </div>
     </div>
 
-    <!-- D1–D8 MAIN AREA -->
+    <!-- D1–D8 MAIN WORK AREA (RIGHT) -->
     <div class="panel phases-container">
       <h2>D1–D8</h2>
 
       <div class="phases-scroll">
 
-        <!-- Example phases -->
         <div class="phase d1">
           <h3>D1 – Problem Definition</h3>
-          <textarea></textarea>
+          <textarea placeholder="Describe the problem, impact, and scope..."></textarea>
         </div>
 
         <div class="phase d2">
           <h3>D2 – Containment</h3>
-          <textarea></textarea>
+          <textarea placeholder="Immediate actions and temporary measures..."></textarea>
         </div>
 
         <div class="phase d3">
           <h3>D3 – Analysis</h3>
-          <textarea></textarea>
+          <textarea placeholder="Hypotheses, 5-Why analysis, evidence links..."></textarea>
         </div>
 
-        <!-- D4–D8 follow same pattern -->
+        <div class="phase d4">
+          <h3>D4 – Corrective Actions</h3>
+          <textarea placeholder="Corrective actions, owners, due dates..."></textarea>
+        </div>
+
+        <div class="phase d5">
+          <h3>D5 – Validation</h3>
+          <textarea placeholder="Validation method, KPIs, results..."></textarea>
+        </div>
 
       </div>
     </div>
@@ -60,17 +81,28 @@
   <!-- ROW 2 -->
   <section class="row bottom-row">
 
+    <!-- RUN ANALYSIS -->
     <div class="panel run-ai-panel">
       <h3>Run Analysis</h3>
+      <p>Trigger AI-assisted reasoning based on the current incident and inputs.</p>
       <button class="primary">Run AI Analysis</button>
     </div>
 
+    <!-- AI INSIGHTS -->
     <div class="panel ai-output">
       <h3>AI-Assisted Insights</h3>
       <p><strong>Hypothesis:</strong> Process parameter drift caused by delayed maintenance.</p>
-      <p><strong>Confidence:</strong> 0.72</p>
+      <p><strong>Confidence:</strong> 0.72 (based on similar incidents)</p>
+      <ul>
+        <li>Recalibrate monitoring thresholds</li>
+        <li>Reduce maintenance interval</li>
+        <li>Introduce early warning alerts</li>
+      </ul>
     </div>
 
   </section>
 
 </main>
+
+</body>
+</html>

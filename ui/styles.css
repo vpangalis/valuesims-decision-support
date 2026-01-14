@@ -11,6 +11,7 @@
   --accent-d5: #7c3aed;
 }
 
+/* BASE */
 body {
   margin: 0;
   font-family: Inter, system-ui, sans-serif;
@@ -36,14 +37,21 @@ body {
   opacity: 0.8;
 }
 
-/* LAYOUT */
-.layout {
-  display: grid;
-  grid-template-columns: 28% 72%;
+/* WORKSPACE (PPT LAYOUT) */
+.workspace {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
   padding: 16px;
 }
 
+.row {
+  display: grid;
+  grid-template-columns: 28% 72%;
+  gap: 16px;
+}
+
+/* PANELS */
 .panel {
   background: var(--bg-panel);
   border: 1px solid var(--border-soft);
@@ -59,7 +67,7 @@ body {
   color: #475569;
 }
 
-/* CONTEXT */
+/* INCIDENT CONTEXT */
 .context-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -67,17 +75,65 @@ body {
   font-size: 13px;
 }
 
+.subheading {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  color: #64748b;
+}
 
+.evidence-list {
+  padding-left: 18px;
+  font-size: 13px;
+}
 
+.upload-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
 
-.phases {
+/* BUTTONS */
+button.primary {
+  width: 100%;
+  padding: 12px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button.secondary {
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid var(--border-soft);
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+/* D1–D8 SCROLLABLE AREA */
+.phases-container {
+  display: flex;
+  flex-direction: column;
+  height: 520px; /* matches PPT proportions */
+}
+
+.phases-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding-right: 8px;
+
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(220px, 1fr));
   gap: 12px;
 }
 
+/* PHASE CARDS */
 .phase {
-  background: #ffffff;
+  background: white;
   border-radius: 10px;
   padding: 12px;
   display: flex;
@@ -92,7 +148,6 @@ body {
 }
 
 .phase textarea {
-  width: 100%;
   flex: 1;
   resize: none;
   font-size: 13px;
@@ -107,23 +162,7 @@ body {
 .d4 { border-color: var(--accent-d4); }
 .d5 { border-color: var(--accent-d5); }
 
-.phases-container {
-  display: flex;
-  flex-direction: column;
-  height: 520px;   /* PPT-like proportion */
-}
-.phases-scroll {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  padding-right: 8px; /* space for scrollbar */
-  
-  display: grid;
-  grid-template-columns: repeat(5, minmax(220px, 1fr));
-  gap: 12px;
-}
-
-
-/* AI */
+/* AI OUTPUT */
 .ai-output h3 {
   margin-top: 0;
   font-size: 15px;
@@ -134,63 +173,9 @@ body {
   font-size: 14px;
 }
 
-/* BUTTON */
-button.primary {
-  margin-top: 16px;
-  width: 100%;
-  padding: 12px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-}
-/* LEFT COLUMN STACK */
-.left-column {
+/* RUN AI PANEL */
+.run-ai-panel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-
-
-
-.evidence-panel {
-  margin-top: 0;
-}
-
-
-/* RIGHT COLUMN LAYOUT CONTROL */
-.right-column {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* Make phases area dominate */
-.phases {
-  flex: 1 1 auto;
-}
-
-/* Keep AI output compact */
-.ai-output {
-  flex: 0 0 auto;
-}
-.ai-output {
-  padding: 12px 16px;
-  font-size: 13px;
-}
-
-.workspace {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-}
-
-.row {
-  display: grid;
-  grid-template-columns: 28% 72%;
-  gap: 16px;
+  justify-content: center;
 }
