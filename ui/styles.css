@@ -155,13 +155,16 @@ button.primary {
 
 .phases-scroll {
   flex: 1;
-  overflow-y: auto;
-  padding-right: 8px;
+  overflow-x: auto;   /* 🔑 horizontal scroll */
+  overflow-y: hidden; /* 🔑 prevent vertical wrap */
+  padding-bottom: 8px;
 
   display: grid;
-  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  grid-auto-flow: column; /* 🔑 force single row */
+  grid-auto-columns: minmax(220px, 1fr);
   gap: 12px;
 }
+
 
 /* ================= PHASE CARDS ================= */
 .phase {
@@ -219,11 +222,13 @@ button.primary {
 
 .phase label {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   margin: 8px 0 4px;
   display: block;
   color: #475569;
 }
+
 
 .phase input {
   width: 100%;
@@ -240,31 +245,24 @@ button.primary {
 
 /* Two clean columns with comfortable spacing */
 .form-grid {
+  display: grid;                 /* 🔑 REQUIRED */
   grid-template-columns: 1fr 1fr;
   gap: 12px 16px;
 }
+
 
 /* Allow selected fields to span full width */
 .form-grid .full-width {
   grid-column: 1 / -1;
 }
 
-/* Team members textarea styling */
-.phase textarea {
-  font-family: inherit;
-  line-height: 1.4;
-}
+
 
 .form-grid textarea {
   min-height: 72px;
 }
 
-/* Improve visual hierarchy */
-.phase label {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
+
 
 
 /* ================= D1–D2 WIDE INITIATION BLOCK ================= */
