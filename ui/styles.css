@@ -345,3 +345,7 @@ button.primary {
 .phase-wide {
   flex: 0 0 640px;   /* wider, still horizontal */
 }
+.phase-content {
+  flex: 1;
+  overflow-y: auto;
+}
