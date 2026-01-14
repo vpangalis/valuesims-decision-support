@@ -82,7 +82,7 @@ body {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  min-height: 260px;
+  min-height: 420px;
   border-top: 5px solid;
 }
 
@@ -145,3 +145,23 @@ button.primary {
 }
 
 
+/* RIGHT COLUMN LAYOUT CONTROL */
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Make phases area dominate */
+.phases {
+  flex: 1 1 auto;
+}
+
+/* Keep AI output compact */
+.ai-output {
+  flex: 0 0 auto;
+}
+.ai-output {
+  padding: 12px 16px;
+  font-size: 13px;
+}
