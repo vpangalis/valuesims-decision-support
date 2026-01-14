@@ -161,20 +161,10 @@ button.primary {
 
 .phases-scroll {
   
-  display: flex; 
-  /* 🔑 single row */
-  flex-direction: row;
-  flex-wrap: nowrap;
-  /* 🔑 NO wrapping */
-  gap: 12px;
-
-  overflow-x: auto;
-  /* 🔑 horizontal scroll */
-  overflow-y: hidden;
+  display: block; 
   padding-bottom: 8px;
- 
-
-}
+  overflow :visible;
+ }
 
 
 /* ================= PHASE CARDS ================= */
@@ -184,10 +174,11 @@ button.primary {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  min-height: 420px;
+  min-height: auto;
   border-top: 5px solid;
-  flex: 0 0 220px;
+  flex: none;
   /* 🔑 fixed column width */
+  max-width:none;
 
 }
 
@@ -298,14 +289,6 @@ button.primary {
 
 /* ================= D1–D2 WIDE INITIATION BLOCK ================= */
 
-.d12 {
-  flex: 0 0 640px;
-  max-width: 640px;
-
-  max-height: 70vh;        /* 🔑 prevents row explosion */
-  overflow-y: auto;        /* 🔑 scroll long forms */
-  overflow-x: hidden;
-}
 
 
 
