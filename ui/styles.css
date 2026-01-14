@@ -349,9 +349,11 @@ button.primary {
 
 .bottom-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 320px 1fr;  /* 🔑 SAME AS TOP ROW */
   gap: 16px;
+  align-items: stretch;
 }
+
 
 .phase-wide {
   flex: 0 0 640px;   /* wider, still horizontal */
