@@ -271,8 +271,9 @@ button.primary {
   letter-spacing: 0.02em;
 }
 
-/* ================= D1–D2 WIDER INITIATION BLOCK ================= */
+
+/* ================= D1–D2 WIDE INITIATION BLOCK ================= */
 
 .d12 {
-  grid-column: span 2;
+  grid-column: span 4;
 }
