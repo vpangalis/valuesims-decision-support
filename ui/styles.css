@@ -210,3 +210,34 @@ button.primary {
   padding-left: 18px;
   font-size: 14px;
 }
+
+
+/* ================= D1–D2 FORM STRUCTURE ================= */
+
+.phase label {
+  font-size: 12px;
+  font-weight: 500;
+  margin: 8px 0 4px;
+  display: block;
+  color: #475569;
+}
+
+.phase input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid var(--border-soft);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+
+/* Slightly taller D1–D2 card for readability */
+.d12 {
+  min-height: 520px;
+}
