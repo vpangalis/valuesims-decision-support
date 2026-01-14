@@ -65,20 +65,71 @@
   <div class="phases-scroll">
 
     <!-- D1–D2 (WIDE CARD) -->
-    <div class="phase d1 phase-wide">
-      <h3>Problem Initiation (D1–D2)</h3>
-      <div class ="phase-content">
-      <label for="problem_description">Problem Description</label>
-      <textarea id="problem_description"
-        name="phases.D1_D2.data.problem_description"
-        placeholder="Describe what happened (WHAT). Do not analyze causes here.">
-      </textarea>
+ <div class="phase d1 phase-wide">
+  <h3>Problem Initiation (D1–D2)</h3>
 
-      <div class="form-grid">
-        <!-- unchanged form content -->
+  <div class="phase-content">
+
+    <label for="problem_description">Problem Description</label>
+    <textarea id="problem_description"
+      name="phases.D1_D2.data.problem_description"
+      placeholder="Describe what happened (WHAT). Do not analyze causes here.">
+    </textarea>
+
+    <div class="form-grid">
+
+      <div>
+        <label for="country">Country</label>
+        <input id="country" type="text"
+          name="phases.D1_D2.data.organization.country"
+          placeholder="e.g. Austria">
       </div>
+
+      <div>
+        <label for="site">Site / Plant</label>
+        <input id="site" type="text"
+          name="phases.D1_D2.data.organization.site"
+          placeholder="e.g. Vienna – Plant 1">
       </div>
+
+      <div class="full-width">
+        <label for="department">Department</label>
+        <input id="department" type="text"
+          name="phases.D1_D2.data.organization.department"
+          placeholder="e.g. Production / Quality">
+      </div>
+
+      <div class="full-width">
+        <label for="team_members">Team Members</label>
+        <textarea id="team_members"
+          name="phases.D1_D2.data.team_members"
+          placeholder="One person per line: Name – Role – Function">
+        </textarea>
+      </div>
+
+      <div>
+        <label for="case_number">Case Number</label>
+        <input id="case_number" type="text"
+          name="case.case_number"
+          placeholder="e.g. INC-2026-001">
+      </div>
+
+      <div>
+        <label for="opening_date">Opening Date</label>
+        <input id="opening_date" type="date"
+          name="case.opening_date">
+      </div>
+
+      <div>
+        <label for="closure_date">Closure Date</label>
+        <input id="closure_date" type="date"
+          name="case.closure_date">
+      </div>
+
     </div>
+  </div>
+</div>
+
 
     <!-- D3 -->
     <div class="phase d3">
