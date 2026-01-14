@@ -150,8 +150,10 @@ button.primary {
 .phases-container {
   display: flex;
   flex-direction: column;
+  height : 520px;
   width: 100%;
   min-width: 0;
+
   /* 🔑 CRITICAL */
 }
 
@@ -167,8 +169,7 @@ button.primary {
   overflow-x: auto;
   /* 🔑 horizontal scroll */
   overflow-y: hidden;
-  padding-bottom: 8px;
-  scroll-padding-left : 16px;
+
 }
 
 
