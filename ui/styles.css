@@ -270,3 +270,9 @@ button.primary {
   font-weight: 600;
   letter-spacing: 0.02em;
 }
+
+/* ================= D1–D2 WIDER INITIATION BLOCK ================= */
+
+.d12 {
+  grid-column: span 2;
+}
