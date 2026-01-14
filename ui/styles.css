@@ -107,6 +107,22 @@ body {
 .d4 { border-color: var(--accent-d4); }
 .d5 { border-color: var(--accent-d5); }
 
+.phases-container {
+  display: flex;
+  flex-direction: column;
+  height: 520px;   /* PPT-like proportion */
+}
+.phases-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding-right: 8px; /* space for scrollbar */
+  
+  display: grid;
+  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+
 /* AI */
 .ai-output h3 {
   margin-top: 0;
@@ -164,4 +180,17 @@ button.primary {
 .ai-output {
   padding: 12px 16px;
   font-size: 13px;
+}
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 28% 72%;
+  gap: 16px;
 }
