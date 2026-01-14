@@ -148,7 +148,6 @@ button.primary {
 .phases-container {
   display: flex;
   flex-direction: column;
-  height: 520px;
   width: 100%;
   min-width: 0; /* 🔑 CRITICAL */
 }
