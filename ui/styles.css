@@ -332,19 +332,12 @@ button.primary {
 #department {
   width: 100%;
 }
-
-
-
 .row {
   display: grid;
   grid-template-columns: 28% 72%;
-  gap: 16px;          /* left–right spacing */
-  margin-bottom: 16px; /* 🔑 top–bottom spacing */
-}
-.top-row {
-  align-items: flex-start;
+  gap: 16px;
+
+  align-items: start;   /* 🔑 THIS IS THE FIX */
 }
 
-.bottom-row {
-  align-items: stretch;
-}
+
