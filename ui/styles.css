@@ -43,22 +43,17 @@ body {
   flex-direction: column;
   gap: 16px;
   padding: 16px;
-  height: calc(100vh - 72px); /* header height */
-  overflow: hidden;          /* 🔑 critical */
+ 
 }
+
 html, body {
-  height: 100%;
-  overflow: hidden;   /* 🔑 prevent page scroll */
+  height: auto;
+  overflow-y: auto;
 }
 
 
-.row {
-  display: grid;
-  grid-template-columns: 28% 72%;
-  gap: 16px;
-  align-items: stretch;
-  /* 🔑 IMPORTANT */
-}
+
+
 
 /* ================= PANELS ================= */
 .panel {
@@ -160,12 +155,13 @@ button.primary {
   width: 100%;
   min-width: 0;
 
+
   /* 🔑 CRITICAL */
 }
 
 .phases-scroll {
   
-  display: flex;
+  display: flex; 
   /* 🔑 single row */
   flex-direction: row;
   flex-wrap: nowrap;
@@ -175,6 +171,7 @@ button.primary {
   overflow-x: auto;
   /* 🔑 horizontal scroll */
   overflow-y: hidden;
+  padding-bottom: 8px;
  
 
 }
@@ -302,10 +299,14 @@ button.primary {
 /* ================= D1–D2 WIDE INITIATION BLOCK ================= */
 
 .d12 {
-  flex: 0 0 640px;        /* ✅ business-friendly fixed width */
-  max-width: 640px;      /* ✅ never exceed this */
-  overflow-y: visible;      /* ✅ internal scroll for long forms */
+  flex: 0 0 640px;
+  max-width: 640px;
+
+  max-height: 70vh;        /* 🔑 prevents row explosion */
+  overflow-y: auto;        /* 🔑 scroll long forms */
+  overflow-x: hidden;
 }
+
 
 
 
