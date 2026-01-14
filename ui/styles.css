@@ -43,7 +43,14 @@ body {
   flex-direction: column;
   gap: 16px;
   padding: 16px;
+  height: calc(100vh - 72px); /* header height */
+  overflow: hidden;          /* 🔑 critical */
 }
+html, body {
+  height: 100%;
+  overflow: hidden;   /* 🔑 prevent page scroll */
+}
+
 
 .row {
   display: grid;
@@ -150,7 +157,6 @@ button.primary {
 .phases-container {
   display: flex;
   flex-direction: column;
-  height : 520px;
   width: 100%;
   min-width: 0;
 
@@ -168,7 +174,8 @@ button.primary {
 
   overflow-x: auto;
   /* 🔑 horizontal scroll */
-  overflow-y: hidden;
+  overflow-y: auto;
+  min-height: 0;
 
 }
 
@@ -324,4 +331,13 @@ button.primary {
 #site,
 #department {
   width: 100%;
+}
+
+.top-row {
+  flex: 1;
+  min-height: 0;   /* 🔑 required for nested scrolling */
+}
+
+.bottom-row {
+  flex: 0 0 auto;
 }
