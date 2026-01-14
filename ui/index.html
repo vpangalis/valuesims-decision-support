@@ -70,43 +70,86 @@
   <h3>Problem Initiation (D1–D2)</h3>
   
   <label>Problem Description</label>
-  <textarea placeholder="Describe the problem ..."></textarea>
+  <textarea
+  name="phases.D1_D2.data.problem_description"
+  id="problem_description"
+  placeholder="Describe the problem.">
+  </textarea>
+
   
   <div class="form-grid">
     <div>
       <label>Case Number</label>
-      <input type="text" placeholder="Enter case number (e.g. INC-2026-001)">
+
+      <input
+        type="text"
+        name="case.case_number"
+        id="case_number"
+        placeholder="Enter case number (e.g. INC-2026-001)">
+
   
     </div>
   
     <div>
       <label>Opening Date</label>
-      <input type="date" value="2026-01-14" readonly>
+    
+      <input
+         type="date"
+         name="case.opening_date"
+         id="opening_date"
+         readonly>
+
     </div>
   
     <div>
       <label>Closure Date</label>
-      <input type="date" disabled>
+      
+      <input
+        type="date"
+        name="case.closure_date"
+        id="closure_date"
+        disabled>
+
     </div>
   
     <div class="full-width">
        <label>Team Members</label>
-        <textarea placeholder="Owner, contributors, functions involved"></textarea>
+        <textarea
+          name="phases.D1_D2.data.team_members"
+          id="team_members"
+          placeholder="One person per line (name – role)">
+        </textarea>
+
      </div>
   
     <div>
       <label>Country</label>
-      <input type="text" placeholder="e.g. Austria">
+      <input
+         type="text"
+         name="phases.D1_D2.data.organization.country"
+         id="country"
+         placeholder="e.g. Austria">
+
     </div>
   
     <div>
       <label>Site / Plant</label>
-      <input type="text" placeholder="e.g. Vienna">
+      <input
+        type="text"
+        name="phases.D1_D2.data.organization.site"
+        id="site"
+        placeholder="e.g. Vienna">
+
     </div>
   
     <div>
       <label>Department</label>
-      <input type="text" placeholder="e.g. Production">
+      <input
+        type="text"
+        name="phases.D1_D2.data.organization.department"
+        id="department"
+        placeholder="e.g. Production">
+
     </div>
   </div>
   </div>
@@ -114,22 +157,38 @@
 
         <div class="phase d2">
           <h3>D2 – Containment</h3>
-          <textarea placeholder="Immediate actions and temporary measures..."></textarea>
+          <textarea
+             name="phases.D4.data.notes"
+             placeholder="Immediate actions and temporary measures...">
+          </textarea>
+
         </div>
 
         <div class="phase d3">
           <h3>D3 – Analysis</h3>
-          <textarea placeholder="Hypotheses, 5-Why analysis, evidence links..."></textarea>
+          <textarea
+            name="phases.D3.data.notes"
+            placeholder="Hypotheses, 5-Why analysis, evidence links...">
+          </textarea>
+
         </div>
 
         <div class="phase d4">
           <h3>D4 – Corrective Actions</h3>
-          <textarea placeholder="Corrective actions, owners, due dates..."></textarea>
+          <textarea
+            name="phases.D6.data.notes"
+            placeholder="Corrective actions, owners, due dates...">
+          </textarea>
+
         </div>
 
         <div class="phase d5">
           <h3>D5 – Validation</h3>
-          <textarea placeholder="Validation method, KPIs, results..."></textarea>
+          <textarea
+           name="phases.D5.data.notes"
+           placeholder="Validation method, KPIs, results...">
+          </textarea>
+
         </div>
 
       </div>
