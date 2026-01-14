@@ -14,11 +14,12 @@
 
 <main class="layout">
 
-  <!-- LEFT COLUMN -->
+  <!-- LEFT COLUMN: INCIDENT CONTEXT + EVIDENCE -->
   <section class="left-column">
 
     <div class="panel context-panel">
       <h2>Incident Context</h2>
+
       <div class="context-grid">
         <div><strong>Case ID:</strong> INC-2026-001</div>
         <div><strong>Status:</strong> Open</div>
@@ -27,16 +28,17 @@
         <div><strong>Severity:</strong> High</div>
         <div><strong>Owner:</strong> Team A</div>
       </div>
-    </div>
 
-    <div class="panel evidence-panel">
-      <h2>Evidence</h2>
-      <ul>
+      <h3 class="subheading">Evidence</h3>
+      <ul class="evidence-list">
         <li>incident_photo_01.jpg</li>
         <li>inspection_report.pdf</li>
       </ul>
 
-      <button class="primary">Run AI Analysis</button>
+      <div class="upload-actions">
+        <button class="secondary">Upload Photo</button>
+        <button class="secondary">Upload Document</button>
+      </div>
     </div>
 
   </section>
@@ -44,38 +46,68 @@
   <!-- RIGHT COLUMN -->
   <section class="right-column">
 
+    <!-- PHASE WORK AREA (DOMINANT) -->
     <div class="phases">
+
       <div class="phase d1">
         <h3>D1 – Problem Definition</h3>
         <textarea placeholder="Describe the problem, impact, and scope..."></textarea>
       </div>
+
       <div class="phase d2">
         <h3>D2 – Containment</h3>
         <textarea placeholder="Immediate actions and temporary measures..."></textarea>
       </div>
+
       <div class="phase d3">
         <h3>D3 – Analysis</h3>
         <textarea placeholder="Hypotheses, 5-Why analysis, evidence links..."></textarea>
       </div>
+
       <div class="phase d4">
         <h3>D4 – Corrective Actions</h3>
         <textarea placeholder="Corrective actions, owners, due dates..."></textarea>
       </div>
+
       <div class="phase d5">
         <h3>D5 – Validation</h3>
         <textarea placeholder="Validation method, KPIs, results..."></textarea>
       </div>
+
     </div>
 
-    <div class="panel ai-output">
-      <h3>AI-Assisted Insights</h3>
-      <p><strong>Hypothesis:</strong> Process parameter drift caused by delayed maintenance activity.</p>
-      <p><strong>Confidence:</strong> 0.72 (based on similar incidents)</p>
-      <ul>
-        <li>Recalibrate monitoring thresholds</li>
-        <li>Reduce maintenance interval</li>
-        <li>Introduce early warning alerts</li>
-      </ul>
+    <!-- ACTION + AI INSIGHTS ROW -->
+    <div class="bottom-row">
+
+      <div class="panel run-ai-panel">
+        <h3>Run Analysis</h3>
+        <p>
+          Trigger AI-assisted reasoning based on the current incident data,
+          evidence, and phase inputs.
+        </p>
+        <button class="primary">Run AI Analysis</button>
+      </div>
+
+      <div class="panel ai-output">
+        <h3>AI-Assisted Insights</h3>
+
+        <p>
+          <strong>Hypothesis:</strong>
+          Process parameter drift caused by delayed maintenance activity.
+        </p>
+
+        <p>
+          <strong>Confidence:</strong>
+          0.72 (based on similar incidents)
+        </p>
+
+        <ul>
+          <li>Recalibrate monitoring thresholds</li>
+          <li>Reduce maintenance interval</li>
+          <li>Introduce early warning alerts</li>
+        </ul>
+      </div>
+
     </div>
 
   </section>
