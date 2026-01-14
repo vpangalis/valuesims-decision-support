@@ -155,14 +155,14 @@ button.primary {
 
 .phases-scroll {
   flex: 1;
-  overflow-x: auto;   /* 🔑 horizontal scroll */
-  overflow-y: hidden; /* 🔑 prevent vertical wrap */
-  padding-bottom: 8px;
-
-  display: grid;
-  grid-auto-flow: column; /* 🔑 force single row */
-  grid-auto-columns: minmax(220px, 1fr);
+  display: flex;              /* 🔑 single row */
+  flex-direction: row;
+  flex-wrap: nowrap;          /* 🔑 NO wrapping */
   gap: 12px;
+
+  overflow-x: auto;           /* 🔑 horizontal scroll */
+  overflow-y: hidden;
+  padding-bottom: 8px;
 }
 
 
@@ -175,6 +175,8 @@ button.primary {
   flex-direction: column;
   min-height: 420px;
   border-top: 5px solid;
+  flex: 0 0 220px;             /* 🔑 fixed column width */
+
 }
 
 .phase h3 {
@@ -268,9 +270,10 @@ button.primary {
 /* ================= D1–D2 WIDE INITIATION BLOCK ================= */
 
 .d12 {
-  grid-column: span 4;
+  flex: 0 0 calc(220px * 4 + 12px * 3); /* span 4 columns + gaps */
   min-height: 520px;
 }
+
 
 /* ================= JSON-ALIGNED FIELD STYLING ================= */
 
