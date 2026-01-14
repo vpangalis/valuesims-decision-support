@@ -39,11 +39,22 @@
         <li>inspection_report.pdf</li>
       </ul>
 
-      <div class="upload-actions">
-        <button class="secondary">Upload Photo</button>
-        <button class="secondary">Upload Document</button>
-      </div>
-    </div>
+<div class="upload-actions">
+
+  <!-- Upload Photo -->
+  <label class="secondary file-button">
+    Upload Photo
+    <input type="file" accept="image/*" hidden>
+  </label>
+
+  <!-- Upload Document -->
+  <label class="secondary file-button">
+    Upload Document
+    <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx" hidden>
+  </label>
+
+</div>
+
 
     <!-- D1–D8 MAIN WORK AREA (RIGHT) -->
     <div class="panel phases-container">
