@@ -16,7 +16,10 @@
 <main class="layout">
 
   <!-- LEFT: INCIDENT CONTEXT -->
-  <section class="panel">
+  <section class="left-column">
+
+  <!-- TOP: INCIDENT CONTEXT -->
+  <div class="panel">
     <h2>Incident Context</h2>
     <div class="context-grid">
       <div><strong>Case ID:</strong> INC-2026-001</div>
@@ -26,17 +29,20 @@
       <div><strong>Severity:</strong> High</div>
       <div><strong>Owner:</strong> Team A</div>
     </div>
+  </div>
 
-    <div class="evidence">
-      <h2>Evidence</h2>
-      <ul>
-        <li>incident_photo_01.jpg</li>
-        <li>inspection_report.pdf</li>
-      </ul>
-    </div>
+  <!-- BOTTOM: EVIDENCE & ACTION -->
+  <div class="panel">
+    <h2>Evidence</h2>
+    <ul>
+      <li>incident_photo_01.jpg</li>
+      <li>inspection_report.pdf</li>
+    </ul>
 
     <button class="primary">Run AI Analysis</button>
-  </section>
+  </div>
+
+</section>
 
   <!-- RIGHT: PHASES + AI -->
   <section class="right-column">
