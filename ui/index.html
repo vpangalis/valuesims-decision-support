@@ -1,139 +1,80 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ValueSims – QRQC Pantheon</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="stylesheet" href="styles.css"/>
+  <title>AI-Assisted Decision Support – Collaborative Intelligence Workspace</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
 
 <header class="topbar">
   <h1>AI-Assisted Decision Support</h1>
-  <p>QRQC – Collaborative Intelligence Wall</p>
+  <p>Collaborative Intelligence Workspace</p>
 </header>
 
-<main class="grid">
+<main class="layout">
 
-  <!-- TOP LEFT : CONTROL & STATE -->
-  <section class="panel control">
-    <h2>QRQC Control & State</h2>
-
-    <div class="state-block">
-      <div><strong>Case ID:</strong> QRQC-2026-001</div>
-      <div><strong>Status:</strong> <span class="badge open">Open</span></div>
-      <div><strong>Phase:</strong> D3 – Root Cause</div>
-      <div><strong>Plant:</strong> AT-Wien-01</div>
+  <!-- LEFT: INCIDENT CONTEXT -->
+  <section class="panel">
+    <h2>Incident Context</h2>
+    <div class="context-grid">
+      <div><strong>Case ID:</strong> INC-2026-001</div>
+      <div><strong>Status:</strong> Open</div>
+      <div><strong>Phase:</strong> Analysis</div>
+      <div><strong>Location:</strong> Vienna</div>
       <div><strong>Severity:</strong> High</div>
-      <div><strong>Owner:</strong> Production Team A</div>
+      <div><strong>Owner:</strong> Team A</div>
     </div>
 
-    <hr/>
-
-    <div class="upload-block">
-      <button>📷 Upload Photos</button>
-      <ul class="file-list">
-        <li>line3_defect_01.jpg</li>
-        <li>line3_defect_02.jpg</li>
-      </ul>
-    </div>
-
-    <div class="upload-block">
-      <button>📄 Upload Documents</button>
-      <ul class="file-list">
+    <div class="evidence">
+      <h2>Evidence</h2>
+      <ul>
+        <li>incident_photo_01.jpg</li>
         <li>inspection_report.pdf</li>
-        <li>maintenance_log.xlsx</li>
       </ul>
     </div>
+
+    <button class="primary">Run AI Analysis</button>
   </section>
 
-  <!-- TOP RIGHT : QRQC STEPS -->
-  <section class="panel qrqc">
-    <h2>QRQC Steps Overview</h2>
+  <!-- RIGHT: PHASES + AI -->
+  <section class="right-column">
 
-    <div class="qrqc-scroll">
-
-      <div class="qrqc-step">
-        <h3>D1 – Problem</h3>
-        <p>Defect rate above threshold on Line 3.</p>
+    <div class="phases">
+      <div class="phase d1">
+        <h3>D1 – Problem Definition</h3>
+        <textarea placeholder="Describe the problem, impact, and scope..."></textarea>
       </div>
-
-      <div class="qrqc-step">
+      <div class="phase d2">
         <h3>D2 – Containment</h3>
-        <p>Line slowed, suspect batches isolated.</p>
+        <textarea placeholder="Immediate actions and temporary measures..."></textarea>
       </div>
-
-      <div class="qrqc-step">
-        <h3>D3 – Root Cause</h3>
-        <p>Hypothesis under analysis.</p>
+      <div class="phase d3">
+        <h3>D3 – Analysis</h3>
+        <textarea placeholder="Hypotheses, 5-Why analysis, evidence links..."></textarea>
       </div>
-
-      <div class="qrqc-step">
-        <h3>D4 – Corrective Action</h3>
-        <p>—</p>
+      <div class="phase d4">
+        <h3>D4 – Corrective Actions</h3>
+        <textarea placeholder="Corrective actions, owners, due dates..."></textarea>
       </div>
-
-      <div class="qrqc-step">
+      <div class="phase d5">
         <h3>D5 – Validation</h3>
-        <p>—</p>
+        <textarea placeholder="Validation method, KPIs, results..."></textarea>
       </div>
-
-      <div class="qrqc-step">
-        <h3>D6 – Standardization</h3>
-        <p>—</p>
-      </div>
-
-      <div class="qrqc-step">
-        <h3>D7 – Prevention</h3>
-        <p>—</p>
-      </div>
-
-      <div class="qrqc-step">
-        <h3>D8 – Closure</h3>
-        <p>—</p>
-      </div>
-
     </div>
-  </section>
 
-  <!-- BOTTOM LEFT : AI CONTROL -->
-  <section class="panel ai-control">
-    <h2>AI Workflow Control</h2>
-
-    <button class="run-ai">▶ Run QRQC Agent</button>
-
-    <div class="workflow-log">
-      <h3>Workflow Messages</h3>
+    <div class="panel ai-output">
+      <h3>AI-Assisted Insights</h3>
+      <p><strong>Hypothesis:</strong> Process parameter drift caused by delayed maintenance activity.</p>
+      <p><strong>Confidence:</strong> 0.72 (based on similar incidents)</p>
       <ul>
-        <li>✔ Evidence indexed</li>
-        <li>⏳ Running 5-Why analysis</li>
-        <li>⏳ Cross-checking similar cases</li>
+        <li>Recalibrate monitoring thresholds</li>
+        <li>Reduce maintenance interval</li>
+        <li>Introduce early warning alerts</li>
       </ul>
     </div>
-  </section>
 
-  <!-- BOTTOM RIGHT : AI REASONING -->
-  <section class="panel ai-output">
-    <h2>AI Reasoning Output</h2>
-
-    <div class="reasoning">
-      <h3>Root Cause Hypotheses</h3>
-      <p>
-        Likely root cause is temperature drift during curing phase
-        caused by delayed maintenance on kiln sensor.
-      </p>
-
-      <h3>Confidence</h3>
-      <p>0.72 (based on 14 similar incidents)</p>
-
-      <h3>Suggested Countermeasures</h3>
-      <ul>
-        <li>Immediate sensor recalibration</li>
-        <li>Preventive maintenance interval reduction</li>
-        <li>SPC alert threshold adjustment</li>
-      </ul>
-    </div>
   </section>
 
 </main>
