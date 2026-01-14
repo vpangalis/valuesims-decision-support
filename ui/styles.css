@@ -49,7 +49,8 @@ body {
   display: grid;
   grid-template-columns: 28% 72%;
   gap: 16px;
-  align-items: stretch; /* 🔑 IMPORTANT */
+  align-items: stretch;
+  /* 🔑 IMPORTANT */
 }
 
 /* ================= PANELS ================= */
@@ -59,7 +60,8 @@ body {
   border-radius: 10px;
   padding: 16px;
   width: 100%;
-  min-width: 0; /* 🔑 IMPORTANT for grid */
+  min-width: 0;
+  /* 🔑 IMPORTANT for grid */
 }
 
 .panel h2 {
@@ -149,17 +151,21 @@ button.primary {
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-width: 0; /* 🔑 CRITICAL */
+  min-width: 0;
+  /* 🔑 CRITICAL */
 }
 
 .phases-scroll {
   flex: 1;
-  display: flex;              /* 🔑 single row */
+  display: flex;
+  /* 🔑 single row */
   flex-direction: row;
-  flex-wrap: nowrap;          /* 🔑 NO wrapping */
+  flex-wrap: nowrap;
+  /* 🔑 NO wrapping */
   gap: 12px;
 
-  overflow-x: auto;           /* 🔑 horizontal scroll */
+  overflow-x: auto;
+  /* 🔑 horizontal scroll */
   overflow-y: hidden;
   padding-bottom: 8px;
 }
@@ -174,7 +180,8 @@ button.primary {
   flex-direction: column;
   min-height: 420px;
   border-top: 5px solid;
-  flex: 0 0 220px;             /* 🔑 fixed column width */
+  flex: 0 0 220px;
+  /* 🔑 fixed column width */
 
 }
 
@@ -184,7 +191,7 @@ button.primary {
 }
 
 .phase textarea {
-  
+
   resize: none;
   font-size: 13px;
   padding: 8px;
@@ -195,11 +202,25 @@ button.primary {
 }
 
 
-.d1 { border-color: var(--accent-d1); }
-.d2 { border-color: var(--accent-d2); }
-.d3 { border-color: var(--accent-d3); }
-.d4 { border-color: var(--accent-d4); }
-.d5 { border-color: var(--accent-d5); }
+.d1 {
+  border-color: var(--accent-d1);
+}
+
+.d2 {
+  border-color: var(--accent-d2);
+}
+
+.d3 {
+  border-color: var(--accent-d3);
+}
+
+.d4 {
+  border-color: var(--accent-d4);
+}
+
+.d5 {
+  border-color: var(--accent-d5);
+}
 
 /* ================= AI + RUN ANALYSIS ================= */
 .run-ai-panel {
@@ -246,7 +267,8 @@ button.primary {
 
 /* Two clean columns with comfortable spacing */
 .form-grid {
-  display: grid;                 /* 🔑 REQUIRED */
+  display: grid;
+  /* 🔑 REQUIRED */
   grid-template-columns: 1fr 1fr;
   gap: 12px 16px;
 }
@@ -269,8 +291,9 @@ button.primary {
 /* ================= D1–D2 WIDE INITIATION BLOCK ================= */
 
 .d12 {
-  flex: 0 0 calc(220px * 4 + 12px * 3); /* span 4 columns + gaps */
-  min-height: 520px;
+  flex: 0 0 calc(220px * 4 + 12px * 3);
+  /* span 4 columns + gaps */
+  
   overflow-y: auto;
 }
 
@@ -279,7 +302,7 @@ button.primary {
 
 #problem_description {
   min-height: 120px;
-  max-height: 180px;
+  max-height: 160px;
 }
 
 #team_members {
