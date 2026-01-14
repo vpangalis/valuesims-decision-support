@@ -164,7 +164,7 @@ button.primary {
 }
 
 .phases-scroll {
-  flex: 1;
+  
   display: flex;
   /* 🔑 single row */
   flex-direction: row;
@@ -174,8 +174,8 @@ button.primary {
 
   overflow-x: auto;
   /* 🔑 horizontal scroll */
-  overflow-y: auto;
-  min-height: 0;
+  overflow-y: hidden;
+ 
 
 }
 
