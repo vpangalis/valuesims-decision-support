@@ -1,10 +1,8 @@
-<!-- local dev setup complete -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ValueSims – AI-Assisted Decision Support</title>
+  <title>ValueSims – QRQC Pantheon</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" href="styles.css"/>
 </head>
@@ -13,183 +11,132 @@
 
 <header class="topbar">
   <h1>AI-Assisted Decision Support</h1>
-  <p>Structured problem & incident resolution</p>
+  <p>QRQC – Collaborative Intelligence Wall</p>
 </header>
 
-<div class="layout">
+<main class="grid">
 
-<div class="left-panel">
+  <!-- TOP LEFT : CONTROL & STATE -->
+  <section class="panel control">
+    <h2>QRQC Control & State</h2>
 
-<section class="section open" data-section="case_information">
-  <div class="section-header" onclick="toggleSection(this)">
-    <span class="step">1</span><h2>Case Information</h2>
-  </div>
+    <div class="state-block">
+      <div><strong>Case ID:</strong> QRQC-2026-001</div>
+      <div><strong>Status:</strong> <span class="badge open">Open</span></div>
+      <div><strong>Phase:</strong> D3 – Root Cause</div>
+      <div><strong>Plant:</strong> AT-Wien-01</div>
+      <div><strong>Severity:</strong> High</div>
+      <div><strong>Owner:</strong> Production Team A</div>
+    </div>
 
-  <div class="section-body">
+    <hr/>
 
-    <div class="case-grid">
+    <div class="upload-block">
+      <button>📷 Upload Photos</button>
+      <ul class="file-list">
+        <li>line3_defect_01.jpg</li>
+        <li>line3_defect_02.jpg</li>
+      </ul>
+    </div>
 
-      <div>
-        <label>Case Number</label>
-        <input data-field="case_id" oninput="updateState()"/>
+    <div class="upload-block">
+      <button>📄 Upload Documents</button>
+      <ul class="file-list">
+        <li>inspection_report.pdf</li>
+        <li>maintenance_log.xlsx</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- TOP RIGHT : QRQC STEPS -->
+  <section class="panel qrqc">
+    <h2>QRQC Steps Overview</h2>
+
+    <div class="qrqc-scroll">
+
+      <div class="qrqc-step">
+        <h3>D1 – Problem</h3>
+        <p>Defect rate above threshold on Line 3.</p>
       </div>
 
-      <div>
-        <label>Date</label>
-        <input type="date" data-field="date" oninput="updateState()"/>
+      <div class="qrqc-step">
+        <h3>D2 – Containment</h3>
+        <p>Line slowed, suspect batches isolated.</p>
       </div>
 
-      <div>
-        <label>Problem Title</label>
-        <input data-field="problem_title" oninput="updateState()"/>
+      <div class="qrqc-step">
+        <h3>D3 – Root Cause</h3>
+        <p>Hypothesis under analysis.</p>
       </div>
 
-      <div>
-        <label>Team Members</label>
-        <input data-field="team_members" oninput="updateState()"/>
+      <div class="qrqc-step">
+        <h3>D4 – Corrective Action</h3>
+        <p>—</p>
+      </div>
+
+      <div class="qrqc-step">
+        <h3>D5 – Validation</h3>
+        <p>—</p>
+      </div>
+
+      <div class="qrqc-step">
+        <h3>D6 – Standardization</h3>
+        <p>—</p>
+      </div>
+
+      <div class="qrqc-step">
+        <h3>D7 – Prevention</h3>
+        <p>—</p>
+      </div>
+
+      <div class="qrqc-step">
+        <h3>D8 – Closure</h3>
+        <p>—</p>
       </div>
 
     </div>
+  </section>
 
-  </div>
-</section>
+  <!-- BOTTOM LEFT : AI CONTROL -->
+  <section class="panel ai-control">
+    <h2>AI Workflow Control</h2>
 
-<section class="section" data-section="incident">
-  <div class="section-header" onclick="toggleSection(this)">
-    <span class="step">2</span><h2>Incident / Problem Description (5W2H)</h2>
-  </div>
+    <button class="run-ai">▶ Run QRQC Agent</button>
 
-  <div class="section-body">
-
-    <div class="incident-grid">
-
-      <div class="full">
-        <label>What happened?</label>
-        <textarea data-field="what" oninput="updateState()"></textarea>
-      </div>
-
-      <div class="full">
-        <label>Why is it a problem?</label>
-        <textarea data-field="why_problem" oninput="updateState()"></textarea>
-      </div>
-
-      <div>
-        <label>When?</label>
-        <input data-field="when" oninput="updateState()"/>
-      </div>
-
-      <div>
-        <label>Where?</label>
-        <input data-field="where" oninput="updateState()"/>
-      </div>
-
-      <div>
-        <label>Who identified?</label>
-        <input data-field="who" oninput="updateState()"/>
-      </div>
-
-      <div>
-        <label>How identified?</label>
-        <textarea data-field="how_identified" oninput="updateState()"></textarea>
-      </div>
-
-      <div class="full">
-        <label>Impact</label>
-        <input data-field="impact" oninput="updateState()"/>
-      </div>
-
+    <div class="workflow-log">
+      <h3>Workflow Messages</h3>
+      <ul>
+        <li>✔ Evidence indexed</li>
+        <li>⏳ Running 5-Why analysis</li>
+        <li>⏳ Cross-checking similar cases</li>
+      </ul>
     </div>
+  </section>
 
-  </div>
-</section>
+  <!-- BOTTOM RIGHT : AI REASONING -->
+  <section class="panel ai-output">
+    <h2>AI Reasoning Output</h2>
 
+    <div class="reasoning">
+      <h3>Root Cause Hypotheses</h3>
+      <p>
+        Likely root cause is temperature drift during curing phase
+        caused by delayed maintenance on kiln sensor.
+      </p>
 
+      <h3>Confidence</h3>
+      <p>0.72 (based on 14 similar incidents)</p>
 
-
-
-<section class="section" data-section="immediate_actions">
-  <div class="section-header" onclick="toggleSection(this)">
-    <span class="step">3</span><h2>Immediate Actions</h2>
-  </div>
-  <div class="section-body">
-    <table id="immediateActions">
-      <thead><tr><th>Action</th><th>Owner</th><th>Due</th></tr></thead>
-      <tbody></tbody>
-    </table>
-    <button onclick="addRow('immediateActions')">+ Add Action</button>
-  </div>
-</section>
-
-<section class="section" data-section="investigation">
-  <div class="section-header" onclick="toggleSection(this)">
-    <span class="step">4</span><h2>Investigation & Analysis</h2>
-  </div>
-
-  <div class="section-body">
-    <div class="tabs">
-      <button class="tab active" onclick="openTab(event,'tab-tasks')">Tasks</button>
-      <button class="tab" onclick="openTab(event,'tab-fishbone')">Fishbone</button>
-      <button class="tab" onclick="openTab(event,'tab-factors')">Factors</button>
-      <button class="tab" onclick="openTab(event,'tab-why')">5 Whys</button>
+      <h3>Suggested Countermeasures</h3>
+      <ul>
+        <li>Immediate sensor recalibration</li>
+        <li>Preventive maintenance interval reduction</li>
+        <li>SPC alert threshold adjustment</li>
+      </ul>
     </div>
+  </section>
 
-    <div class="tab-content active" id="tab-tasks">
-      <table id="investigationTasks">
-        <thead><tr><th>Item</th><th>Owner</th><th>Due</th></tr></thead>
-        <tbody></tbody>
-      </table>
-      <button onclick="addRow('investigationTasks')">+ Add Task</button>
-    </div>
+</main>
 
-    <div class="tab-content" id="tab-fishbone">
-      <div class="fishbone-grid">
-        <div class="fishbone-card"><h4>People</h4><ul id="fish-people"></ul><button onclick="addFishboneCause('fish-people')">+</button></div>
-        <div class="fishbone-card"><h4>Process</h4><ul id="fish-process"></ul><button onclick="addFishboneCause('fish-process')">+</button></div>
-        <div class="fishbone-card"><h4>Product</h4><ul id="fish-product"></ul><button onclick="addFishboneCause('fish-product')">+</button></div>
-        <div class="fishbone-card"><h4>Procedure</h4><ul id="fish-procedure"></ul><button onclick="addFishboneCause('fish-procedure')">+</button></div>
-        <div class="fishbone-card"><h4>Policy</h4><ul id="fish-policy"></ul><button onclick="addFishboneCause('fish-policy')">+</button></div>
-        <div class="fishbone-card"><h4>Place</h4><ul id="fish-place"></ul><button onclick="addFishboneCause('fish-place')">+</button></div>
-      </div>
-    </div>
-
-    <div class="tab-content" id="tab-factors">
-      <table id="factorTable">
-        <thead><tr><th>Factor</th><th>Expected</th><th>Actual</th><th>Relevant</th></tr></thead>
-        <tbody></tbody>
-      </table>
-      <button onclick="addRow('factorTable')">+ Add Factor</button>
-    </div>
-
-    <div class="tab-content" id="tab-why">
-      <div id="fiveWhyContainer"></div>
-      <button onclick="addWhyChain()">+ Add 5-Why Chain</button>
-    </div>
-  </div>
-</section>
-
-<section class="section" data-section="corrective_actions">
-  <div class="section-header" onclick="toggleSection(this)">
-    <span class="step">5</span><h2>Corrective & Preventive Actions</h2>
-  </div>
-  <div class="section-body">
-    <table id="correctiveActions">
-      <thead><tr><th>Action</th><th>Owner</th><th>Due</th><th>Verification</th></tr></thead>
-      <tbody></tbody>
-    </table>
-    <button onclick="addRow('correctiveActions')">+ Add Action</button>
-  </div>
-</section>
-
-</div>
-
-<div class="right-panel">
-  <div id="caseStatus" class="case-status new">Status: New</div>
-  <button onclick="runAI()">Request AI Decision Support</button>
-  <textarea id="jsonPreview" rows="20" readonly></textarea>
-</div>
-
-</div>
-
-<script src="app.js"></script>
 </body>
 </html>

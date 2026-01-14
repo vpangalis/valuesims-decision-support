@@ -1,282 +1,138 @@
-/* =========================
-   Global
-   ========================= */
+* {
+  box-sizing: border-box;
+  font-family: system-ui, sans-serif;
+}
 
 body {
   margin: 0;
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: #f5f7fb;
-  color: #0f172a;
+  background: #f4f6f8;
+  color: #1f2933;
 }
 
-/* =========================
-   Top Bar
-   ========================= */
-
+/* HEADER */
 .topbar {
   background: #0f172a;
-  color: white;
-  padding: 20px;
+  color: #ffffff;
+  padding: 16px 24px;
 }
 
 .topbar h1 {
   margin: 0;
+  font-size: 20px;
 }
 
 .topbar p {
   margin: 4px 0 0;
-  opacity: 0.8;
+  font-size: 13px;
+  opacity: 0.85;
 }
 
-/* =========================
-   Layout
-   ========================= */
-
-.layout {
-  display: flex;
-  gap: 24px;
-  padding: 24px;
-}
-
-.left-panel {
-  flex: 2;
-}
-
-.right-panel {
-  flex: 1;
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  position: sticky;
-  top: 24px;
-}
-
-/* =========================
-   Sections
-   ========================= */
-
-.section {
-  background: white;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  border-left: 8px solid #e5e7eb;
-}
-
-.section.open .section-body {
-  display: block;
-}
-
-.section-body {
-  display: none;
-  padding: 20px;
-}
-
-.section.started {
-  border-left-color: #f59e0b;
-}
-
-.section.completed {
-  border-left-color: #16a34a;
-}
-
-/* =========================
-   Section Header
-   ========================= */
-
-.section-header {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
-  cursor: pointer;
-  align-items: center;
-}
-
-.step {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-
-.section.started .step {
-  background: #f59e0b;
-  color: white;
-}
-
-.section.completed .step {
-  background: #16a34a;
-  color: white;
-}
-
-/* =========================
-   Tabs
-   ========================= */
-
-.tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.tab {
-  padding: 6px 12px;
-  background: #e5e7eb;
-  border-radius: 6px;
-  cursor: pointer;
-  border: none;
-}
-
-.tab.active {
-  background: #2563eb;
-  color: white;
-}
-
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
-  display: block;
-}
-
-/* =========================
-   Tables
-   ========================= */
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 12px;
-}
-
-th,
-td {
-  border: 1px solid #e5e7eb;
-  padding: 8px;
-  text-align: left;
-}
-
-/* =========================
-   Buttons
-   ========================= */
-
-button {
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 14px;
-  cursor: pointer;
-}
-
-button:hover {
-  opacity: 0.9;
-}
-
-/* =========================
-   Case Status
-   ========================= */
-
-.case-status {
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  font-weight: 600;
-}
-
-.case-status.new {
-  background: #f1f5f9;
-}
-
-.case-status.in_progress {
-  background: #fef3c7;
-}
-
-.case-status.ready {
-  background: #dcfce7;
-}
-
-/* =========================
-   Fishbone
-   ========================= */
-
-.fishbone-grid {
+/* GRID LAYOUT */
+.grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-/* =========================
-   Form Grids (Case + Incident)
-   ========================= */
-
-.case-grid,
-.incident-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr 2fr;
+  grid-template-rows: 1fr 1fr;
   gap: 16px;
+  padding: 16px;
+  height: calc(100vh - 80px);
 }
 
-.incident-grid .full {
-  grid-column: span 2;
-}
-
-/* Stack label + field vertically */
-.case-grid > div,
-.incident-grid > div {
+/* PANELS */
+.panel {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
 
-/* Labels */
-.case-grid label,
-.incident-grid label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #334155;
+.panel h2 {
+  margin-top: 0;
+  font-size: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
 }
 
-/* Inputs & textareas */
-.case-grid input,
-.incident-grid input,
-.incident-grid textarea {
+/* CONTROL PANEL */
+.state-block div {
+  margin-bottom: 6px;
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.badge.open {
+  background: #fde68a;
+}
+
+.upload-block {
+  margin-top: 12px;
+}
+
+.upload-block button {
   width: 100%;
-  min-height: 36px;
 }
 
-/* =========================
-   Inputs
-   ========================= */
+.file-list {
+  margin: 6px 0 0;
+  padding-left: 16px;
+  font-size: 13px;
+}
 
-input,
-textarea {
-  border: 1px solid #cbd5e1;
+/* QRQC STEPS */
+.qrqc-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-top: 12px;
+}
+
+.qrqc-step {
+  min-width: 220px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
   border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 0.95rem;
-  font-family: inherit;
+  padding: 12px;
+  flex-shrink: 0;
 }
 
-textarea {
-  resize: vertical;
+/* AI CONTROL */
+.run-ai {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
-input:focus,
-textarea:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+.workflow-log {
+  margin-top: 16px;
+  font-size: 13px;
 }
 
-/* =========================
-   Five Whys
-   ========================= */
+.workflow-log ul {
+  padding-left: 16px;
+}
 
-.why-chain {
-  margin-bottom: 16px;
+/* AI OUTPUT */
+.ai-output {
+  overflow-y: auto;
+}
+
+.reasoning h3 {
+  margin-bottom: 4px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    height: auto;
+  }
 }
