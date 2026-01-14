@@ -168,6 +168,7 @@ button.primary {
   /* 🔑 horizontal scroll */
   overflow-y: hidden;
   padding-bottom: 8px;
+  scroll-padding-left : 16px;
 }
 
 
@@ -290,12 +291,14 @@ button.primary {
 
 /* ================= D1–D2 WIDE INITIATION BLOCK ================= */
 
+/* ================= D1–D2 WIDE INITIATION BLOCK ================= */
+
 .d12 {
-  flex: 0 0 calc(220px * 4 + 12px * 3);
-  /* span 4 columns + gaps */
-  
-  overflow-y: auto;
+  flex: 0 0 640px;        /* ✅ business-friendly fixed width */
+  max-width: 640px;      /* ✅ never exceed this */
+  overflow-y: auto;      /* ✅ internal scroll for long forms */
 }
+
 
 
 /* ================= JSON-ALIGNED FIELD STYLING ================= */
