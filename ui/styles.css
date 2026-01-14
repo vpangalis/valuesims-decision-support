@@ -336,6 +336,8 @@ button.primary {
   grid-template-columns: 320px 1fr;
   gap: 16px;
   align-items: stretch; /* 🔑 same height */
+  max-height: 70vh;
+  overflow:auto;
 }
 
 .bottom-row {
