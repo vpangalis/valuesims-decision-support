@@ -186,7 +186,10 @@ button.primary {
   padding: 8px;
   border-radius: 6px;
   border: 1px solid var(--border-soft);
+  font-family: inherit;
+  line-height: 1.4;
 }
+
 
 .d1 { border-color: var(--accent-d1); }
 .d2 { border-color: var(--accent-d2); }
@@ -230,17 +233,9 @@ button.primary {
   border: 1px solid var(--border-soft);
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px 12px;
-  margin-top: 8px;
-}
 
-/* Slightly taller D1–D2 card for readability */
-.d12 {
-  min-height: 520px;
-}
+
+
 /* ================= BUSINESS FORM REFINEMENT ================= */
 
 /* Two clean columns with comfortable spacing */
@@ -276,4 +271,28 @@ button.primary {
 
 .d12 {
   grid-column: span 4;
+  min-height: 520px;
+}
+
+/* ================= JSON-ALIGNED FIELD STYLING ================= */
+
+#problem_description {
+  min-height: 120px;
+}
+
+#team_members {
+  min-height: 90px;
+  width: 100%;
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+#case_number,
+#opening_date,
+#closure_date,
+#country,
+#site,
+#department {
+  width: 100%;
 }
