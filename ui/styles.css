@@ -180,7 +180,7 @@ button.primary {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  min-height: 420px;
+  min-height: 0;
   border-top: 5px solid;
   flex: 0 0 280px;
   /* 🔑 fixed column width */
@@ -196,7 +196,7 @@ button.primary {
 }
 
 .phase textarea {
-
+  max-height : 160px;
   resize: none;
   font-size: 13px;
   padding: 8px;
@@ -276,6 +276,7 @@ button.primary {
   /* 🔑 REQUIRED */
   grid-template-columns: 1fr 1fr;
   gap: 12px 16px;
+  width:100%
 }
 
 
