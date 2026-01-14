@@ -127,8 +127,15 @@ button.primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  padding: 8px 12px;
+  min-height: 36px;
+  border-radius: 6px;
+  border: 1px solid var(--border-soft);
+  background: #f8fafc;
   cursor: pointer;
+  font-size: 13px;
 }
+
 
 .file-button input[type="file"] {
   position: absolute;
