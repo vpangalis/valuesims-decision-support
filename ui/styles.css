@@ -185,6 +185,7 @@ button.primary {
   /* 🔑 fixed column width */
   max-width:none;
   height :70vh;
+  overflow-y:auto;
 
 }
 
