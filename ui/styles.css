@@ -333,11 +333,18 @@ button.primary {
   width: 100%;
 }
 
+
+
+.row {
+  display: grid;
+  grid-template-columns: 28% 72%;
+  gap: 16px;          /* left–right spacing */
+  margin-bottom: 16px; /* 🔑 top–bottom spacing */
+}
 .top-row {
-  flex: 1;
-  min-height: 0;   /* 🔑 required for nested scrolling */
+  align-items: flex-start;
 }
 
 .bottom-row {
-  flex: 0 0 auto;
+  align-items: stretch;
 }
