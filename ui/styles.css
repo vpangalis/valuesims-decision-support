@@ -43,6 +43,7 @@ body {
   flex-direction: column;
   gap: 16px;
   padding: 16px;
+  min-height: 100vh;
  
 }
 
@@ -336,9 +337,15 @@ button.primary {
   grid-template-columns: 320px 1fr;
   gap: 16px;
   align-items: stretch; /* 🔑 same height */
-  max-height: 70vh;
-  overflow:auto;
+  max-height: 60vh;
+  overflow: hidden;
+  
+  
 }
+.main-row > .panel {
+  overflow-y: auto;    /* scrolling happens INSIDE panels */
+}
+
 
 .bottom-row {
   display: grid;
