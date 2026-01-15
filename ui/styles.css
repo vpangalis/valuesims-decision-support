@@ -82,7 +82,7 @@ th, td { padding: 6px; }
 
 .w-action { width: 60%; }
 .w-owner { width: 25%; }
-.w-date { width: 7.5%; }
+.w-date { width: 5%; }
 
 .fishbone {
   display: grid;
@@ -106,9 +106,9 @@ th, td { padding: 6px; }
 .col-d0 { width: 320px; }
 .col-d12 { width: 420px; }
 .col-d3 { width: 420px; }
-.col-d4, .col-d6 { width: 700px; }
+.col-d4, .col-d6 { width: 900px; }
 .col-d5 { width: 1400px; }
 .col-d78 { width: 360px; }
-.col-ai { width: 1000px; }
+.col-ai { width: 1400px; }
 
 .muted { color: #6b7280; }
