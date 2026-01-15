@@ -9,172 +9,158 @@
 
 <div class="board">
 
-<!-- ================= INCIDENT OVERVIEW ================= -->
-<div class="column column-d0">
-  <div class="column-header">Incident Overview & Evidence</div>
+  <!-- INCIDENT OVERVIEW -->
+  <div class="column column-d0">
+    <div class="column-header">Incident Overview & Evidence</div>
 
-  <div class="column-content">
-    <div class="card">
-      <label>Incident / Case ID</label>
-      <input data-field="case.case_number">
+    <div class="column-content">
+      <div class="card">
+        <label>Incident / Case ID</label>
+        <input data-field="case.case_number">
 
-      <label>Status</label>
-      <input data-field="case.status">
+        <label>Status</label>
+        <input data-field="case.status">
 
-      <label>Opening Date</label>
-      <input type="date" data-field="case.opening_date">
+        <label>Opening Date</label>
+        <input type="date" data-field="case.opening_date">
 
-      <label>Closure Date</label>
-      <input type="date" data-field="case.closure_date" disabled>
-    </div>
-
-    <div class="card">
-      <button data-action="upload-evidence">Upload Evidence</button>
-      <p class="helper-text">
-        Upload photos or relevant documents.  
-        Files are stored securely via FastAPI in Blob Storage.
-      </p>
-    </div>
-
-    <div class="card" data-view="evidence">
-      <p>No evidence uploaded yet.</p>
-    </div>
-  </div>
-
-  <div class="column-description">
-    Use this section to manage general incident information and attach evidence.
-  </div>
-</div>
-
-<!-- ================= PROBLEM INITIATION ================= -->
-<div class="column column-d1d2" data-phase="D1_D2">
-  <div class="column-header">Problem Initiation</div>
-
-  <div class="column-content">
-    <div class="card">
-      <label>Problem Description</label>
-      <textarea data-field="phases.D1_D2.data.problem_description"></textarea>
-    </div>
-
-    <div class="card two-col">
-      <div>
-        <label>Country</label>
-        <input data-field="phases.D1_D2.data.organization.country">
+        <label>Closure Date</label>
+        <input type="date" data-field="case.closure_date" disabled>
       </div>
-      <div>
-        <label>Site / Location</label>
-        <input data-field="phases.D1_D2.data.organization.site">
+
+      <div class="card">
+        <button data-action="upload-evidence">Upload Evidence</button>
+        <p class="helper-text">
+          Upload photos or documents. Files are stored securely via FastAPI.
+        </p>
+      </div>
+
+      <div class="card" data-view="evidence">
+        <p>No evidence uploaded yet.</p>
       </div>
     </div>
 
-    <div class="card">
-      <label>Department / Area</label>
-      <input data-field="phases.D1_D2.data.organization.department">
-    </div>
-
-    <div class="card">
-      <label>Involved People / Teams</label>
-      <textarea data-field="phases.D1_D2.data.team_members"></textarea>
+    <div class="column-description">
+      Manage general incident information and attach all relevant evidence.
     </div>
   </div>
 
-  <div class="column-description">
-    Describe the problem factually and define the context.  
-    The closure date is managed only in the **Prevention & Closure** phase.
-  </div>
-</div>
+  <!-- PROBLEM INITIATION -->
+  <div class="column column-d1d2" data-phase="D1_D2">
+    <div class="column-header">Problem Initiation</div>
 
-<!-- ================= PROBLEM DEFINITION ================= -->
-<div class="column column-d3" data-phase="D3">
-  <div class="column-header">Problem Definition</div>
+    <div class="column-content">
+      <div class="card">
+        <label>Problem Description</label>
+        <textarea data-field="phases.D1_D2.data.problem_description"></textarea>
+      </div>
 
-  <div class="column-content">
-    <div class="card"><label>What happened?</label><textarea data-field="phases.D3.data.what_happened"></textarea></div>
-    <div class="card"><label>Why is this a problem?</label><textarea data-field="phases.D3.data.why_is_it_a_problem"></textarea></div>
-    <div class="card"><label>When did it occur?</label><input data-field="phases.D3.data.when"></div>
-    <div class="card"><label>Who was involved?</label><input data-field="phases.D3.data.who"></div>
-    <div class="card"><label>Where did it occur?</label><input data-field="phases.D3.data.where"></div>
-    <div class="card"><label>How was it identified?</label><textarea data-field="phases.D3.data.how"></textarea></div>
-    <div class="card"><label>How many / how much impact?</label><input data-field="phases.D3.data.how_many_or_how_much"></div>
-  </div>
+      <div class="card two-col">
+        <div>
+          <label>Country</label>
+          <input data-field="phases.D1_D2.data.organization.country">
+        </div>
+        <div>
+          <label>Site / Location</label>
+          <input data-field="phases.D1_D2.data.organization.site">
+        </div>
+      </div>
 
-  <div class="column-description">
-    Build a shared factual understanding of the problem before analysis begins.
-  </div>
-</div>
+      <div class="card">
+        <label>Department / Area</label>
+        <input data-field="phases.D1_D2.data.organization.department">
+      </div>
 
-<!-- ================= IMMEDIATE ACTIONS ================= -->
-<div class="column column-d4" data-phase="D4">
-  <div class="column-header">Immediate Actions</div>
+      <div class="card">
+        <label>Involved People / Teams</label>
+        <textarea data-field="phases.D1_D2.data.team_members"></textarea>
+      </div>
+    </div>
 
-  <div class="column-content">
-    <div class="card">
-      <table>
-        <thead>
-          <tr>
-            <th>Action</th>
-            <th>Responsible</th>
-            <th>Due Date</th>
-            <th>Actual Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- 5 static rows -->
-          <tr>
-            <td><input data-field="phases.D4.data.containment_actions.0.action_description"></td>
-            <td><input data-field="phases.D4.data.containment_actions.0.responsible"></td>
-            <td><input type="date" data-field="phases.D4.data.containment_actions.0.due_date"></td>
-            <td><input type="date" data-field="phases.D4.data.containment_actions.0.action_date"></td>
-          </tr>
-          <tr>
-            <td><input data-field="phases.D4.data.containment_actions.1.action_description"></td>
-            <td><input data-field="phases.D4.data.containment_actions.1.responsible"></td>
-            <td><input type="date" data-field="phases.D4.data.containment_actions.1.due_date"></td>
-            <td><input type="date" data-field="phases.D4.data.containment_actions.1.action_date"></td>
-          </tr>
-          <tr>
-            <td><input data-field="phases.D4.data.containment_actions.2.action_description"></td>
-            <td><input data-field="phases.D4.data.containment_actions.2.responsible"></td>
-            <td><input type="date" data-field="phases.D4.data.containment_actions.2.due_date"></td>
-            <td><input type="date" data-field="phases.D4.data.containment_actions.2.action_date"></td>
-          </tr>
-          <tr>
-            <td><input data-field="phases.D4.data.containment_actions.3.action_description"></td>
-            <td><input data-field="phases.D4.data.containment_actions.3.responsible"></td>
-            <td><input type="date" data-field="phases.D4.data.containment_actions.3.due_date"></td>
-            <td><input type="date" data-field="phases.D4.data.containment_actions.3.action_date"></td>
-          </tr>
-          <tr>
-            <td><input data-field="phases.D4.data.containment_actions.4.action_description"></td>
-            <td><input data-field="phases.D4.data.containment_actions.4.responsible"></td>
-            <td><input type="date" data-field="phases.D4.data.containment_actions.4.due_date"></td>
-            <td><input type="date" data-field="phases.D4.data.containment_actions.4.action_date"></td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="column-description">
+      Define the problem factually. Closure date is managed only in Prevention & Closure.
     </div>
   </div>
 
-  <div class="column-description">
-    Define short-term actions to limit impact and protect stakeholders.
-  </div>
-</div>
+  <!-- PROBLEM DEFINITION -->
+  <div class="column column-d3" data-phase="D3">
+    <div class="column-header">Problem Definition</div>
 
-<!-- ================= AI ================= -->
-<div class="column column-ai">
-  <div class="column-header">AI Analysis</div>
+    <div class="column-content">
+      <div class="card"><label>What happened?</label><textarea data-field="phases.D3.data.what_happened"></textarea></div>
+      <div class="card"><label>Why is this a problem?</label><textarea data-field="phases.D3.data.why_is_it_a_problem"></textarea></div>
+      <div class="card"><label>When?</label><input data-field="phases.D3.data.when"></div>
+      <div class="card"><label>Who?</label><input data-field="phases.D3.data.who"></div>
+      <div class="card"><label>Where?</label><input data-field="phases.D3.data.where"></div>
+      <div class="card"><label>How?</label><textarea data-field="phases.D3.data.how"></textarea></div>
+      <div class="card"><label>Impact (how many / how much)?</label><input data-field="phases.D3.data.how_many_or_how_much"></div>
+    </div>
 
-  <div class="column-content">
-    <div class="card">
-      <button data-action="run-ai-agent">Run AI Analysis</button>
+    <div class="column-description">
+      Build a shared, factual understanding before analysis.
     </div>
   </div>
 
-  <div class="column-description">
-    Agent Status: idle
+  <!-- IMMEDIATE ACTIONS -->
+  <div class="column column-d4" data-phase="D4">
+    <div class="column-header">Immediate Actions</div>
+
+    <div class="column-content">
+      <div class="card table-card">
+        <table class="wide-table">
+          <thead>
+            <tr>
+              <th class="col-action">Action</th>
+              <th class="col-owner">Responsible</th>
+              <th class="col-date">Due Date</th>
+              <th class="col-date">Actual Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input data-field="phases.D4.data.containment_actions.0.action_description"></td>
+              <td><input data-field="phases.D4.data.containment_actions.0.responsible"></td>
+              <td><input type="date" data-field="phases.D4.data.containment_actions.0.due_date"></td>
+              <td><input type="date" data-field="phases.D4.data.containment_actions.0.action_date"></td>
+            </tr>
+            <tr>
+              <td><input data-field="phases.D4.data.containment_actions.1.action_description"></td>
+              <td><input data-field="phases.D4.data.containment_actions.1.responsible"></td>
+              <td><input type="date" data-field="phases.D4.data.containment_actions.1.due_date"></td>
+              <td><input type="date" data-field="phases.D4.data.containment_actions.1.action_date"></td>
+            </tr>
+            <tr>
+              <td><input data-field="phases.D4.data.containment_actions.2.action_description"></td>
+              <td><input data-field="phases.D4.data.containment_actions.2.responsible"></td>
+              <td><input type="date" data-field="phases.D4.data.containment_actions.2.due_date"></td>
+              <td><input type="date" data-field="phases.D4.data.containment_actions.2.action_date"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="column-description">
+      Define short-term actions to limit impact and protect stakeholders.
+    </div>
   </div>
-</div>
+
+  <!-- AI PANEL -->
+  <div class="column column-ai">
+    <div class="column-header">AI Analysis</div>
+
+    <div class="column-content">
+      <div class="card">
+        <button data-action="run-ai-agent">Run AI Analysis</button>
+      </div>
+    </div>
+
+    <div class="column-description">
+      Agent Status: idle
+    </div>
+  </div>
 
 </div>
+
 </body>
 </html>

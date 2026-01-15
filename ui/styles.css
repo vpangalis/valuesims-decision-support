@@ -1,139 +1,109 @@
-/* ===============================
-   GLOBAL
-================================ */
-* {
-  box-sizing: border-box;
-}
+/* GLOBAL */
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f4f6f9;
+  font-family: Inter, system-ui, sans-serif;
+  background: #f1f5f9;
   color: #1f2937;
 }
 
-/* ===============================
-   BOARD LAYOUT
-================================ */
+/* BOARD */
 .board {
   display: flex;
-  gap: 14px;
-  padding: 14px;
+  gap: 16px;
+  padding: 16px;
   height: 100vh;
   overflow-x: auto;
   overflow-y: hidden;
 }
 
-/* ===============================
-   COLUMNS
-================================ */
+/* COLUMNS */
 .column {
-  min-width: 320px;
-  max-width: 420px;
+  min-width: 340px;
+  max-width: 440px;
   background: #ffffff;
   border-radius: 16px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
-/* Fixed AI column */
 .column-ai {
   min-width: 300px;
 }
 
-/* ===============================
-   COLUMN SECTIONS
-================================ */
+/* HEADERS */
 .column-header {
   padding: 14px 16px;
   font-weight: 600;
   font-size: 14px;
-  border-bottom: 1px solid #e5e7eb;
-  background: linear-gradient(180deg, #ffffff, #f9fafb);
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
+  background: #e0ecff;
+  color: #1e3a8a;
+  border-bottom: 1px solid #c7d2fe;
+  border-radius: 16px 16px 0 0;
 }
 
+/* CONTENT */
 .column-content {
-  padding: 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   overflow-y: auto;
   flex: 1;
 }
 
+/* DESCRIPTION */
 .column-description {
   padding: 10px 14px;
   font-size: 12px;
-  line-height: 1.4;
-  color: #374151;
   background: #eef2ff;
-  border-top: 1px solid #e5e7eb;
-  border-bottom-left-radius: 16px;
-  border-bottom-right-radius: 16px;
+  color: #374151;
+  border-top: 1px solid #c7d2fe;
+  border-radius: 0 0 16px 16px;
 }
 
-/* ===============================
-   CARDS
-================================ */
+/* CARDS */
 .card {
-  background: #fafafa;
+  background: #f9fafb;
   border-radius: 12px;
   padding: 12px;
-  box-shadow: inset 0 0 0 1px #e5e7eb;
+  border: 1px solid #e5e7eb;
 }
 
-.card h4 {
-  margin: 0 0 8px;
-  font-size: 13px;
-  font-weight: 600;
+.table-card {
+  padding: 8px;
 }
 
-.card h5 {
-  margin: 10px 0 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #374151;
-}
-
-/* ===============================
-   FORM ELEMENTS
-================================ */
+/* FORMS */
 label {
   font-size: 12px;
   font-weight: 500;
+  margin-top: 6px;
   display: block;
-  margin-top: 8px;
 }
 
-input,
-textarea,
-select {
+input, textarea, select {
   width: 100%;
   margin-top: 4px;
   padding: 6px 8px;
   border-radius: 6px;
   border: 1px solid #d1d5db;
   font-size: 12px;
-  font-family: inherit;
 }
 
 textarea {
-  min-height: 64px;
+  min-height: 70px;
   resize: vertical;
 }
 
 input:disabled {
-  background: #f3f4f6;
+  background: #e5e7eb;
   color: #6b7280;
-  cursor: not-allowed;
 }
 
-/* ===============================
-   TABLES
-================================ */
+/* TABLES */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -144,17 +114,19 @@ th {
   text-align: left;
   padding: 6px;
   font-weight: 600;
-  color: #374151;
-  border-bottom: 1px solid #e5e7eb;
+  color: #1e3a8a;
 }
 
 td {
   padding: 4px;
 }
 
-/* ===============================
-   LAYOUT HELPERS
-================================ */
+/* COLUMN WIDTH CONTROL */
+.col-action { width: 45%; }
+.col-owner { width: 25%; }
+.col-date  { width: 15%; }
+
+/* HELPERS */
 .two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -163,31 +135,10 @@ td {
 
 .helper-text {
   font-size: 11px;
-  color: #6b7280;
-  margin-top: 6px;
+  color: #475569;
 }
 
-/* ===============================
-   FISHBONE
-================================ */
-.fishbone-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.fishbone-item input[type="checkbox"] {
-  transform: scale(1.1);
-}
-
-.fishbone-item input[type="checkbox"]:checked {
-  accent-color: #ef4444;
-}
-
-/* ===============================
-   BUTTONS
-================================ */
+/* BUTTONS */
 button {
   width: 100%;
   padding: 10px;
@@ -195,28 +146,20 @@ button {
   border: none;
   background: #2563eb;
   color: #ffffff;
-  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease-in-out;
 }
 
 button:hover {
   background: #1d4ed8;
 }
 
-/* ===============================
-   SCROLLBAR (OPTIONAL, CLEAN)
-================================ */
+/* SCROLLBAR */
 .column-content::-webkit-scrollbar {
   width: 6px;
 }
 
 .column-content::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #94a3b8;
   border-radius: 4px;
-}
-
-.column-content::-webkit-scrollbar-track {
-  background: transparent;
 }
