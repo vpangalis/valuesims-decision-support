@@ -100,12 +100,21 @@ th, td { padding: 6px; }
   gap: 6px;
 }
 
-/* Fishbone: mark ONLY filled causes as critical */
-.fish input:not(:placeholder-shown),
-.fish input:not([value=""]) {
+/* Fishbone rows */
+.fish-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Critical logic:
+   checkbox checked + input has text */
+.fish-row input[type="checkbox"]:checked + input:not(:placeholder-shown),
+.fish-row input[type="checkbox"]:checked + input:not([value=""]) {
   background: #fee2e2;
   border-color: #ef4444;
 }
+
 
 
 /* widths */
