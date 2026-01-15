@@ -1,179 +1,114 @@
-/* ================= RESET ================= */
-* {
-  box-sizing: border-box;
-}
+/* ===== RESET ===== */
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: Inter, system-ui, Segoe UI, Roboto, Arial, sans-serif;
   background: #eef2f7;
   color: #1f2937;
 }
 
-/* ================= BOARD ================= */
+/* ===== BOARD (ONE HORIZONTAL SCROLL ONLY) ===== */
 .board {
   display: flex;
-  gap: 24px;
-  padding: 24px;
-  height: 100vh;
-
-  /* HARD guarantee for horizontal scrolling */
-  min-width: 5600px;
-
+  gap: 32px;
+  padding: 32px;
+  min-width: 2600px;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
 }
 
-/* ================= COLUMNS ================= */
+/* ===== COLUMNS ===== */
 .column {
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0; /* CRITICAL: prevents collapse */
-
   background: #ffffff;
   border-radius: 16px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
-
-  max-height: calc(100vh - 48px);
-}
-
-/* Width control */
-.column-normal { width: 380px; }
-.column-wide   { width: 760px; }
-.column-cause  { width: 1520px; } /* 4× */
-.column-ai     { width: 640px; min-width: 640px; }
-
-/* ================= HEADERS ================= */
-.column-header {
-  padding: 16px 18px;
-  font-size: 15px;
-  font-weight: 600;
-
-  background: linear-gradient(180deg, #e7f0ff, #dbe8ff);
-  color: #1e3a8a;
-
-  border-bottom: 1px solid #c7d2fe;
-  border-radius: 16px 16px 0 0;
-}
-
-/* ================= CONTENT ================= */
-.column-content {
-  flex: 1;
-  padding: 18px;
-
+  box-shadow: 0 10px 28px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
-  gap: 18px;
-
-  overflow-y: auto;
 }
 
-/* ================= FOOTER ================= */
-.column-description {
-  padding: 10px 16px;
-  font-size: 12px;
-  color: #374151;
+.column-cause { width: 1600px; }
+.column-ai    { width: 520px; }
 
+/* ===== HEADERS ===== */
+.column-header {
+  padding: 18px 22px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(180deg,#e7f0ff,#dbe8ff);
+  color: #1e3a8a;
+  border-bottom: 1px solid #c7d2fe;
+}
+
+/* ===== CONTENT ===== */
+.column-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ===== FOOTER ===== */
+.column-description {
+  padding: 12px 20px;
+  font-size: 12px;
   background: #eef2ff;
   border-top: 1px solid #c7d2fe;
-  border-radius: 0 0 16px 16px;
 }
 
-/* ================= CARDS ================= */
+/* ===== CARDS ===== */
 .card {
   background: #f9fafb;
   border-radius: 14px;
-  padding: 16px;
+  padding: 18px;
   border: 1px solid #e5e7eb;
 }
 
-/* ================= FORMS ================= */
-label {
-  display: block;
-  margin-top: 8px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-input,
-textarea {
+/* ===== FORMS ===== */
+input {
   width: 100%;
-  margin-top: 4px;
   padding: 10px 12px;
-
   border-radius: 8px;
   border: 1px solid #d1d5db;
-
-  font-size: 13px;
-}
-
-textarea {
-  min-height: 90px;
-  resize: vertical;
+  margin-top: 6px;
 }
 
 input[type="date"] {
-  min-width: 140px; /* FULL DATE READABLE */
+  min-width: 180px;
 }
 
-/* ================= TABLES ================= */
+/* ===== TABLES ===== */
 table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.action-table {
-  table-layout: fixed;
-}
-
 th {
   text-align: left;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  padding: 8px;
   color: #1e3a8a;
-  padding: 8px 6px;
 }
 
 td {
   padding: 6px;
 }
 
-/* Column sizing */
-.col-action {
-  width: 50%;
+.w-action { width: 50%; }
+.w-owner  { width: 20%; }
+.w-date   { width: 15%; }
+
+/* ===== FISHBONE ===== */
+.fishbone {
+  min-height: 600px;
 }
 
-.col-owner {
-  width: 20%;
-}
-
-.col-date {
-  width: 15%;
-}
-
-.col-date-wide {
-  width: 18%;
-}
-
-.action-table input {
-  width: 100%;
-}
-
-/* ================= D5 – CAUSE ANALYSIS ================= */
-
-/* Fishbone card: dominant */
-.fishbone-card {
-  min-height: 520px; /* 2× height */
-}
-
-/* Fishbone grid */
 .fishbone-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 20px;
 }
 
-/* Fishbone category */
 .fishbone-category {
   background: #f8fbff;
   border: 1px solid #dbeafe;
@@ -181,54 +116,35 @@ td {
   padding: 14px;
 }
 
-.fishbone-category h5 {
-  margin: 0 0 6px 0;
-  font-size: 13px;
-  font-weight: 600;
+.fishbone-category h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
   color: #1e3a8a;
 }
 
-.fishbone-category label {
-  font-size: 11px;
-  margin-bottom: 6px;
-  display: inline-flex;
+.critical {
+  display: flex;
   align-items: center;
   gap: 6px;
+  font-size: 12px;
+  margin-bottom: 6px;
 }
 
-/* ================= LAYOUT HELPERS ================= */
+/* ===== LAYOUT ===== */
 .two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 24px;
 }
 
-/* ================= BUTTONS ================= */
+/* ===== BUTTON ===== */
 button {
-  width: 100%;
   padding: 14px;
-
   border-radius: 12px;
   border: none;
-
   background: #2563eb;
   color: #ffffff;
-
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-}
-
-button:hover {
-  background: #1d4ed8;
-}
-
-/* ================= SCROLLBAR ================= */
-.column-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.column-content::-webkit-scrollbar-thumb {
-  background: #94a3b8;
-  border-radius: 4px;
 }
