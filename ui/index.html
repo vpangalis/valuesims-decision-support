@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>AI-Assisted Incident & Problem Management</title>
-
-  <!-- cache-busted on purpose -->
-  <link rel="stylesheet" href="styles.css?v=1.0.0">
+  <link rel="stylesheet" href="styles.css?v=2.0.0">
 </head>
 <body>
 
@@ -14,43 +12,29 @@
   <!-- INCIDENT OVERVIEW -->
   <div class="column">
     <div class="column-header">Incident Overview & Evidence</div>
-
     <div class="column-content">
       <div class="card">
-        <label>Incident / Case ID</label>
-        <input>
-
-        <label>Status</label>
-        <input>
-
-        <label>Opening Date</label>
-        <input type="date">
-
-        <label>Closure Date</label>
-        <input type="date" disabled>
+        <label>Incident / Case ID</label><input>
+        <label>Status</label><input>
+        <label>Opening Date</label><input type="date">
+        <label>Closure Date</label><input type="date" disabled>
       </div>
 
       <div class="card">
         <button>Upload Evidence</button>
-        <p class="helper-text">
-          Upload photos or documents. Stored securely via backend service.
-        </p>
+        <p class="helper-text">Upload photos or documents (stored via backend).</p>
       </div>
 
-      <div class="card">
-        No evidence uploaded yet.
-      </div>
+      <div class="card">No evidence uploaded yet.</div>
     </div>
-
     <div class="column-description">
-      Manage general incident information and attach all relevant evidence.
+      General incident information and evidence handling.
     </div>
   </div>
 
-  <!-- PROBLEM INITIATION -->
+  <!-- D1–D2 PROBLEM INITIATION -->
   <div class="column">
     <div class="column-header">Problem Initiation</div>
-
     <div class="column-content">
       <div class="card">
         <label>Problem Description</label>
@@ -58,19 +42,12 @@
       </div>
 
       <div class="card two-col">
-        <div>
-          <label>Country</label>
-          <input>
-        </div>
-        <div>
-          <label>Site / Location</label>
-          <input>
-        </div>
+        <div><label>Country</label><input></div>
+        <div><label>Site / Location</label><input></div>
       </div>
 
       <div class="card">
-        <label>Department / Area</label>
-        <input>
+        <label>Department / Area</label><input>
       </div>
 
       <div class="card">
@@ -78,16 +55,14 @@
         <textarea></textarea>
       </div>
     </div>
-
     <div class="column-description">
-      Describe the problem factually and define the context.
+      Define the problem and context. Closure is handled later.
     </div>
   </div>
 
-  <!-- PROBLEM DEFINITION -->
+  <!-- D3 PROBLEM DEFINITION -->
   <div class="column">
     <div class="column-header">Problem Definition</div>
-
     <div class="column-content">
       <div class="card"><label>What happened?</label><textarea></textarea></div>
       <div class="card"><label>Why is this a problem?</label><textarea></textarea></div>
@@ -97,16 +72,14 @@
       <div class="card"><label>How was it identified?</label><textarea></textarea></div>
       <div class="card"><label>Impact (how many / how much)?</label><input></div>
     </div>
-
     <div class="column-description">
-      Build a shared factual understanding before analysis begins.
+      Establish a shared factual understanding.
     </div>
   </div>
 
-  <!-- IMMEDIATE ACTIONS -->
+  <!-- D4 IMMEDIATE ACTIONS -->
   <div class="column">
     <div class="column-header">Immediate Actions</div>
-
     <div class="column-content">
       <div class="card">
         <table class="wide-table">
@@ -114,55 +87,113 @@
             <tr>
               <th class="col-action">Action</th>
               <th class="col-owner">Responsible</th>
-              <th class="col-date">Due Date</th>
-              <th class="col-date">Actual Date</th>
+              <th class="col-date">Due</th>
+              <th class="col-date">Actual</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td><input></td>
-              <td><input></td>
-              <td><input type="date"></td>
-              <td><input type="date"></td>
-            </tr>
-            <tr>
-              <td><input></td>
-              <td><input></td>
-              <td><input type="date"></td>
-              <td><input type="date"></td>
-            </tr>
-            <tr>
-              <td><input></td>
-              <td><input></td>
-              <td><input type="date"></td>
-              <td><input type="date"></td>
-            </tr>
+            <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
+            <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
+            <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
           </tbody>
         </table>
       </div>
     </div>
-
     <div class="column-description">
-      Define short-term actions to limit impact and protect stakeholders.
+      Short-term actions to limit impact.
     </div>
   </div>
 
-  <!-- AI PANEL -->
-  <div class="column ai-column">
-    <div class="column-header">AI Analysis</div>
+  <!-- D5 CAUSE ANALYSIS -->
+  <div class="column">
+    <div class="column-header">Cause Analysis</div>
+    <div class="column-content">
 
+      <div class="card">
+        <h4>Assignment Follow-Up</h4>
+        <table class="wide-table">
+          <thead>
+            <tr>
+              <th class="col-action">Assignment</th>
+              <th class="col-owner">Responsible</th>
+              <th class="col-date">Due</th>
+              <th class="col-date">Actual</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
+            <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h4>5 WHYs – Analysis A</h4>
+        <input placeholder="Why 1"><input placeholder="Why 2"><input placeholder="Why 3"><input placeholder="Why 4"><input placeholder="Why 5">
+      </div>
+
+      <div class="card">
+        <h4>5 WHYs – Analysis B</h4>
+        <input placeholder="Why 1"><input placeholder="Why 2"><input placeholder="Why 3"><input placeholder="Why 4"><input placeholder="Why 5">
+      </div>
+
+    </div>
+    <div class="column-description">
+      Identify and verify root causes.
+    </div>
+  </div>
+
+  <!-- D6 PERMANENT ACTIONS -->
+  <div class="column">
+    <div class="column-header">Permanent Actions</div>
     <div class="column-content">
       <div class="card">
-        <button>Run AI Analysis</button>
+        <table class="wide-table">
+          <thead>
+            <tr>
+              <th class="col-action">Action</th>
+              <th class="col-owner">Responsible</th>
+              <th class="col-date">Due</th>
+              <th class="col-date">Actual</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
+            <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
-
     <div class="column-description">
-      Agent Status: idle
+      Actions to prevent recurrence.
     </div>
+  </div>
+
+  <!-- D7–D8 PREVENTION & CLOSURE -->
+  <div class="column">
+    <div class="column-header">Prevention & Closure</div>
+    <div class="column-content">
+      <div class="card">
+        <label>Procedures updated?</label><input>
+        <label>Training completed?</label><input>
+        <label>Quality approved?</label><input>
+        <label>Closure Date</label><input type="date">
+      </div>
+    </div>
+    <div class="column-description">
+      Standardisation and formal closure.
+    </div>
+  </div>
+
+  <!-- AI -->
+  <div class="column ai-column">
+    <div class="column-header">AI Analysis</div>
+    <div class="column-content">
+      <div class="card"><button>Run AI Analysis</button></div>
+    </div>
+    <div class="column-description">Agent status: idle</div>
   </div>
 
 </div>
-
 </body>
 </html>
