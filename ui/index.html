@@ -9,9 +9,41 @@
 
 <div class="board">
 
-  <!-- ================= D5 CAUSE ANALYSIS ================= -->
-  <div class="column column-cause">
+  <!-- INCIDENT OVERVIEW -->
+  <div class="column column-normal">
+    <div class="column-header">Incident Overview & Evidence</div>
 
+    <div class="column-content">
+      <div class="card">
+        <label>Incident / Case ID</label>
+        <input>
+
+        <label>Status</label>
+        <input value="Open" readonly>
+
+        <label>Opening Date</label>
+        <input type="date">
+
+        <label>Closure Date</label>
+        <input type="date" readonly>
+      </div>
+
+      <div class="card">
+        <button>Upload Evidence</button>
+      </div>
+
+      <div class="card">
+        No evidence uploaded yet.
+      </div>
+    </div>
+
+    <div class="column-description">
+      Status updates automatically when any field in the workflow is edited.
+    </div>
+  </div>
+
+  <!-- CAUSE ANALYSIS -->
+  <div class="column column-cause">
     <div class="column-header">Cause Analysis</div>
 
     <div class="column-content">
@@ -20,51 +52,51 @@
       <div class="card fishbone">
         <h3>Fishbone Analysis</h3>
 
-        <div class="fishbone-grid">
+        <div class="fishbone-grid-3">
 
           <div class="fishbone-category">
             <h4>People / Organization</h4>
-            <label class="critical"><input type="checkbox"> Critical</label>
-            <input placeholder="Factor 1">
-            <input placeholder="Factor 2">
-            <input placeholder="Factor 3">
-            <input placeholder="Factor 4">
+            <label><input type="checkbox"> Critical</label>
+            <input placeholder="Factor 1" data-affects-status="true">
+            <input placeholder="Factor 2" data-affects-status="true">
+            <input placeholder="Factor 3" data-affects-status="true">
+            <input placeholder="Factor 4" data-affects-status="true">
           </div>
 
           <div class="fishbone-category">
             <h4>Process / Workflow</h4>
-            <label class="critical"><input type="checkbox"> Critical</label>
-            <input placeholder="Factor 1">
-            <input placeholder="Factor 2">
-            <input placeholder="Factor 3">
-            <input placeholder="Factor 4">
+            <label><input type="checkbox"> Critical</label>
+            <input placeholder="Factor 1" data-affects-status="true">
+            <input placeholder="Factor 2" data-affects-status="true">
+            <input placeholder="Factor 3" data-affects-status="true">
+            <input placeholder="Factor 4" data-affects-status="true">
           </div>
 
           <div class="fishbone-category">
             <h4>Tools / Systems</h4>
-            <label class="critical"><input type="checkbox"> Critical</label>
-            <input placeholder="Factor 1">
-            <input placeholder="Factor 2">
-            <input placeholder="Factor 3">
-            <input placeholder="Factor 4">
+            <label><input type="checkbox"> Critical</label>
+            <input placeholder="Factor 1" data-affects-status="true">
+            <input placeholder="Factor 2" data-affects-status="true">
+            <input placeholder="Factor 3" data-affects-status="true">
+            <input placeholder="Factor 4" data-affects-status="true">
           </div>
 
           <div class="fishbone-category">
             <h4>Environment / Context</h4>
-            <label class="critical"><input type="checkbox"> Critical</label>
-            <input placeholder="Factor 1">
-            <input placeholder="Factor 2">
-            <input placeholder="Factor 3">
-            <input placeholder="Factor 4">
+            <label><input type="checkbox"> Critical</label>
+            <input placeholder="Factor 1" data-affects-status="true">
+            <input placeholder="Factor 2" data-affects-status="true">
+            <input placeholder="Factor 3" data-affects-status="true">
+            <input placeholder="Factor 4" data-affects-status="true">
           </div>
 
           <div class="fishbone-category">
             <h4>Policy / Management</h4>
-            <label class="critical"><input type="checkbox"> Critical</label>
-            <input placeholder="Factor 1">
-            <input placeholder="Factor 2">
-            <input placeholder="Factor 3">
-            <input placeholder="Factor 4">
+            <label><input type="checkbox"> Critical</label>
+            <input placeholder="Factor 1" data-affects-status="true">
+            <input placeholder="Factor 2" data-affects-status="true">
+            <input placeholder="Factor 3" data-affects-status="true">
+            <input placeholder="Factor 4" data-affects-status="true">
           </div>
 
         </div>
@@ -74,33 +106,33 @@
       <div class="two-col">
         <div class="card">
           <h3>5 WHYs – Analysis A</h3>
-          <input placeholder="Why 1">
-          <input placeholder="Why 2">
-          <input placeholder="Why 3">
-          <input placeholder="Why 4">
-          <input placeholder="Why 5">
+          <input placeholder="Why 1" data-affects-status="true">
+          <input placeholder="Why 2" data-affects-status="true">
+          <input placeholder="Why 3" data-affects-status="true">
+          <input placeholder="Why 4" data-affects-status="true">
+          <input placeholder="Why 5" data-affects-status="true">
         </div>
 
         <div class="card">
           <h3>5 WHYs – Analysis B</h3>
-          <input placeholder="Why 1">
-          <input placeholder="Why 2">
-          <input placeholder="Why 3">
-          <input placeholder="Why 4">
-          <input placeholder="Why 5">
+          <input placeholder="Why 1" data-affects-status="true">
+          <input placeholder="Why 2" data-affects-status="true">
+          <input placeholder="Why 3" data-affects-status="true">
+          <input placeholder="Why 4" data-affects-status="true">
+          <input placeholder="Why 5" data-affects-status="true">
         </div>
       </div>
 
       <!-- ASSIGNMENT TASKS -->
       <div class="card">
         <h3>Assignment Tasks for Investigation</h3>
-        <table>
+        <table class="fixed-table">
           <thead>
             <tr>
               <th class="w-action">Task</th>
               <th class="w-owner">Responsible</th>
-              <th class="w-date">Due Date</th>
-              <th class="w-date">Actual Date</th>
+              <th class="w-date">Due</th>
+              <th class="w-date">Actual</th>
             </tr>
           </thead>
           <tbody>
@@ -116,7 +148,7 @@
       <!-- FACTOR TREE -->
       <div class="card">
         <h3>Factor / Tree Analysis</h3>
-        <table>
+        <table class="fixed-table">
           <thead>
             <tr>
               <th class="w-action">Factor</th>
@@ -140,18 +172,6 @@
     <div class="column-description">
       Identify, structure and validate root causes.
     </div>
-
-  </div>
-
-  <!-- ================= AI ================= -->
-  <div class="column column-ai">
-    <div class="column-header">AI Analysis</div>
-    <div class="column-content">
-      <div class="card">
-        <button>Run AI Analysis</button>
-      </div>
-    </div>
-    <div class="column-description">Agent status: idle</div>
   </div>
 
 </div>
