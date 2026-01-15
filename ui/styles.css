@@ -10,7 +10,7 @@ body {
   display: flex;
   gap: 24px;
   padding: 24px;
-  min-width: 4200px;
+  min-width: 5600px;
   overflow-x: auto;
   overflow-y: hidden;
 }
@@ -103,12 +103,12 @@ th, td { padding: 6px; }
 
 
 /* widths */
-.col-d0 { width: 320px; }
-.col-d12 { width: 420px; }
-.col-d3 { width: 420px; }
+.col-d0 { width: 380px; }
+.col-d12 { width: 480px; }
+.col-d3 { width: 520px; }
 .col-d4, .col-d6 { width: 900px; }
-.col-d5 { width: 1400px; }
-.col-d78 { width: 360px; }
+.col-d5 { width: 1600px; }
+.col-d78 { width: 420px; }
 .col-ai { width: 1400px; }
 
 .muted { color: #6b7280; }
