@@ -4,6 +4,7 @@ body {
   margin: 0;
   font-family: Inter, system-ui, sans-serif;
   background: #eef2f7;
+  overflow-y:auto;/* always show vertical scrollbar */
 }
 
 .board {
@@ -35,11 +36,12 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  flex:1;/* take available space */
 }
 
 .scroll-y {
-  max-height: calc(100vh - 220px);
-  overflow-y: auto;
+
+  overflow-y: visible;
 }
 
 .footer {
