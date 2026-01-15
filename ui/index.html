@@ -90,24 +90,134 @@
     <div class="column-description">Containment actions.</div>
   </div>
 
-  <!-- D5 CAUSE ANALYSIS -->
-  <div class="column column-cause">
-    <div class="column-header">Cause Analysis</div>
-    <div class="column-content grid-d5">
-      <div class="card large-box">Fishbone Diagram</div>
-      <div class="card large-box">Factor / Tree Analysis</div>
-      <div class="card">
-        <h4>5 WHYs – Analysis A</h4>
-        <input><input><input><input><input>
+<!-- D5 CAUSE ANALYSIS -->
+<div class="column column-cause">
+  <div class="column-header">Cause Analysis</div>
+
+  <div class="column-content">
+
+    <!-- FISHBONE -->
+    <div class="card fishbone-card">
+      <h4>Fishbone Analysis</h4>
+
+      <div class="fishbone-grid">
+        <div class="fishbone-category">
+          <h5>People / Organization</h5>
+          <label><input type="checkbox"> Critical</label>
+          <input placeholder="Factor 1">
+          <input placeholder="Factor 2">
+          <input placeholder="Factor 3">
+          <input placeholder="Factor 4">
+        </div>
+
+        <div class="fishbone-category">
+          <h5>Process / Workflow</h5>
+          <label><input type="checkbox"> Critical</label>
+          <input placeholder="Factor 1">
+          <input placeholder="Factor 2">
+          <input placeholder="Factor 3">
+          <input placeholder="Factor 4">
+        </div>
+
+        <div class="fishbone-category">
+          <h5>Tools / Systems</h5>
+          <label><input type="checkbox"> Critical</label>
+          <input placeholder="Factor 1">
+          <input placeholder="Factor 2">
+          <input placeholder="Factor 3">
+          <input placeholder="Factor 4">
+        </div>
+
+        <div class="fishbone-category">
+          <h5>Environment / Context</h5>
+          <label><input type="checkbox"> Critical</label>
+          <input placeholder="Factor 1">
+          <input placeholder="Factor 2">
+          <input placeholder="Factor 3">
+          <input placeholder="Factor 4">
+        </div>
+
+        <div class="fishbone-category">
+          <h5>Policy / Management</h5>
+          <label><input type="checkbox"> Critical</label>
+          <input placeholder="Factor 1">
+          <input placeholder="Factor 2">
+          <input placeholder="Factor 3">
+          <input placeholder="Factor 4">
+        </div>
       </div>
-      <div class="card">
-        <h4>5 WHYs – Analysis B</h4>
-        <input><input><input><input><input>
-      </div>
-      <div class="card large-box">Assignment Tasks for Investigation</div>
     </div>
-    <div class="column-description">Root cause identification.</div>
+
+    <!-- 5 WHYS -->
+    <div class="card">
+      <h4>5 WHYs – Analysis A</h4>
+      <input placeholder="Why 1">
+      <input placeholder="Why 2">
+      <input placeholder="Why 3">
+      <input placeholder="Why 4">
+      <input placeholder="Why 5">
+    </div>
+
+    <div class="card">
+      <h4>5 WHYs – Analysis B</h4>
+      <input placeholder="Why 1">
+      <input placeholder="Why 2">
+      <input placeholder="Why 3">
+      <input placeholder="Why 4">
+      <input placeholder="Why 5">
+    </div>
+
+    <!-- ASSIGNMENT TASKS -->
+    <div class="card">
+      <h4>Assignment Tasks for Investigation</h4>
+      <table class="action-table">
+        <thead>
+          <tr>
+            <th class="col-action">Task</th>
+            <th class="col-owner">Responsible</th>
+            <th class="col-date-wide">Due Date</th>
+            <th class="col-date-wide">Actual Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
+          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
+          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
+          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
+          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FACTOR TREE -->
+    <div class="card">
+      <h4>Factor / Tree Analysis</h4>
+      <table class="action-table">
+        <thead>
+          <tr>
+            <th class="col-action">Factor</th>
+            <th class="col-owner">Owner</th>
+            <th class="col-date-wide">Reviewed</th>
+            <th class="col-date-wide">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
+          <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
+          <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
+          <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
+          <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
+
+  <div class="column-description">
+    Identify, structure and validate root causes.
+  </div>
+</div>
+
 
   <!-- D6 PERMANENT ACTIONS -->
   <div class="column column-wide">
