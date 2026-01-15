@@ -1,5 +1,7 @@
-/* GLOBAL */
-* { box-sizing: border-box; }
+/* ================= GLOBAL ================= */
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -8,7 +10,7 @@ body {
   color: #1f2937;
 }
 
-/* BOARD */
+/* ================= BOARD ================= */
 .board {
   display: flex;
   gap: 16px;
@@ -18,7 +20,7 @@ body {
   overflow-y: hidden;
 }
 
-/* COLUMNS */
+/* ================= COLUMNS ================= */
 .column {
   min-width: 340px;
   max-width: 440px;
@@ -27,13 +29,14 @@ body {
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  max-height: calc(100vh - 32px);
 }
 
-.column-ai {
+.ai-column {
   min-width: 300px;
 }
 
-/* HEADERS */
+/* ================= HEADERS ================= */
 .column-header {
   padding: 14px 16px;
   font-weight: 600;
@@ -44,7 +47,7 @@ body {
   border-radius: 16px 16px 0 0;
 }
 
-/* CONTENT */
+/* ================= CONTENT ================= */
 .column-content {
   padding: 14px;
   display: flex;
@@ -54,7 +57,7 @@ body {
   flex: 1;
 }
 
-/* DESCRIPTION */
+/* ================= DESCRIPTION ================= */
 .column-description {
   padding: 10px 14px;
   font-size: 12px;
@@ -64,7 +67,7 @@ body {
   border-radius: 0 0 16px 16px;
 }
 
-/* CARDS */
+/* ================= CARDS ================= */
 .card {
   background: #f9fafb;
   border-radius: 12px;
@@ -72,11 +75,7 @@ body {
   border: 1px solid #e5e7eb;
 }
 
-.table-card {
-  padding: 8px;
-}
-
-/* FORMS */
+/* ================= FORMS ================= */
 label {
   font-size: 12px;
   font-weight: 500;
@@ -84,7 +83,8 @@ label {
   display: block;
 }
 
-input, textarea, select {
+input,
+textarea {
   width: 100%;
   margin-top: 4px;
   padding: 6px 8px;
@@ -103,11 +103,16 @@ input:disabled {
   color: #6b7280;
 }
 
-/* TABLES */
+/* ================= TABLES ================= */
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
+}
+
+.wide-table {
+  table-layout: fixed;
+  width: 100%;
 }
 
 th {
@@ -121,12 +126,16 @@ td {
   padding: 4px;
 }
 
+.wide-table input {
+  width: 100%;
+}
+
 /* COLUMN WIDTH CONTROL */
 .col-action { width: 45%; }
 .col-owner { width: 25%; }
 .col-date  { width: 15%; }
 
-/* HELPERS */
+/* ================= HELPERS ================= */
 .two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -138,7 +147,7 @@ td {
   color: #475569;
 }
 
-/* BUTTONS */
+/* ================= BUTTONS ================= */
 button {
   width: 100%;
   padding: 10px;
@@ -154,7 +163,7 @@ button:hover {
   background: #1d4ed8;
 }
 
-/* SCROLLBAR */
+/* ================= SCROLLBAR ================= */
 .column-content::-webkit-scrollbar {
   width: 6px;
 }
