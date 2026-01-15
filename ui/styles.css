@@ -101,11 +101,26 @@ th, td { padding: 6px; }
 }
 
 /* Fishbone rows */
+/* Fishbone rows – improved layout */
 .fish-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 20px 1fr; /* checkbox | input */
+  align-items: start;
+  gap: 10px;
 }
+
+/* Improve input usability */
+.fish-row input:not([type="checkbox"]) {
+  min-height: 36px;
+  font-size: 14px;
+}
+
+/* Align checkbox visually with input text */
+.fish-row input[type="checkbox"] {
+  margin-top: 8px;
+}
+
+
 
 /* Critical logic:
    checkbox checked + input has text */
