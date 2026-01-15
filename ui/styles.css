@@ -124,8 +124,8 @@ th, td { padding: 6px; }
 
 /* Critical logic:
    checkbox checked + input has text */
-.fish-row input[type="checkbox"]:checked + input:not(:placeholder-shown),
-.fish-row input[type="checkbox"]:checked + input:not([value=""]) {
+/* Critical only if checkbox is checked AND input has text */
+.fish-row > input[type="checkbox"]:checked + input:not(:placeholder-shown) {
   background: #fee2e2;
   border-color: #ef4444;
 }
