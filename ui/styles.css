@@ -1,263 +1,112 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Incident & Problem Management</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+* { box-sizing: border-box; }
 
-<div class="board">
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  background: #eef2f7;
+}
 
-  <!-- D0 INCIDENT OVERVIEW -->
-  <div class="column col-d0">
-    <div class="header">Incident Overview & Evidence</div>
-    <div class="content">
-      <label>Incident / Case ID</label>
-      <input>
+.board {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+  min-width: 4200px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
 
-      <label>Status</label>
-      <input value="Open" readonly>
+.column {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  display: flex;
+  flex-direction: column;
+}
 
-      <label>Opening Date</label>
-      <input type="date">
+.header {
+  padding: 14px 18px;
+  font-weight: 600;
+  background: #e7f0ff;
+  border-bottom: 1px solid #c7d2fe;
+}
 
-      <label>Closure Date</label>
-      <input type="date" readonly>
+.content {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
-      <button>Upload Evidence</button>
+.scroll-y {
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
 
-      <div class="muted">No evidence uploaded yet.</div>
-    </div>
-    <div class="footer">Status updates automatically when any D1–D8 field is edited.</div>
-  </div>
+.footer {
+  padding: 8px 14px;
+  font-size: 12px;
+  background: #eef2ff;
+  border-top: 1px solid #c7d2fe;
+}
 
-  <!-- D1–D2 PROBLEM INITIATION -->
-  <div class="column col-d12">
-    <div class="header">Problem Initiation (D1–D2)</div>
-    <div class="content scroll-y">
-      <label>Problem Description</label>
-      <textarea></textarea>
+input, textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
 
-      <div class="two-col">
-        <div>
-          <label>Country</label>
-          <input>
-        </div>
-        <div>
-          <label>Site / Location</label>
-          <input>
-        </div>
-      </div>
+textarea { min-height: 80px; }
 
-      <label>Department / Area</label>
-      <input>
+button {
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+}
 
-      <label>Involved People / Teams</label>
-      <textarea></textarea>
-    </div>
-    <div class="footer">Define scope and context.</div>
-  </div>
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
 
-  <!-- D3 PROBLEM DEFINITION -->
-  <div class="column col-d3">
-    <div class="header">Problem Definition (D3)</div>
-    <div class="content scroll-y">
-      <label>What happened?</label>
-      <textarea></textarea>
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
-      <label>Why is this a problem?</label>
-      <textarea></textarea>
+th, td { padding: 6px; }
 
-      <div class="two-col">
-        <div>
-          <label>When?</label>
-          <input>
-        </div>
-        <div>
-          <label>Where?</label>
-          <input>
-        </div>
-      </div>
+.w-action { width: 50%; }
+.w-owner { width: 20%; }
+.w-date { width: 15%; }
 
-      <div class="two-col">
-        <div>
-          <label>Who?</label>
-          <input>
-        </div>
-        <div>
-          <label>How identified?</label>
-          <input>
-        </div>
-      </div>
+.fishbone {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
 
-      <label>Impact (how many / how much)</label>
-      <input>
-    </div>
-    <div class="footer">Shared factual understanding.</div>
-  </div>
+.fish {
+  background: #f8fbff;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #dbeafe;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
-  <!-- D4 IMMEDIATE ACTIONS -->
-  <div class="column col-d4 wide">
-    <div class="header">Immediate Actions (D4)</div>
-    <div class="content scroll-y">
-      <table>
-        <thead>
-          <tr>
-            <th class="w-action">Action</th>
-            <th class="w-owner">Responsible</th>
-            <th class="w-date">Due</th>
-            <th class="w-date">Actual</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- 10 rows -->
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="footer">Contain and protect stakeholders.</div>
-  </div>
+/* widths */
+.col-d0 { width: 320px; }
+.col-d12 { width: 420px; }
+.col-d3 { width: 420px; }
+.col-d4, .col-d6 { width: 700px; }
+.col-d5 { width: 1400px; }
+.col-d78 { width: 360px; }
+.col-ai { width: 360px; }
 
-  <!-- D5 CAUSE ANALYSIS -->
-  <div class="column col-d5 huge">
-    <div class="header">Cause Analysis (D5)</div>
-    <div class="content scroll-y">
-
-      <h3>Fishbone Analysis</h3>
-      <div class="fishbone">
-        <!-- 6 categories -->
-        <div class="fish">People / Organization <input type="checkbox"> Critical
-          <input><input><input><input>
-        </div>
-        <div class="fish">Process / Workflow <input type="checkbox"> Critical
-          <input><input><input><input>
-        </div>
-        <div class="fish">Tools / Systems <input type="checkbox"> Critical
-          <input><input><input><input>
-        </div>
-        <div class="fish">Environment / Context <input type="checkbox"> Critical
-          <input><input><input><input>
-        </div>
-        <div class="fish">Policy / Management <input type="checkbox"> Critical
-          <input><input><input><input>
-        </div>
-        <div class="fish">Mother Nature / Place <input type="checkbox"> Critical
-          <input><input><input><input>
-        </div>
-      </div>
-
-      <div class="two-col">
-        <div>
-          <h3>5 WHYs – Analysis A</h3>
-          <input><input><input><input><input>
-        </div>
-        <div>
-          <h3>5 WHYs – Analysis B</h3>
-          <input><input><input><input><input>
-        </div>
-      </div>
-
-      <h3>Assignment Tasks for Investigation</h3>
-      <table>
-        <thead>
-          <tr>
-            <th class="w-action">Task</th>
-            <th class="w-owner">Responsible</th>
-            <th class="w-date">Due</th>
-            <th class="w-date">Actual</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-        </tbody>
-      </table>
-
-      <h3>Factor / Tree Analysis</h3>
-      <table>
-        <thead>
-          <tr>
-            <th class="w-action">Factor</th>
-            <th class="w-owner">Owner</th>
-            <th class="w-date">Reviewed</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
-          <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
-          <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
-          <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
-          <tr><td><input></td><td><input></td><td><input></td><td><input></td></tr>
-        </tbody>
-      </table>
-
-    </div>
-    <div class="footer">Identify and validate root causes.</div>
-  </div>
-
-  <!-- D6 PERMANENT ACTIONS -->
-  <div class="column col-d6 wide">
-    <div class="header">Permanent Actions (D6)</div>
-    <div class="content scroll-y">
-      <!-- same structure as D4 -->
-      <table>
-        <thead>
-          <tr>
-            <th class="w-action">Action</th>
-            <th class="w-owner">Responsible</th>
-            <th class="w-date">Due</th>
-            <th class="w-date">Actual</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- 10 rows -->
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-          <tr><td><input></td><td><input></td><td><input type="date"></td><td><input type="date"></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="footer">Prevent recurrence.</div>
-  </div>
-
-  <!-- D7–D8 PREVENTION & CLOSURE -->
-  <div class="column col-d78">
-    <div class="header">Prevention & Closure (D7–D8)</div>
-    <div class="content">
-      <label>Procedures updated?</label><input>
-      <label>Training completed?</label><input>
-      <label>Quality approved?</label><input>
-      <label>Closure Date</label><input type="date">
-    </div>
-    <div class="footer">Standardisation and closure.</div>
-  </div>
-
-  <!-- AI -->
-  <div class="column col-ai">
-    <div class="header">AI Analysis</div>
-    <div class="content">
-      <button>Run AI Analysis</button>
-      <div class="muted">Agent status: idle</div>
-    </div>
-  </div>
-
-</div>
-
-</body>
-</html>
+.muted { color: #6b7280; }
