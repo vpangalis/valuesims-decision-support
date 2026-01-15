@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Incident & Problem Management</title>
-  <link rel="stylesheet" href="styles.css?v=4.0.0">
+  <link rel="stylesheet" href="styles.css?v=5.0.0">
 </head>
 <body>
 
@@ -21,7 +21,6 @@
       </div>
       <div class="card">
         <button>Upload Evidence</button>
-        <p class="helper-text">Upload photos or documents.</p>
       </div>
       <div class="card">No evidence uploaded yet.</div>
     </div>
@@ -37,10 +36,10 @@
         <div><label>Country</label><input></div>
         <div><label>Site / Location</label><input></div>
       </div>
-      <div class="card"><label>Department / Area</label><input></div>
+      <div class="card"><label>Department</label><input></div>
       <div class="card"><label>People / Teams</label><textarea></textarea></div>
     </div>
-    <div class="column-description">Define context and scope.</div>
+    <div class="column-description">Define context.</div>
   </div>
 
   <!-- D3 -->
@@ -55,15 +54,15 @@
       <div class="card"><label>How identified?</label><textarea></textarea></div>
       <div class="card"><label>Impact</label><input></div>
     </div>
-    <div class="column-description">Shared factual understanding.</div>
+    <div class="column-description">Shared understanding.</div>
   </div>
 
-  <!-- D4 IMMEDIATE ACTIONS (DOUBLE WIDTH) -->
+  <!-- D4 IMMEDIATE ACTIONS -->
   <div class="column column-wide">
     <div class="column-header">Immediate Actions</div>
     <div class="column-content">
       <div class="card">
-        <table class="wide-table">
+        <table class="action-table">
           <thead>
             <tr>
               <th class="col-action">Action</th>
@@ -88,22 +87,26 @@
         </table>
       </div>
     </div>
-    <div class="column-description">Short-term containment actions.</div>
+    <div class="column-description">Containment actions.</div>
   </div>
 
-  <!-- D5 CAUSE ANALYSIS (60% WIDTH) -->
+  <!-- D5 CAUSE ANALYSIS -->
   <div class="column column-cause">
     <div class="column-header">Cause Analysis</div>
     <div class="column-content grid-d5">
-
-      <div class="card"><h4>Fishbone Analysis</h4><textarea class="large-box"></textarea></div>
-      <div class="card"><h4>Assignment Tasks for Investigation</h4><textarea class="large-box"></textarea></div>
-      <div class="card"><h4>5 WHYs – Analysis A</h4><input><input><input><input><input></div>
-      <div class="card"><h4>5 WHYs – Analysis B</h4><input><input><input><input><input></div>
-      <div class="card"><h4>Factor / Tree Analysis</h4><textarea class="large-box"></textarea></div>
-
+      <div class="card large-box">Fishbone Diagram</div>
+      <div class="card large-box">Factor / Tree Analysis</div>
+      <div class="card">
+        <h4>5 WHYs – Analysis A</h4>
+        <input><input><input><input><input>
+      </div>
+      <div class="card">
+        <h4>5 WHYs – Analysis B</h4>
+        <input><input><input><input><input>
+      </div>
+      <div class="card large-box">Assignment Tasks for Investigation</div>
     </div>
-    <div class="column-description">Identify, validate, and structure root causes.</div>
+    <div class="column-description">Root cause identification.</div>
   </div>
 
   <!-- D6 PERMANENT ACTIONS -->
@@ -111,7 +114,7 @@
     <div class="column-header">Permanent Actions</div>
     <div class="column-content">
       <div class="card">
-        <table class="wide-table">
+        <table class="action-table">
           <thead>
             <tr>
               <th class="col-action">Action</th>
@@ -136,7 +139,7 @@
         </table>
       </div>
     </div>
-    <div class="column-description">Long-term prevention actions.</div>
+    <div class="column-description">Prevent recurrence.</div>
   </div>
 
   <!-- D7–D8 -->
@@ -146,15 +149,15 @@
       <div class="card">
         <label>Procedures updated?</label><input>
         <label>Training completed?</label><input>
-        <label>Quality approval</label><input>
+        <label>Quality approved?</label><input>
         <label>Closure Date</label><input type="date">
       </div>
     </div>
-    <div class="column-description">Standardisation and closure.</div>
+    <div class="column-description">Formal closure.</div>
   </div>
 
   <!-- AI -->
-  <div class="column column-normal ai-column">
+  <div class="column column-ai">
     <div class="column-header">AI Analysis</div>
     <div class="column-content">
       <div class="card"><button>Run AI Analysis</button></div>
