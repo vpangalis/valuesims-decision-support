@@ -1,0 +1,4 @@
+git status
+git add ui/index.html ui/styles.css
+git commit -m "style improvements forumn widths"
+git push origin main
