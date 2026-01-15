@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <title>AI-Assisted Incident & Problem Management</title>
-  <link rel="stylesheet" href="styles.css?v=2.0.0">
+  <link rel="stylesheet" href="styles.css?v=3.0.0">
 </head>
 <body>
 
 <div class="board">
 
-  <!-- INCIDENT OVERVIEW -->
+  <!-- D0 -->
   <div class="column">
     <div class="column-header">Incident Overview & Evidence</div>
     <div class="column-content">
@@ -19,20 +19,16 @@
         <label>Opening Date</label><input type="date">
         <label>Closure Date</label><input type="date" disabled>
       </div>
-
       <div class="card">
         <button>Upload Evidence</button>
-        <p class="helper-text">Upload photos or documents (stored via backend).</p>
+        <p class="helper-text">Upload photos or documents.</p>
       </div>
-
       <div class="card">No evidence uploaded yet.</div>
     </div>
-    <div class="column-description">
-      General incident information and evidence handling.
-    </div>
+    <div class="column-description">General incident information.</div>
   </div>
 
-  <!-- D1–D2 PROBLEM INITIATION -->
+  <!-- D1–D2 -->
   <div class="column">
     <div class="column-header">Problem Initiation</div>
     <div class="column-content">
@@ -40,44 +36,32 @@
         <label>Problem Description</label>
         <textarea></textarea>
       </div>
-
       <div class="card two-col">
         <div><label>Country</label><input></div>
         <div><label>Site / Location</label><input></div>
       </div>
-
-      <div class="card">
-        <label>Department / Area</label><input>
-      </div>
-
-      <div class="card">
-        <label>Involved People / Teams</label>
-        <textarea></textarea>
-      </div>
+      <div class="card"><label>Department</label><input></div>
+      <div class="card"><label>People / Teams</label><textarea></textarea></div>
     </div>
-    <div class="column-description">
-      Define the problem and context. Closure is handled later.
-    </div>
+    <div class="column-description">Define the problem and context.</div>
   </div>
 
-  <!-- D3 PROBLEM DEFINITION -->
+  <!-- D3 -->
   <div class="column">
     <div class="column-header">Problem Definition</div>
     <div class="column-content">
       <div class="card"><label>What happened?</label><textarea></textarea></div>
       <div class="card"><label>Why is this a problem?</label><textarea></textarea></div>
-      <div class="card"><label>When did it occur?</label><input></div>
-      <div class="card"><label>Who was involved?</label><input></div>
-      <div class="card"><label>Where did it occur?</label><input></div>
-      <div class="card"><label>How was it identified?</label><textarea></textarea></div>
-      <div class="card"><label>Impact (how many / how much)?</label><input></div>
+      <div class="card"><label>When?</label><input></div>
+      <div class="card"><label>Who?</label><input></div>
+      <div class="card"><label>Where?</label><input></div>
+      <div class="card"><label>How identified?</label><textarea></textarea></div>
+      <div class="card"><label>Impact</label><input></div>
     </div>
-    <div class="column-description">
-      Establish a shared factual understanding.
-    </div>
+    <div class="column-description">Shared factual understanding.</div>
   </div>
 
-  <!-- D4 IMMEDIATE ACTIONS -->
+  <!-- D4 -->
   <div class="column">
     <div class="column-header">Immediate Actions</div>
     <div class="column-content">
@@ -99,16 +83,13 @@
         </table>
       </div>
     </div>
-    <div class="column-description">
-      Short-term actions to limit impact.
-    </div>
+    <div class="column-description">Limit impact immediately.</div>
   </div>
 
-  <!-- D5 CAUSE ANALYSIS -->
+  <!-- D5 -->
   <div class="column">
     <div class="column-header">Cause Analysis</div>
     <div class="column-content">
-
       <div class="card">
         <h4>Assignment Follow-Up</h4>
         <table class="wide-table">
@@ -129,21 +110,18 @@
 
       <div class="card">
         <h4>5 WHYs – Analysis A</h4>
-        <input placeholder="Why 1"><input placeholder="Why 2"><input placeholder="Why 3"><input placeholder="Why 4"><input placeholder="Why 5">
+        <input><input><input><input><input>
       </div>
 
       <div class="card">
         <h4>5 WHYs – Analysis B</h4>
-        <input placeholder="Why 1"><input placeholder="Why 2"><input placeholder="Why 3"><input placeholder="Why 4"><input placeholder="Why 5">
+        <input><input><input><input><input>
       </div>
-
     </div>
-    <div class="column-description">
-      Identify and verify root causes.
-    </div>
+    <div class="column-description">Identify root causes.</div>
   </div>
 
-  <!-- D6 PERMANENT ACTIONS -->
+  <!-- D6 -->
   <div class="column">
     <div class="column-header">Permanent Actions</div>
     <div class="column-content">
@@ -164,25 +142,21 @@
         </table>
       </div>
     </div>
-    <div class="column-description">
-      Actions to prevent recurrence.
-    </div>
+    <div class="column-description">Prevent recurrence.</div>
   </div>
 
-  <!-- D7–D8 PREVENTION & CLOSURE -->
+  <!-- D7–D8 -->
   <div class="column">
     <div class="column-header">Prevention & Closure</div>
     <div class="column-content">
       <div class="card">
         <label>Procedures updated?</label><input>
         <label>Training completed?</label><input>
-        <label>Quality approved?</label><input>
+        <label>Quality approval</label><input>
         <label>Closure Date</label><input type="date">
       </div>
     </div>
-    <div class="column-description">
-      Standardisation and formal closure.
-    </div>
+    <div class="column-description">Formal closure.</div>
   </div>
 
   <!-- AI -->
