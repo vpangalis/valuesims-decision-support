@@ -100,6 +100,12 @@ th, td { padding: 6px; }
   gap: 6px;
 }
 
+/* Fishbone: mark ONLY filled causes as critical */
+.fish input:not(:placeholder-shown),
+.fish input:not([value=""]) {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
 
 
 /* widths */
@@ -108,7 +114,7 @@ th, td { padding: 6px; }
 .col-d3 { width: 520px; }
 .col-d4, .col-d6 { width: 900px; }
 .col-d5 { width: 1600px; }
-.col-d78 { width: 420px; }
+.col-d78 { width: 0px; }
 .col-ai { width: 1400px; }
 
 .muted { color: #6b7280; }
