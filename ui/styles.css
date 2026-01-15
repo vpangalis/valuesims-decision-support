@@ -80,9 +80,9 @@ table {
 
 th, td { padding: 6px; }
 
-.w-action { width: 50%; }
-.w-owner { width: 20%; }
-.w-date { width: 15%; }
+.w-action { width: 60%; }
+.w-owner { width: 25%; }
+.w-date { width: 7.5%; }
 
 .fishbone {
   display: grid;
@@ -91,14 +91,16 @@ th, td { padding: 6px; }
 }
 
 .fish {
-  background: #f8fbff;
+  background: #f1f5f9; /* darker neutral gray */
   padding: 10px;
   border-radius: 10px;
-  border: 1px solid #dbeafe;
+  border: 1px solid #cbd5e1;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
+
+
 
 /* widths */
 .col-d0 { width: 320px; }
@@ -107,6 +109,6 @@ th, td { padding: 6px; }
 .col-d4, .col-d6 { width: 700px; }
 .col-d5 { width: 1400px; }
 .col-d78 { width: 360px; }
-.col-ai { width: 360px; }
+.col-ai { width: 720px; }
 
 .muted { color: #6b7280; }
