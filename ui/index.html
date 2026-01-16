@@ -2,186 +2,481 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Incident & Problem Management</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <title>Incident & Problem Management</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-<div class="board">
+    <div class="board">
 
-  <!-- D0 INCIDENT OVERVIEW (NO data-edited) -->
-  <div class="column col-d0" data-phase="D0">
-    <div class="header">Incident Overview & Evidence</div>
-    <div class="content">
-      <label>Incident / Case ID</label>
-      <input data-path="case_id" id="case-id-input" required>
+        <!-- D0 INCIDENT OVERVIEW -->
+        <div class="column col-d0">
+            <div class="header">Incident Overview & Evidence</div>
+            <div class="content">
+                <label>Incident / Case ID</label>
+                <input>
 
-      <label>Status</label>
-      <input value="new" readonly data-path="status">
+                <label>Status</label>
+                <input value="Open" readonly>
 
-      <label>Opening Date</label>
-      <input type="date" data-path="created_at">
+                <label>Opening Date</label>
+                <input type="date">
 
-      <label>Closure Date</label>
-      <input type="date" readonly data-path="closed_at">
+                <label>Closure Date</label>
+                <input type="date" readonly>
 
-      <button data-action="upload-evidence" disabled>Upload Evidence</button>
+                <button>Upload Evidence</button>
 
-      <div class="muted">No evidence uploaded yet.</div>
-    </div>
-    <div class="footer">
-      Status is derived automatically: new → in_progress → completed
-    </div>
-  </div>
-
-  <!-- D1 -->
-  <div class="column col-d12" data-phase="D1" data-edited="false">
-    <div class="header">Problem Initiation (D1–D2)</div>
-    <div class="content scroll-y">
-      <label>Problem Description</label>
-      <textarea data-path="qrqc.D1.problem_statement"></textarea>
-
-      <div class="two-col">
-        <div>
-          <label>Country</label>
-          <input data-path="case_info.country">
+                <div class="muted">No evidence uploaded yet.</div>
+            </div>
+            <div class="footer">Status updates automatically when any D1–D8 field is edited.
+            </div>
         </div>
-        <div>
-          <label>Site / Location</label>
-          <input data-path="case_info.plant">
+
+        <!-- D1–D2 PROBLEM INITIATION -->
+        <div class="column col-d12">
+            <div class="header">Problem Initiation (D1–D2)</div>
+            <div class="content scroll-y">
+                <label>Problem Description</label>
+                <textarea></textarea>
+
+                <div class="two-col">
+                    <div>
+                        <label>Country</label>
+                        <input>
+                    </div>
+                    <div>
+                        <label>Site / Location</label>
+                        <input>
+                    </div>
+                </div>
+
+                <label>Department / Area</label>
+                <input>
+
+                <label>Involved People / Teams</label>
+                <textarea></textarea>
+            </div>
+            <div class="footer">Define scope and context.</div>
         </div>
-      </div>
 
-      <label>Department / Area</label>
-      <input data-path="case_info.process">
+        <!-- D3 PROBLEM DEFINITION -->
+        <div class="column col-d3">
+            <div class="header">Problem Definition (D3)</div>
+            <div class="content scroll-y">
+                <label>What happened?</label>
+                <textarea></textarea>
 
-      <label>Involved People / Teams</label>
-      <textarea data-path="qrqc.D1.involved_people"></textarea>
-    </div>
-    <div class="footer">Define scope and context.</div>
-  </div>
+                <label>Why is this a problem?</label>
+                <textarea></textarea>
 
-  <!-- D3 -->
-  <div class="column col-d3" data-phase="D3" data-edited="false">
-    <div class="header">Problem Definition (D3)</div>
-    <div class="content scroll-y">
-      <label>What happened?</label>
-      <textarea data-path="qrqc.D3.what_happened"></textarea>
+                <div class="two-col">
+                    <div>
+                        <label>When?</label>
+                        <input>
+                    </div>
+                    <div>
+                        <label>Where?</label>
+                        <input>
+                    </div>
+                </div>
 
-      <label>Why is this a problem?</label>
-      <textarea data-path="qrqc.D3.why_problem"></textarea>
+                <div class="two-col">
+                    <div>
+                        <label>Who?</label>
+                        <input>
+                    </div>
+                    <div>
+                        <label>How identified?</label>
+                        <input>
+                    </div>
+                </div>
 
-      <div class="two-col">
-        <div>
-          <label>When?</label>
-          <input data-path="qrqc.D3.when">
+                <label>Impact (how many / how much)</label>
+                <input>
+            </div>
+            <div class="footer">Shared factual understanding.</div>
         </div>
-        <div>
-          <label>Where?</label>
-          <input data-path="qrqc.D3.where">
+
+        <!-- D4 IMMEDIATE ACTIONS -->
+        <div class="column col-d4 wide">
+            <div class="header">Immediate Actions (D4)</div>
+            <div class="content scroll-y">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="w-action">Action</th>
+                            <th class="w-owner">Responsible</th>
+                            <th class="w-date">Due</th>
+                            <th class="w-date">Actual</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 10 rows -->
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="footer">Contain and protect stakeholders.</div>
         </div>
-      </div>
 
-      <div class="two-col">
-        <div>
-          <label>Who?</label>
-          <input data-path="qrqc.D3.who">
+        <!-- D5 CAUSE ANALYSIS -->
+        <div class="column col-d5 huge">
+            <div class="header">Cause Analysis (D5)</div>
+            <div class="content scroll-y">
+
+                <h3>Fishbone Analysis</h3>
+                <div class="fishbone">
+                    <!-- 6 categories -->
+                    <div class="fish">People / Organization
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                    </div>
+                    <div class="fish">Process / Workflow
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                    </div>
+                    <div class="fish">Tools / Systems
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                    </div>
+                    <div class="fish">Environment / Context
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                    </div>
+                    <div class="fish">Policy / Management
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                    </div>
+                    <div class="fish">Mother Nature / Place
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                        <div class="fish-row">
+                            <input type="checkbox" class="crit">
+                            <input placeholder=" ">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="two-col">
+                    <div>
+                        <h3>5 WHYs – Analysis A</h3>
+                        <input><input><input><input><input>
+                    </div>
+                    <div>
+                        <h3>5 WHYs – Analysis B</h3>
+                        <input><input><input><input><input>
+                    </div>
+                </div>
+
+                <h3>Assignment Tasks for Investigation</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="w-action">Task</th>
+                            <th class="w-owner">Responsible</th>
+                            <th class="w-date">Due</th>
+                            <th class="w-date">Actual</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Factor / Tree Analysis</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="w-action">Factor</th>
+                            <th class="w-owner">Owner</th>
+                            <th class="w-date">Reviewed</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+            <div class="footer">Identify and validate root causes.</div>
         </div>
-        <div>
-          <label>How identified?</label>
-          <input data-path="qrqc.D3.how_identified">
+
+        <!-- D6 PERMANENT ACTIONS -->
+        <div class="column col-d6 wide">
+            <div class="header">Permanent Actions (D6)</div>
+            <div class="content scroll-y">
+                <!-- same structure as D4 -->
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="w-action">Action</th>
+                            <th class="w-owner">Responsible</th>
+                            <th class="w-date">Due</th>
+                            <th class="w-date">Actual</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 10 rows -->
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                        <tr>
+                            <td><input></td>
+                            <td><input></td>
+                            <td><input type="date"></td>
+                            <td><input type="date"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="footer">Prevent recurrence.</div>
         </div>
-      </div>
 
-      <label>Impact (how many / how much)</label>
-      <input data-path="qrqc.D3.impact">
+        <!-- D7–D8 PREVENTION & CLOSURE -->
+        <div class="column col-d78">
+            <div class="header">Prevention & Closure (D7–D8)</div>
+            <div class="content">
+                <label>Procedures updated?</label><input>
+                <label>Training completed?</label><input>
+                <label>Quality approved?</label><input>
+                <label>Closure Date</label><input type="date">
+            </div>
+            <div class="footer">Standardisation and closure.</div>
+        </div>
+
+        <!-- AI -->
+        <div class="column col-ai">
+            <div class="header">AI Analysis</div>
+            <div class="content">
+                <button>Run AI Analysis</button>
+                <div class="muted">Agent status: idle</div>
+            </div>
+        </div>
+
     </div>
-    <div class="footer">Shared factual understanding.</div>
-  </div>
-
-  <!-- D4 -->
-  <div class="column col-d4 wide" data-phase="D4" data-edited="false">
-    <div class="header">Immediate Actions (D4)</div>
-    <div class="content scroll-y">
-      <table>
-        <tbody>
-          <tr>
-            <td><input data-path="qrqc.D4.actions[0].action"></td>
-            <td><input data-path="qrqc.D4.actions[0].owner"></td>
-            <td><input type="date" data-path="qrqc.D4.actions[0].due"></td>
-            <td><input type="date" data-path="qrqc.D4.actions[0].actual"></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="footer">Contain and protect stakeholders.</div>
-  </div>
-
-  <!-- D5 -->
-  <div class="column col-d5 huge" data-phase="D5" data-edited="false">
-    <div class="header">Cause Analysis (D5)</div>
-    <div class="content scroll-y">
-      <h3>5 WHYs – Analysis A</h3>
-      <input data-path="qrqc.D5.whyA[0]">
-      <input data-path="qrqc.D5.whyA[1]">
-      <input data-path="qrqc.D5.whyA[2]">
-      <input data-path="qrqc.D5.whyA[3]">
-      <input data-path="qrqc.D5.whyA[4]">
-    </div>
-    <div class="footer">Identify and validate root causes.</div>
-  </div>
-
-  <!-- D6 -->
-  <div class="column col-d6 wide" data-phase="D6" data-edited="false">
-    <div class="header">Permanent Actions (D6)</div>
-    <div class="content scroll-y">
-      <table>
-        <tbody>
-          <tr>
-            <td><input data-path="qrqc.D6.actions[0].action"></td>
-            <td><input data-path="qrqc.D6.actions[0].owner"></td>
-            <td><input type="date" data-path="qrqc.D6.actions[0].due"></td>
-            <td><input type="date" data-path="qrqc.D6.actions[0].actual"></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="footer">Prevent recurrence.</div>
-  </div>
-
-  <!-- D7 / D8 -->
-  <div class="column col-d78" data-phase="D7" data-edited="false">
-    <div class="header">Prevention & Closure (D7–D8)</div>
-    <div class="content">
-      <label>Procedures updated?</label>
-      <input data-path="qrqc.D7.procedures_updated">
-
-      <label>Training completed?</label>
-      <input data-path="qrqc.D7.training_completed">
-
-      <label>Quality approved?</label>
-      <input data-path="qrqc.D7.quality_approved">
-
-      <label>Closure Date</label>
-      <input type="date" data-path="qrqc.D8.closure_date">
-    </div>
-    <div class="footer">Standardisation and closure.</div>
-  </div>
-
-  <!-- AI -->
-  <div class="column col-ai">
-    <div class="header">AI Analysis</div>
-    <div class="content">
-      <button data-action="run-agent" disabled>Run AI Analysis</button>
-      <div class="muted">Agent status: idle</div>
-    </div>
-  </div>
-
-</div>
-
-<script src="ui.js"></script>
 
 </body>
+
 </html>
