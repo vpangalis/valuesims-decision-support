@@ -15,11 +15,17 @@
         <div class="column col-d0">
             <div class="header">Incident Overview & Evidence</div>
             <div class="content">
-                
+
                 <label>Incident / Case ID</label>
                 <input id="case-id-input" placeholder="INC-YYYYMMDD-XXXX">
+                <small class="muted">
+                    Format: INC-YYYYMMDD-XXXX (e.g. INC-20260116-0001)
+                </small>
                 <button id="create-incident-btn" disabled>Create Incident</button>
-                
+                <small class="muted">
+                    This locks the Case ID and enables evidence upload and AI analysis.
+                </small>
+
                 <label>Status</label>
                 <input value="Open" readonly>
 
