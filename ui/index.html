@@ -15,9 +15,11 @@
         <div class="column col-d0">
             <div class="header">Incident Overview & Evidence</div>
             <div class="content">
+                
                 <label>Incident / Case ID</label>
-                <input>
-
+                <input id="case-id-input" placeholder="INC-YYYYMMDD-XXXX">
+                <button id="create-incident-btn" disabled>Create Incident</button>
+                
                 <label>Status</label>
                 <input value="Open" readonly>
 
@@ -27,7 +29,7 @@
                 <label>Closure Date</label>
                 <input type="date" readonly>
 
-                <button>Upload Evidence</button>
+                <button data-action="upload-evidence" disabled>Upload Evidence</button>
 
                 <div class="muted">No evidence uploaded yet.</div>
             </div>
@@ -470,7 +472,7 @@
         <div class="column col-ai">
             <div class="header">AI Analysis</div>
             <div class="content">
-                <button>Run AI Analysis</button>
+                <button data-action="run-agent" disabled>Run AI Analysis</button>
                 <div class="muted">Agent status: idle</div>
             </div>
         </div>
