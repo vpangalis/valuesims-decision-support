@@ -13,7 +13,7 @@ body {
   padding: 24px;
   min-width: 5600px;
   overflow-x: auto;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .column {
@@ -37,12 +37,11 @@ body {
   flex-direction: column;
   gap: 14px;
   flex:1;/* take available space */
-  min-height:0;
 }
 
 .scroll-y {
 
-  overflow-y: auto;
+  overflow-y: visible;
 }
 
 .footer {
