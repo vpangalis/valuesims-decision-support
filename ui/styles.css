@@ -41,7 +41,8 @@ body {
 
 .scroll-y {
 
-  overflow-y: visible;
+  overflow-y: auto;
+  max-height: 100px;
 }
 
 .footer {

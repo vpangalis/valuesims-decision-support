@@ -57,3 +57,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 });
+const gatedInputs = document.querySelectorAll(
+  ".column:not(.col-d0) input, .column:not(.col-d0) textarea"
+);
+
+// Disable all gated fields initially
+gatedInputs.forEach(el => el.disabled = true);
+
+// On Create Incident
+createBtn.addEventListener("click", () => {
+  ...
+  gatedInputs.forEach(el => el.disabled = false);
+});
