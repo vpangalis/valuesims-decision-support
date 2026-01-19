@@ -1,0 +1,176 @@
+{
+  "case": {
+    "case_number": "INC-20260116-0001",
+    "opening_date": "2026-01-16",
+    "closure_date": null,
+    "status": "open"
+  },
+
+  "evidence": [
+    {
+      "id": "EV-001",
+      "type": "photo | document | measurement | other",
+      "filename": "",
+      "mime_type": "",
+      "storage_ref": "",
+      "uploaded_by": "",
+      "uploaded_at": "",
+      "description": "",
+      "tags": []
+    }
+  ],
+
+  "phases": {
+    "D1_D2": {
+      "header": {
+        "name": "Problem Initiation",
+        "discipline": ["D1", "D2"],
+        "completed": false,
+        "last_updated": ""
+      },
+      "data": {
+        "problem_description": "",
+        "team_members": [],
+        "organization": {
+          "country": "",
+          "site": "",
+          "department": ""
+        }
+      }
+    },
+
+    "D3": {
+      "header": {
+        "name": "Problem Definition",
+        "discipline": "D3",
+        "completed": false,
+        "last_updated": ""
+      },
+      "data": {
+        "what_happened": "",
+        "why_problem": "",
+        "when": "",
+        "where": "",
+        "who": "",
+        "how_identified": "",
+        "impact": ""
+      }
+    },
+
+    "D4": {
+      "header": {
+        "name": "Immediate Actions",
+        "discipline": "D4",
+        "completed": false,
+        "last_updated": ""
+      },
+      "data": {
+        "actions": [
+          {
+            "action": "",
+            "responsible": "",
+            "due_date": "",
+            "actual_date": ""
+          }
+        ]
+      }
+    },
+
+    "D5": {
+      "header": {
+        "name": "Root Cause Analysis",
+        "discipline": "D5",
+        "completed": false,
+        "last_updated": ""
+      },
+      "data": {
+        "fishbone": {
+          "people": [],
+          "process": [],
+          "tools": [],
+          "environment": [],
+          "management": [],
+          "place": []
+        },
+        "five_whys": {
+          "A": ["", "", "", "", ""],
+          "B": ["", "", "", "", ""]
+        },
+        "investigation_tasks": [
+          {
+            "task": "",
+            "responsible": "",
+            "due_date": "",
+            "actual_date": ""
+          }
+        ],
+        "factors": [
+          {
+            "factor": "",
+            "owner": "",
+            "reviewed_date": "",
+            "status": ""
+          }
+        ]
+      }
+    },
+
+    "D6": {
+      "header": {
+        "name": "Permanent Actions",
+        "discipline": "D6",
+        "completed": false,
+        "last_updated": ""
+      },
+      "data": {
+        "actions": [
+          {
+            "action": "",
+            "responsible": "",
+            "due_date": "",
+            "actual_date": ""
+          }
+        ]
+      }
+    },
+
+    "D7": {
+      "header": {
+        "name": "Prevention / Standardization",
+        "discipline": "D7",
+        "completed": false,
+        "last_updated": ""
+      },
+      "data": {
+        "procedures_updated": false,
+        "training_completed": false
+      }
+    },
+
+    "D8": {
+      "header": {
+        "name": "Closure",
+        "discipline": "D8",
+        "completed": false,
+        "last_updated": ""
+      },
+      "data": {
+        "quality_approved": false,
+        "closure_date": null
+      }
+    }
+  },
+
+  "ai": {
+    "last_run": null,
+    "summary": "",
+    "identified_root_causes": [],
+    "recommended_actions": []
+  },
+
+  "meta": {
+    "created_at": "",
+    "updated_at": "",
+    "version": 1
+  }
+}
