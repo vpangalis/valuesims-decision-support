@@ -7,31 +7,39 @@ document.addEventListener("DOMContentLoaded", () => {
     "[data-action='upload-evidence'], [data-action='run-agent']"
   );
 
-  // --- Safety checks (important during development)
+  const editFields = document.querySelectorAll(
+    ".column:not(.col-d0) input, .column:not(.col-d0) textarea"
+  );
+
+  const incidentIdRegex = /^INC-\d{8}-\d{4}$/;
+
+  // --- Safety check
   if (!caseIdInput || !createBtn) {
     console.warn("Incident ID input or Create button not found");
     return;
   }
 
-  // --- Disable everything by default
+  // --- Initial state (page load)
   createBtn.disabled = true;
   actionButtons.forEach(btn => btn.disabled = true);
+  editFields.forEach(el => el.disabled = true);
 
-  // --- Incident ID validation
-  const incidentIdRegex = /^INC-\d{8}-\d{4}$/;
-
+  // --- Case ID typing
   caseIdInput.addEventListener("input", () => {
     const value = caseIdInput.value.trim();
     const isValid = incidentIdRegex.test(value);
 
-    // Enable only Create Incident when valid
+    // Enable Create Incident when ID is valid
     createBtn.disabled = !isValid;
 
-    // Evidence / AI stay disabled until incident is created
-    actionButtons.forEach(btn => btn.disabled = true);
+    // Unlock entry fields when ID is valid
+    editFields.forEach(el => el.disabled = !isValid);
+
+    // Upload Evidence & AI enabled when ID is valid
+    actionButtons.forEach(btn => btn.disabled = !isValid);
   });
 
-  // --- Create Incident (official moment)
+  // --- Create Incident = formal lock only
   createBtn.addEventListener("click", () => {
     const incidentId = caseIdInput.value.trim();
 
@@ -42,30 +50,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     console.log("Incident created:", incidentId);
 
-    // Unlock next actions ONLY after creation
-    actionButtons.forEach(btn => btn.disabled = false);
-
-    // Lock the Incident ID so it cannot change
+    // Lock ID + button
     caseIdInput.disabled = true;
     createBtn.disabled = true;
   });
 
-  // --- Track column edits (optional, future use)
+  // --- Track edits (future use)
   document.addEventListener("input", (e) => {
     const col = e.target.closest(".column");
     if (col) col.dataset.edited = "true";
   });
 
-});
-const gatedInputs = document.querySelectorAll(
-  ".column:not(.col-d0) input, .column:not(.col-d0) textarea"
-);
-
-// Disable all gated fields initially
-gatedInputs.forEach(el => el.disabled = true);
-
-// On Create Incident
-createBtn.addEventListener("click", () => {
-  ...
-  gatedInputs.forEach(el => el.disabled = false);
 });
