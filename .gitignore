@@ -1,0 +1,10 @@
+tash\ drop 
+# secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+
+# local junk
+tash drop
