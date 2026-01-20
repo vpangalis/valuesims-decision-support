@@ -1,5 +1,6 @@
-from backend.app.domain.case.factory import CaseFactory
-from infrastructure.storage.case_repository import CaseRepository
+from app.domain.case.factory import CaseFactory
+from app.infrastructure.storage.case_repository import CaseRepository
+
 
 
 class CaseService:
