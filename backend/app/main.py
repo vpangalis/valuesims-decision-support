@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes.cases import router as cases_router
+from app.api.cases import router as cases_router
 
 app = FastAPI(
     title="ValueSims Case API",
