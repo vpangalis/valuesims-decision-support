@@ -32,15 +32,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // Enable Create Incident when ID is valid
     createBtn.disabled = !isValid;
 
-    // Unlock entry fields when ID is valid
-    editFields.forEach(el => el.disabled = !isValid);
+    // Only enable Create button on valid format
+    createBtn.disabled = !isValid;
 
-    // Upload Evidence & AI enabled when ID is valid
-    actionButtons.forEach(btn => btn.disabled = !isValid);
   });
 
   // --- Create Incident = formal lock only
-  createBtn.addEventListener("click", () => {
+  createBtn.addEventListener("click", async () => {
     const incidentId = caseIdInput.value.trim();
 
     if (!incidentIdRegex.test(incidentId)) {
@@ -48,12 +46,35 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    console.log("Incident created:", incidentId);
-
-    // Lock ID + button
-    caseIdInput.disabled = true;
     createBtn.disabled = true;
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/cases/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ case_number: incidentId })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        alert(err.detail || "Failed to create case");
+        createBtn.disabled = false;
+        return;
+      }
+
+      // ✅ Backend confirmed → unlock UI
+      caseIdInput.disabled = true;
+      editFields.forEach(el => el.disabled = false);
+      actionButtons.forEach(btn => btn.disabled = false);
+
+      alert(`Incident ${incidentId} created successfully`);
+
+    } catch (err) {
+      alert("Backend not reachable");
+      createBtn.disabled = false;
+    }
   });
+
 
   // --- Track edits (future use)
   document.addEventListener("input", (e) => {
