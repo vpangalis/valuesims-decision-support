@@ -9,6 +9,9 @@ class CaseService:
         self.repo = repository
 
     def create_case(self, case_number: str, opening_date: str | None):
+        if self.repo.exists(case_number):
+            raise ValueError("Case already exists")
+
         case_doc = CaseFactory.create_empty(case_number, opening_date)
         self.repo.create(case_number, case_doc)
         return case_doc

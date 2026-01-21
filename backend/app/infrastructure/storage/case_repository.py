@@ -1,5 +1,6 @@
 import json
-from infrastructure.storage.blob_client import AzureBlobClient
+from app.infrastructure.storage.blob_client import AzureBlobClient
+ 
 
 
 class CaseRepository:
@@ -15,3 +16,7 @@ class CaseRepository:
         path = f"{case_number}/case.json"
         data = self.blob.download_json(path)
         return json.loads(data)
+    
+    def exists(self, case_number: str) -> bool:
+        path = f"{case_number}/case.json"
+        return self.blob.exists(path)

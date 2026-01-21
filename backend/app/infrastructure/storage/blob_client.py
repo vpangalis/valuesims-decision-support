@@ -13,3 +13,8 @@ class AzureBlobClient:
     def download_json(self, path: str) -> str:
         blob = self.container.get_blob_client(path)
         return blob.download_blob().readall()
+    
+    def exists(self, path: str) -> bool:
+        blob = self.container.get_blob_client(path)
+        return blob.exists()
+
