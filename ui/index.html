@@ -22,6 +22,7 @@
                     Format: INC-YYYYMMDD-XXXX (e.g. INC-20260116-0001)
                 </small>
                 <button id="create-incident-btn" disabled>Create Incident</button>
+                <button id="load-incident-btn" disabled>Load Existing Case</button>
                 <small class="muted">
                     This locks the Case ID and enables evidence upload and AI analysis.
                 </small>
@@ -33,7 +34,7 @@
                 <input type="date" data-json-path="case.opening_date">
 
                 <label>Closure Date</label>
-                <input type="date" data-json-path="case.closure_date">
+                <input type="date" data-json-path="case.closure_date" readonly>
 
                 
                 <input id="evidence-file-input" type="file" multiple hidden data-json-path="evidence" />
@@ -135,16 +136,25 @@
                             <th class="w-date">Actual</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody data-array-path="phases.D4.data.actions">
                         <!-- schema v1: actions[0] -->
                         <tr>
-                            <td><input data-json-path="phases.D4.data.actions[0].action"></td>
+                            <td><input class="action-input" data-json-path="phases.D4.data.actions[0].action"></td>
                             <td><input data-json-path="phases.D4.data.actions[0].responsible"></td>
                             <td><input type="date" data-json-path="phases.D4.data.actions[0].due_date"></td>
                             <td><input type="date" data-json-path="phases.D4.data.actions[0].actual_date"></td>
                         </tr>
                     </tbody>
                 </table>
+                <button class="add-row-btn" data-template-id="d4-action-row" data-array-path="phases.D4.data.actions">+ Add Action</button>
+                <template id="d4-action-row">
+                    <tr>
+                        <td><input class="action-input" data-field="action"></td>
+                        <td><input data-field="responsible"></td>
+                        <td><input type="date" data-field="due_date"></td>
+                        <td><input type="date" data-field="actual_date"></td>
+                    </tr>
+                </template>
             </div>
             <div class="phase-actions">
                 <button class="confirm-phase-btn" data-phase="D4">Confirm D4</button>
@@ -267,7 +277,7 @@
                             <th class="w-date">Actual</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody data-array-path="phases.D5.data.investigation_tasks">
                         <tr>
                             <td><input data-json-path="phases.D5.data.investigation_tasks[0].task"></td>
                             <td><input data-json-path="phases.D5.data.investigation_tasks[0].responsible"></td>
@@ -276,6 +286,15 @@
                         </tr>
                     </tbody>
                 </table>
+                <button class="add-row-btn" data-template-id="d5-task-row" data-array-path="phases.D5.data.investigation_tasks">+ Add Task</button>
+                <template id="d5-task-row">
+                    <tr>
+                        <td><input data-field="task"></td>
+                        <td><input data-field="responsible"></td>
+                        <td><input type="date" data-field="due_date"></td>
+                        <td><input type="date" data-field="actual_date"></td>
+                    </tr>
+                </template>
 
                 <h3>Factor / Tree Analysis</h3>
                 <table>
@@ -287,7 +306,7 @@
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody data-array-path="phases.D5.data.factors">
                         <tr>
                             <td><input data-json-path="phases.D5.data.factors[0].factor"></td>
                             <td><input data-json-path="phases.D5.data.factors[0].owner"></td>
@@ -296,6 +315,15 @@
                         </tr>
                     </tbody>
                 </table>
+                <button class="add-row-btn" data-template-id="d5-factor-row" data-array-path="phases.D5.data.factors">+ Add Factor</button>
+                <template id="d5-factor-row">
+                    <tr>
+                        <td><input data-field="factor"></td>
+                        <td><input data-field="owner"></td>
+                        <td><input data-field="reviewed_date"></td>
+                        <td><input data-field="status"></td>
+                    </tr>
+                </template>
 
             </div>
             <div class="phase-actions">
@@ -318,16 +346,25 @@
                             <th class="w-date">Actual</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody data-array-path="phases.D6.data.actions">
                         <!-- schema v1: actions[0] -->
                         <tr>
-                            <td><input data-json-path="phases.D6.data.actions[0].action"></td>
+                            <td><input class="action-input" data-json-path="phases.D6.data.actions[0].action"></td>
                             <td><input data-json-path="phases.D6.data.actions[0].responsible"></td>
                             <td><input type="date" data-json-path="phases.D6.data.actions[0].due_date"></td>
                             <td><input type="date" data-json-path="phases.D6.data.actions[0].actual_date"></td>
                         </tr>
                     </tbody>
                 </table>
+                <button class="add-row-btn" data-template-id="d6-action-row" data-array-path="phases.D6.data.actions">+ Add Action</button>
+                <template id="d6-action-row">
+                    <tr>
+                        <td><input class="action-input" data-field="action"></td>
+                        <td><input data-field="responsible"></td>
+                        <td><input type="date" data-field="due_date"></td>
+                        <td><input type="date" data-field="actual_date"></td>
+                    </tr>
+                </template>
             </div>
             <div class="phase-actions">
                 <button class="confirm-phase-btn" data-phase="D6">Confirm D6</button>

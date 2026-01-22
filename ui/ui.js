@@ -26,9 +26,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const caseIdInput = document.getElementById("case-id-input");
   const createBtn = document.getElementById("create-incident-btn");
+  const loadBtn = document.getElementById("load-incident-btn");
 
   const actionButtons = document.querySelectorAll(
-    "[data-action='upload-evidence'], [data-action='run-agent']"
+    "[data-action='upload-evidence'], [data-action='run-agent'], .add-row-btn"
   );
 
   const editFields = document.querySelectorAll(
@@ -50,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Initial state (page load)
   createBtn.disabled = true;
+  if (loadBtn) loadBtn.disabled = true;
   actionButtons.forEach(btn => btn.disabled = true);
   editFields.forEach(el => el.disabled = true);
 
@@ -64,6 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Enable Create Incident when ID is valid
     createBtn.disabled = !isValid;
+    if (loadBtn) loadBtn.disabled = !isValid;
   });
 
   const evidenceListEl = document.getElementById("evidence-list");
@@ -172,13 +175,40 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  loadBtn?.addEventListener("click", async () => {
+    const incidentId = caseIdInput.value.trim();
+    if (!incidentIdRegex.test(incidentId)) {
+      alert("Invalid Incident ID format.");
+      return;
+    }
+
+    loadBtn.disabled = true;
+
+    try {
+      const response = await fetch(`${API_BASE}/cases/${encodeURIComponent(incidentId)}`);
+      if (!response.ok) {
+        alert("Case not found");
+        loadBtn.disabled = false;
+        return;
+      }
+
+      const caseDoc = await response.json();
+      hydrateCase(caseDoc);
+      caseIdInput.disabled = true;
+      editFields.forEach(el => el.disabled = false);
+      actionButtons.forEach(btn => btn.disabled = false);
+
+      loadEvidence(incidentId);
+    } catch (err) {
+      alert("Backend not reachable");
+      loadBtn.disabled = false;
+    }
+  });
+
 
   // --- Track edits + autosave
   const jsonFields = document.querySelectorAll("[data-json-path]");
-  jsonFields.forEach((el) => {
-    const eventName = el.type === "checkbox" ? "change" : "input";
-    el.addEventListener(eventName, () => handleJsonFieldChange(el));
-  });
+  jsonFields.forEach((el) => bindJsonField(el));
 
   uploadBtn?.addEventListener("click", () => {
     fileInput?.click();
@@ -263,9 +293,63 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // --- Dynamic row buttons
+  const addRowButtons = document.querySelectorAll(".add-row-btn");
+  addRowButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) return;
+      addRow(btn);
+    });
+  });
+
   // -------- helpers --------
   function nowIso() {
     return new Date().toISOString();
+  }
+
+  function bindJsonField(el) {
+    const eventName = el.type === "checkbox" ? "change" : "input";
+    el.addEventListener(eventName, () => handleJsonFieldChange(el));
+  }
+
+  function hydrateCase(caseDoc) {
+    caseState = caseDoc || {};
+
+    const dynamicArrays = [
+      { arrayPath: "phases.D4.data.actions", templateId: "d4-action-row" },
+      { arrayPath: "phases.D5.data.investigation_tasks", templateId: "d5-task-row" },
+      { arrayPath: "phases.D5.data.factors", templateId: "d5-factor-row" },
+      { arrayPath: "phases.D6.data.actions", templateId: "d6-action-row" }
+    ];
+
+    dynamicArrays.forEach(({ arrayPath, templateId }) => {
+      const arr = getByPath(caseState, parsePath(arrayPath));
+      const desired = Array.isArray(arr) ? Math.max(arr.length, 1) : 1;
+      ensureRows(arrayPath, templateId, desired);
+    });
+
+    document.querySelectorAll("[data-json-path]").forEach((el) => {
+      const value = getByPath(caseState, parsePath(el.dataset.jsonPath));
+      if (value === undefined) return;
+      setElementValue(el, value);
+    });
+
+    Object.keys(PHASE_META).forEach((phase) => {
+      const status = caseState?.phases?.[phase]?.header?.status || "not_started";
+      setPhaseStatus(phase, status);
+    });
+  }
+
+  function setElementValue(el, value) {
+    if (el.type === "checkbox") {
+      el.checked = Boolean(value);
+      return;
+    }
+    if (Array.isArray(value) && el.dataset.jsonArray === "true") {
+      el.value = value.join(", ");
+      return;
+    }
+    el.value = value ?? "";
   }
 
   function formatStatus(status) {
@@ -350,7 +434,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const parentTokens = tokens.slice(0, -1);
       const parentPath = tokensToPath(parentTokens);
       const arrValue = getByPath(caseState, parentTokens);
-      const filled = fillScalarArray(arrValue);
+      const filled = fillArrayForPatch(arrValue);
       patch = buildPatch(parentPath, filled);
     } else {
       patch = buildPatch(path, value);
@@ -407,9 +491,52 @@ document.addEventListener("DOMContentLoaded", () => {
     return current;
   }
 
-  function fillScalarArray(arr) {
+  function fillArrayForPatch(arr) {
     if (!Array.isArray(arr)) return [];
-    return arr.map((v) => (v === undefined ? "" : v));
+    const normalized = Array.from({ length: arr.length }, (_, i) => arr[i]);
+    const sample = normalized.find((v) => v !== undefined && v !== null);
+    const isObjectArray = sample && typeof sample === "object" && !Array.isArray(sample);
+    return normalized.map((v) => {
+      if (v === undefined) return isObjectArray ? {} : "";
+      return v;
+    });
+  }
+
+  function addRow(btn) {
+    const templateId = btn.dataset.templateId;
+    const arrayPath = btn.dataset.arrayPath;
+    addRowByConfig(templateId, arrayPath, btn.disabled);
+  }
+
+  function ensureRows(arrayPath, templateId, desiredCount) {
+    const tbody = document.querySelector(`tbody[data-array-path="${arrayPath}"]`);
+    if (!tbody) return;
+    const current = tbody.querySelectorAll("tr").length;
+    for (let i = current; i < desiredCount; i += 1) {
+      addRowByConfig(templateId, arrayPath, false);
+    }
+  }
+
+  function addRowByConfig(templateId, arrayPath, isDisabled) {
+    if (!templateId || !arrayPath) return;
+
+    const template = document.getElementById(templateId);
+    const tbody = document.querySelector(`tbody[data-array-path="${arrayPath}"]`);
+    if (!template || !tbody) return;
+
+    const index = tbody.querySelectorAll("tr").length;
+    const fragment = template.content.cloneNode(true);
+    const inputs = fragment.querySelectorAll("[data-field]");
+
+    inputs.forEach((input) => {
+      const field = input.dataset.field;
+      if (!field) return;
+      input.dataset.jsonPath = `${arrayPath}[${index}].${field}`;
+      input.disabled = isDisabled;
+      bindJsonField(input);
+    });
+
+    tbody.appendChild(fragment);
   }
 
   function setByPath(obj, path, value) {

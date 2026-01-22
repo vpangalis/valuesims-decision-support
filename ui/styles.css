@@ -83,6 +83,21 @@ button {
   font-weight: 600;
 }
 
+.add-row-btn {
+  margin-top: 10px;
+  background: #1f2937;
+  color: #fff;
+  font-weight: 600;
+}
+
+.add-row-btn:hover {
+  background: #111827;
+}
+
+.action-input {
+  min-width: 280px;
+}
+
 .two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -96,9 +111,9 @@ table {
 
 th, td { padding: 6px; }
 
-.w-action { width: 60%; }
-.w-owner { width: 25%; }
-.w-date { width: 5%; }
+.w-action { width: 65%; }
+.w-owner { width: 20%; }
+.w-date { width: 7.5%; }
 
 .fishbone {
   display: grid;
@@ -184,6 +199,14 @@ th, td { padding: 6px; }
 
 .confirm-phase-btn:hover {
   background: #115e59;
+}
+
+#load-incident-btn {
+  background: #0f172a;
+}
+
+#load-incident-btn:hover {
+  background: #111827;
 }
 
 
