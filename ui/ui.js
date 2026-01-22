@@ -353,6 +353,16 @@ document.addEventListener("DOMContentLoaded", () => {
     el.value = value ?? "";
   }
 
+  function updateIncidentOverviewClosure(value) {
+    const closureInput = document.querySelector('[data-json-path="case.closure_date"]');
+    if (closureInput) closureInput.value = value || "";
+  }
+
+  function updateIncidentOverviewStatus(statusValue) {
+    const statusInput = document.querySelector('[data-json-path="case.status"]');
+    if (statusInput) statusInput.value = statusValue || "";
+  }
+
   function formatStatus(status) {
     return status.replace(/_/g, " ");
   }
@@ -430,6 +440,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     let patch;
+    let casePatch = null;
+    if (path === "phases.D8.data.closure_date") {
+      const statusValue = value ? "closed" : "open";
+      setByPath(caseState, "case.closure_date", value || null);
+      setByPath(caseState, "case.status", statusValue);
+      updateIncidentOverviewClosure(value || "");
+      updateIncidentOverviewStatus(statusValue);
+      casePatch = buildPatch("case", {
+        closure_date: value || null,
+        status: statusValue
+      });
+    }
     const tokens = parsePath(path);
     const lastIndexPos = tokens.reduce((pos, token, idx) => (typeof token === "number" ? idx : pos), -1);
     if (lastIndexPos >= 0) {
@@ -445,6 +467,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } else {
       patch = buildPatch(path, value);
+    }
+    if (casePatch) {
+      patch = deepMerge(patch, casePatch);
     }
     if (headerPatch) {
       patch = deepMerge(patch, headerPatch);
