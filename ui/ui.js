@@ -1,10 +1,15 @@
+// ===== API CONFIG (single source of truth) =====
+const API_BASE =
+  window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:8000"
+    : "/api"; // Azure Static Web Apps reverse proxy
+
+
+
 document.addEventListener("DOMContentLoaded", () => {
 
-  // 🔧 API base (local dev vs Azure Static Web Apps)
-  const API_BASE =
-    window.location.hostname.includes("azurestaticapps.net")
-      ? "/api"
-      : "http://127.0.0.1:8000";
+
 
 
   const caseIdInput = document.getElementById("case-id-input");
@@ -83,8 +88,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const row = document.createElement("div");
         row.className = "evidence-row";
 
-        const name = document.createElement("span");
-        name.textContent = f.filename || "(unnamed)";
+    
+        const link = document.createElement("a");
+        link.textContent = f.filename || "(unnamed)";
+        link.href = `${API_BASE}/cases/${encodeURIComponent(caseId)}/evidence/${encodeURIComponent(f.filename)}`;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.className = "evidence-link";
+
 
         const size = document.createElement("span");
         const kb = Math.round((f.size_bytes || 0) / 1024);

@@ -151,3 +151,14 @@ th, td { padding: 6px; }
 .col-ai { width: 1400px; }
 
 .muted { color: #6b7280; }
+
+
+.evidence-link {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.evidence-link:hover {
+  text-decoration: none;
+}
