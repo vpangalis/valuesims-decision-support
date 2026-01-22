@@ -1,5 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+  // 🔧 API base (local dev vs Azure Static Web Apps)
+  const API_BASE =
+    window.location.hostname.includes("azurestaticapps.net")
+      ? "/api"
+      : "http://127.0.0.1:8000";
+
+
   const caseIdInput = document.getElementById("case-id-input");
   const createBtn = document.getElementById("create-incident-btn");
 
@@ -12,6 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   const incidentIdRegex = /^INC-\d{8}-\d{4}$/;
+
+  const uploadBtn = document.getElementById("upload-evidence-btn");
+  const fileInput = document.getElementById("evidence-file-input");
+  const uploadStatus = document.getElementById("upload-status");
+
 
   // --- Safety check
   if (!caseIdInput || !createBtn) {
@@ -32,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Enable Create Incident when ID is valid
     createBtn.disabled = !isValid;
 
-  
+
 
   });
 
@@ -42,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const safeCaseId = encodeURIComponent(caseId);
     const safeFilename = encodeURIComponent(filename);
 
-    const url = `http://127.0.0.1:8000/cases/${safeCaseId}/evidence/${safeFilename}`;
+    const url = `${API_BASE}/cases/${safeCaseId}/evidence/${safeFilename}`;
     window.open(url, "_blank");
   };
 
@@ -53,13 +65,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const safeCaseId = encodeURIComponent(caseId);
-      const res = await fetch(`http://127.0.0.1:8000/cases/${safeCaseId}/evidence`);
+      const res = await fetch(`${API_BASE}/cases/${safeCaseId}/evidence`);
       if (!res.ok) throw new Error("Failed to load evidence");
 
       const data = await res.json();
-      const files = Array.isArray(data) ? data : [];
+      const files = Array.isArray(data?.evidence) ? data.evidence : [];
 
-      
+
 
       if (!files.length) {
         evidenceListEl.innerHTML = "<em>No evidence uploaded</em>";
@@ -106,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
     createBtn.disabled = true;
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/cases/", {
+      const response = await fetch(`${API_BASE}/cases/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ case_number: incidentId })
@@ -141,4 +153,64 @@ document.addEventListener("DOMContentLoaded", () => {
     if (col) col.dataset.edited = "true";
   });
 
+  uploadBtn?.addEventListener("click", () => {
+    fileInput?.click();
+  });
+
+  fileInput?.addEventListener("change", async () => {
+    const files = Array.from(fileInput.files || []);
+    if (!files.length) return;
+
+    const caseId = caseIdInput.value.trim();
+    if (!caseId) {
+      alert("Case ID missing");
+      return;
+    }
+
+    if (uploadBtn) uploadBtn.disabled = true;
+    if (uploadStatus) uploadStatus.textContent = "Uploading files...";
+
+    const formData = new FormData();
+    files.forEach((f) => formData.append("files", f));
+
+    try {
+      const xhr = new XMLHttpRequest();
+
+      xhr.open(
+        "POST",
+        `${API_BASE}/cases/${encodeURIComponent(caseId)}/evidence`
+      );
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && uploadStatus) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          uploadStatus.textContent = `Uploading… ${percent}%`;
+        }
+      };
+
+      xhr.onload = async () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          if (uploadStatus) uploadStatus.textContent = "Upload completed ✅";
+          fileInput.value = "";
+          await loadEvidence(caseId);
+        } else {
+          if (uploadStatus) uploadStatus.textContent = "Upload failed ❌";
+          alert("Upload failed");
+        }
+        if (uploadBtn) uploadBtn.disabled = false;
+      };
+
+      xhr.onerror = () => {
+        if (uploadStatus) uploadStatus.textContent = "Upload error ❌";
+        if (uploadBtn) uploadBtn.disabled = false;
+      };
+
+      xhr.send(formData);
+    } catch (err) {
+      if (uploadStatus) uploadStatus.textContent = "Unexpected upload error";
+      if (uploadBtn) uploadBtn.disabled = false;
+    }
+  });
+
 });
+

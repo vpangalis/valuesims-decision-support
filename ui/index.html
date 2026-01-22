@@ -35,7 +35,15 @@
                 <label>Closure Date</label>
                 <input type="date" readonly>
 
-                <button data-action="upload-evidence" disabled>Upload Evidence</button>
+                
+                <input id="evidence-file-input" type="file" multiple hidden />
+
+                <button id="upload-evidence-btn" data-action="upload-evidence" disabled>
+                    Upload Evidence
+                </button>
+
+                <div id="upload-status" class="muted"></div>
+
 
                 <div id="evidence-list" class="muted">No evidence uploaded yet.</div>
             </div>
