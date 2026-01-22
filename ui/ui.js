@@ -434,9 +434,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof tokens[tokens.length - 1] === "number") {
       const parentTokens = tokens.slice(0, -1);
       const parentPath = tokensToPath(parentTokens);
-      const arrValue = getByPath(caseState, parentTokens);
-      const filled = fillArrayForPatch(arrValue);
-      patch = buildPatch(parentPath, filled);
+      const domArray = buildObjectArrayFromDom(parentPath);
+      if (domArray) {
+        patch = buildPatch(parentPath, domArray);
+      } else {
+        const arrValue = getByPath(caseState, parentTokens);
+        const filled = fillArrayForPatch(arrValue);
+        patch = buildPatch(parentPath, filled);
+      }
     } else {
       patch = buildPatch(path, value);
     }
@@ -501,6 +506,35 @@ document.addEventListener("DOMContentLoaded", () => {
       if (v === undefined) return isObjectArray ? {} : "";
       return v;
     });
+  }
+
+  function escapeRegex(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function buildObjectArrayFromDom(arrayPath) {
+    const tbody = document.querySelector(`tbody[data-array-path="${arrayPath}"]`);
+    if (!tbody) return null;
+
+    const rows = tbody.querySelectorAll("tr");
+    const escaped = escapeRegex(arrayPath);
+    const result = [];
+
+    rows.forEach((row, index) => {
+      const obj = {};
+      const inputs = row.querySelectorAll("[data-json-path]");
+      inputs.forEach((input) => {
+        const path = input.dataset.jsonPath;
+        if (!path) return;
+        const match = path.match(new RegExp(`^${escaped}\\[${index}\\]\\.(.+)$`));
+        if (!match) return;
+        const key = match[1];
+        obj[key] = getElementValue(input);
+      });
+      result.push(obj);
+    });
+
+    return result;
   }
 
   function addRow(btn) {
