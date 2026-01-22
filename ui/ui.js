@@ -275,6 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", async () => {
       const phase = btn.dataset.phase;
       if (!phase) return;
+      await flushSave();
       const header = ensurePhaseHeader(phase);
       header.completed = true;
       header.status = "confirmed";
