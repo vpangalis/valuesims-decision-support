@@ -162,3 +162,33 @@ th, td { padding: 6px; }
 .evidence-link:hover {
   text-decoration: none;
 }
+
+.evidence-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.evidence-row:last-child {
+  border-bottom: none;
+}
+
+.evidence-download {
+  background: #2563eb;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.evidence-download:hover {
+  background: #1e40af;
+}
+
+.error {
+  color: #b91c1c;
+}

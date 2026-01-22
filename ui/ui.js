@@ -1,9 +1,5 @@
 // ===== API CONFIG (single source of truth) =====
-const API_BASE =
-  window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1"
-    ? "http://127.0.0.1:8000"
-    : "/api"; // Azure Static Web Apps reverse proxy
+const API_BASE = "http://127.0.0.1:8000";
 
 
 
@@ -88,28 +84,28 @@ document.addEventListener("DOMContentLoaded", () => {
         const row = document.createElement("div");
         row.className = "evidence-row";
 
-    
-        const link = document.createElement("a");
-        link.textContent = f.filename || "(unnamed)";
-        link.href = `${API_BASE}/cases/${encodeURIComponent(caseId)}/evidence/${encodeURIComponent(f.filename)}`;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.className = "evidence-link";
+        const fileNameEl = document.createElement("a");
+        fileNameEl.textContent = f.filename || "(unnamed)";
+        fileNameEl.href = `${API_BASE}/cases/${encodeURIComponent(caseId)}/evidence/${encodeURIComponent(f.filename)}`;
+        fileNameEl.target = "_blank";
+        fileNameEl.rel = "noopener noreferrer";
+        fileNameEl.className = "evidence-link";
 
-
-        const size = document.createElement("span");
+        const sizeEl = document.createElement("span");
         const kb = Math.round((f.size_bytes || 0) / 1024);
-        size.textContent = `${kb} KB`;
+        sizeEl.textContent = `${kb} KB`;
 
-        const button = document.createElement("button");
-        button.textContent = "⬇";
-        button.addEventListener("click", () => {
-          window.downloadEvidence(caseId, f.filename);
-        });
+        const downloadEl = document.createElement("a");
+        downloadEl.textContent = "⬇";
+        downloadEl.href = fileNameEl.href;
+        downloadEl.target = "_blank";
+        downloadEl.title = "Open / Download evidence";
+        downloadEl.className = "evidence-download";
 
-        row.appendChild(name);
-        row.appendChild(size);
-        row.appendChild(button);
+        row.appendChild(fileNameEl);
+        row.appendChild(sizeEl);
+        row.appendChild(downloadEl);
+
         evidenceListEl.appendChild(row);
       });
     } catch (err) {
