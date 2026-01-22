@@ -9,8 +9,8 @@ class AzureBlobClient:
         self.service = BlobServiceClient.from_connection_string(connection_string)
         self.container = self.service.get_container_client(container)
 
-    def upload_json(self, path: str, data: str):
-        self.container.upload_blob(path, data, overwrite=False)
+    def upload_json(self, path: str, data: str, overwrite: bool = False):
+        self.container.upload_blob(path, data, overwrite=overwrite)
 
     def download_json(self, path: str) -> str:
         blob = self.container.get_blob_client(path)

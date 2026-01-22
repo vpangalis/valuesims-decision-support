@@ -11,7 +11,7 @@ class CaseRepository:
 
     def create(self, case_number: str, case_doc: dict):
         path = f"{case_number}/case.json"
-        self.blob.upload_json(path, json.dumps(case_doc, indent=2))
+        self.blob.upload_json(path, json.dumps(case_doc, indent=2), overwrite=False)
 
     def load(self, case_number: str) -> dict:
         path = f"{case_number}/case.json"
@@ -20,7 +20,7 @@ class CaseRepository:
 
     def save(self, case_number: str, case_doc: dict):
         path = f"{case_number}/case.json"
-        self.blob.upload_json(path, json.dumps(case_doc, indent=2))
+        self.blob.upload_json(path, json.dumps(case_doc, indent=2), overwrite=True)
     
     def exists(self, case_number: str) -> bool:
         path = f"{case_number}/case.json"
