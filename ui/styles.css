@@ -29,6 +29,10 @@ body {
   font-weight: 600;
   background: #e7f0ff;
   border-bottom: 1px solid #c7d2fe;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .content {
@@ -61,6 +65,11 @@ input, textarea {
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #d1d5db;
+}
+
+input[type="checkbox"] {
+  width: auto;
+  padding: 0;
 }
 
 textarea { min-height: 80px; }
@@ -111,33 +120,14 @@ th, td { padding: 6px; }
 /* Fishbone rows – improved layout */
 .fish-row {
   display: grid;
-  grid-template-columns: 20px 1fr; /* checkbox | input */
+  grid-template-columns: 1fr;
   align-items: start;
   gap: 10px;
 }
 
-/* Improve input usability */
-.fish-row input:not([type="checkbox"]) {
+.fish-row input {
   min-height: 36px;
   font-size: 14px;
-}
-
-/* Align checkbox visually with input text */
-.fish-row input[type="checkbox"] {
-  margin-top: 8px;
-}
-
-
-
-/* Critical logic:
-   checkbox checked + input has text */
-/* Critical only if checkbox is checked AND input has text */
-.fish-row > input[type="checkbox"]:checked + input:not(:placeholder-shown) {
-  background: #fee2e2;
-  border-color: #ef4444;
-}
-.fish-row > input[type="checkbox"]:disabled + input {
-  opacity: 0.6;
 }
 
 
@@ -147,10 +137,54 @@ th, td { padding: 6px; }
 .col-d3 { width: 520px; }
 .col-d4, .col-d6 { width: 900px; }
 .col-d5 { width: 1600px; }
-.col-d78 { width: 420px; }
+.col-d7 { width: 420px; }
+.col-d8 { width: 420px; }
 .col-ai { width: 1400px; }
 
 .muted { color: #6b7280; }
+
+.phase-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
+  text-transform: capitalize;
+}
+
+.column[data-status="not_started"] .phase-status {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.column[data-status="in_progress"] .phase-status {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.column[data-status="confirmed"] .phase-status {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.column[data-status="reopened"] .phase-status {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.phase-actions {
+  padding: 0 18px 12px 18px;
+}
+
+.confirm-phase-btn {
+  width: 100%;
+  background: #0f766e;
+}
+
+.confirm-phase-btn:hover {
+  background: #115e59;
+}
 
 
 .evidence-link {

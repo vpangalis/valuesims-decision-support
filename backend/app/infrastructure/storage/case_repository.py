@@ -17,6 +17,10 @@ class CaseRepository:
         path = f"{case_number}/case.json"
         data = self.blob.download_json(path)
         return json.loads(data)
+
+    def save(self, case_number: str, case_doc: dict):
+        path = f"{case_number}/case.json"
+        self.blob.upload_json(path, json.dumps(case_doc, indent=2))
     
     def exists(self, case_number: str) -> bool:
         path = f"{case_number}/case.json"

@@ -4,7 +4,8 @@ from app.infrastructure.storage.blob_client import AzureBlobClient
 from app.infrastructure.storage.case_repository import CaseRepository
 from app.domain.case.service import CaseService
 from app.config import settings
-from pydantic import BaseModel,field_validator
+from pydantic import BaseModel, RootModel, field_validator
+from typing import Any, Dict
 import re
 
 router = APIRouter(prefix="/cases", tags=["cases"])
@@ -21,6 +22,14 @@ class CaseCreateRequest(BaseModel):
         if not re.match(CASE_ID_REGEX, v):
             raise ValueError("Invalid Case ID format")
         return v
+
+
+class CasePatchRequest(RootModel[Dict[str, Any]]):
+    """Partial update payload for case.json.
+
+    Payload must include only the subtree that changed.
+    Lists replace existing lists, dicts merge recursively, scalars overwrite.
+    """
 
 
 blob_client = AzureBlobClient(
@@ -57,3 +66,23 @@ def load_case(case_id: str):
         return case_service.load_case(case_id)
     except Exception:
         raise HTTPException(status_code=404, detail="Case not found")
+
+
+@router.patch("/{case_id}")
+def patch_case(case_id: str, payload: CasePatchRequest):
+    """Apply a partial update to case.json using deep merge.
+
+    - Loads existing case.json from Blob
+    - Deep merges payload (lists replaced)
+    - Updates meta.updated_at and increments meta.version
+    - Persists updated case.json back to Blob
+    """
+    try:
+        result = case_service.patch_case(case_id, payload.root)
+        return result
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Case not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal error")

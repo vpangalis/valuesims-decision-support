@@ -1,6 +1,22 @@
 // ===== API CONFIG (single source of truth) =====
 const API_BASE = "http://127.0.0.1:8000";
 
+let caseState = {};
+
+const PHASE_META = {
+  D1_D2: { name: "Problem Initiation", discipline: ["D1", "D2"] },
+  D3: { name: "Problem Definition", discipline: "D3" },
+  D4: { name: "Immediate Actions", discipline: "D4" },
+  D5: { name: "Root Cause Analysis", discipline: "D5" },
+  D6: { name: "Permanent Actions", discipline: "D6" },
+  D7: { name: "Prevention / Standardization", discipline: "D7" },
+  D8: { name: "Closure", discipline: "D8" }
+};
+
+const DEBOUNCE_MS = 900;
+let pendingPatch = {};
+let saveTimer = null;
+
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -37,6 +53,10 @@ document.addEventListener("DOMContentLoaded", () => {
   actionButtons.forEach(btn => btn.disabled = true);
   editFields.forEach(el => el.disabled = true);
 
+  Object.keys(PHASE_META).forEach((phase) => {
+    setPhaseStatus(phase, "not_started");
+  });
+
   // --- Case ID typing
   caseIdInput.addEventListener("input", () => {
     const value = caseIdInput.value.trim();
@@ -44,9 +64,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Enable Create Incident when ID is valid
     createBtn.disabled = !isValid;
-
-
-
   });
 
   const evidenceListEl = document.getElementById("evidence-list");
@@ -143,6 +160,8 @@ document.addEventListener("DOMContentLoaded", () => {
       editFields.forEach(el => el.disabled = false);
       actionButtons.forEach(btn => btn.disabled = false);
 
+      setByPath(caseState, "case.case_number", incidentId);
+
       loadEvidence(incidentId);
 
       alert(`Incident ${incidentId} created successfully`);
@@ -154,10 +173,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 
-  // --- Track edits (future use)
-  document.addEventListener("input", (e) => {
-    const col = e.target.closest(".column");
-    if (col) col.dataset.edited = "true";
+  // --- Track edits + autosave
+  const jsonFields = document.querySelectorAll("[data-json-path]");
+  jsonFields.forEach((el) => {
+    const eventName = el.type === "checkbox" ? "change" : "input";
+    el.addEventListener(eventName, () => handleJsonFieldChange(el));
   });
 
   uploadBtn?.addEventListener("click", () => {
@@ -218,6 +238,287 @@ document.addEventListener("DOMContentLoaded", () => {
       if (uploadBtn) uploadBtn.disabled = false;
     }
   });
+
+  // --- Confirm Phase buttons
+  const confirmButtons = document.querySelectorAll(".confirm-phase-btn");
+  confirmButtons.forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const phase = btn.dataset.phase;
+      if (!phase) return;
+      const header = ensurePhaseHeader(phase);
+      header.completed = true;
+      header.status = "confirmed";
+      header.confirmed_at = nowIso();
+      header.last_updated = nowIso();
+      setPhaseStatus(phase, header.status);
+
+      const patch = buildHeaderPatch(phase, {
+        completed: header.completed,
+        status: header.status,
+        confirmed_at: header.confirmed_at,
+        last_updated: header.last_updated
+      });
+
+      await savePatchImmediately(patch);
+    });
+  });
+
+  // -------- helpers --------
+  function nowIso() {
+    return new Date().toISOString();
+  }
+
+  function formatStatus(status) {
+    return status.replace(/_/g, " ");
+  }
+
+  function setPhaseStatus(phase, status) {
+    const col = document.querySelector(`.column[data-phase="${phase}"]`);
+    if (!col) return;
+    col.dataset.status = status;
+    const statusEl = col.querySelector("[data-phase-status]");
+    if (statusEl) statusEl.textContent = formatStatus(status);
+  }
+
+  function ensurePhaseHeader(phase) {
+    if (!caseState.phases) caseState.phases = {};
+    if (!caseState.phases[phase]) caseState.phases[phase] = {};
+    if (!caseState.phases[phase].header) {
+      caseState.phases[phase].header = {
+        name: PHASE_META[phase]?.name || phase,
+        discipline: PHASE_META[phase]?.discipline || phase,
+        completed: false,
+        last_updated: "",
+        confirmed_at: null,
+        status: "not_started"
+      };
+    }
+    if (!caseState.phases[phase].header.status) {
+      caseState.phases[phase].header.status = "not_started";
+    }
+    if (caseState.phases[phase].header.completed === undefined) {
+      caseState.phases[phase].header.completed = false;
+    }
+    return caseState.phases[phase].header;
+  }
+
+  function getPhaseFromPath(path) {
+    if (!path.startsWith("phases.")) return null;
+    const parts = path.split(".");
+    return parts[1] || null;
+  }
+
+  function handleJsonFieldChange(el) {
+    const path = el.dataset.jsonPath;
+    if (!path) return;
+    if (el.type === "file") return;
+
+    const value = getElementValue(el);
+    setByPath(caseState, path, value);
+
+    const phase = getPhaseFromPath(path);
+    let immediate = false;
+    let headerPatch = null;
+
+    if (phase) {
+      const header = ensurePhaseHeader(phase);
+      const prevStatus = header.status || "not_started";
+      header.last_updated = nowIso();
+
+      if (prevStatus === "not_started") {
+        header.status = "in_progress";
+      } else if (prevStatus === "confirmed") {
+        header.status = "reopened";
+        header.completed = false;
+        header.confirmed_at = null;
+        immediate = true;
+      }
+
+      setPhaseStatus(phase, header.status);
+
+      headerPatch = buildHeaderPatch(phase, {
+        status: header.status,
+        completed: header.completed,
+        confirmed_at: header.confirmed_at,
+        last_updated: header.last_updated
+      });
+    }
+
+    let patch;
+    const tokens = parsePath(path);
+    if (typeof tokens[tokens.length - 1] === "number") {
+      const parentTokens = tokens.slice(0, -1);
+      const parentPath = tokensToPath(parentTokens);
+      const arrValue = getByPath(caseState, parentTokens);
+      const filled = fillScalarArray(arrValue);
+      patch = buildPatch(parentPath, filled);
+    } else {
+      patch = buildPatch(path, value);
+    }
+    if (headerPatch) {
+      patch = deepMerge(patch, headerPatch);
+    }
+
+    scheduleSave(patch, immediate);
+  }
+
+  function getElementValue(el) {
+    if (el.type === "file") return null;
+    if (el.type === "checkbox") return el.checked;
+    const raw = el.value;
+    if (el.dataset.jsonArray === "true") {
+      return raw.split(",").map(v => v.trim()).filter(Boolean);
+    }
+    return raw;
+  }
+
+  function parsePath(path) {
+    const tokens = [];
+    path.split(".").forEach((part) => {
+      const match = part.match(/(\w+)|\[(\d+)\]/g);
+      if (match) {
+        match.forEach((m) => {
+          if (m.startsWith("[")) tokens.push(Number(m.replace(/[\[\]]/g, "")));
+          else tokens.push(m);
+        });
+      }
+    });
+    return tokens;
+  }
+
+  function tokensToPath(tokens) {
+    let out = "";
+    tokens.forEach((t) => {
+      if (typeof t === "number") {
+        out += `[${t}]`;
+      } else {
+        out += out ? `.${t}` : t;
+      }
+    });
+    return out;
+  }
+
+  function getByPath(obj, tokens) {
+    let current = obj;
+    for (const t of tokens) {
+      if (current == null) return undefined;
+      current = current[t];
+    }
+    return current;
+  }
+
+  function fillScalarArray(arr) {
+    if (!Array.isArray(arr)) return [];
+    return arr.map((v) => (v === undefined ? "" : v));
+  }
+
+  function setByPath(obj, path, value) {
+    const tokens = parsePath(path);
+    let current = obj;
+    tokens.forEach((token, index) => {
+      const isLast = index === tokens.length - 1;
+      const nextToken = tokens[index + 1];
+
+      if (isLast) {
+        current[token] = value;
+        return;
+      }
+
+      if (current[token] === undefined) {
+        current[token] = typeof nextToken === "number" ? [] : {};
+      }
+
+      current = current[token];
+    });
+  }
+
+  function buildPatch(path, value) {
+    const tokens = parsePath(path);
+    const root = {};
+    let current = root;
+    tokens.forEach((token, index) => {
+      const isLast = index === tokens.length - 1;
+      const nextToken = tokens[index + 1];
+      if (isLast) {
+        current[token] = value;
+        return;
+      }
+      if (current[token] === undefined) {
+        current[token] = typeof nextToken === "number" ? [] : {};
+      }
+      current = current[token];
+    });
+    return root;
+  }
+
+  function buildHeaderPatch(phase, headerFields) {
+    return {
+      phases: {
+        [phase]: {
+          header: headerFields
+        }
+      }
+    };
+  }
+
+  function deepMerge(target, source) {
+    if (Array.isArray(source)) {
+      return source;
+    }
+
+    if (source && typeof source === "object") {
+      if (!target || typeof target !== "object") target = {};
+      Object.keys(source).forEach((key) => {
+        target[key] = deepMerge(target[key], source[key]);
+      });
+      return target;
+    }
+
+    return source;
+  }
+
+  function scheduleSave(patch, immediate) {
+    pendingPatch = deepMerge(pendingPatch, patch);
+    if (immediate) {
+      void flushSave();
+      return;
+    }
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => void flushSave(), DEBOUNCE_MS);
+  }
+
+  async function flushSave() {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = null;
+
+    const caseId = caseIdInput.value.trim();
+    if (!incidentIdRegex.test(caseId)) return;
+
+    const payload = pendingPatch;
+    pendingPatch = {};
+    if (!payload || Object.keys(payload).length === 0) return;
+
+    await patchCase(caseId, payload);
+  }
+
+  async function savePatchImmediately(patch) {
+    const caseId = caseIdInput.value.trim();
+    if (!incidentIdRegex.test(caseId)) return;
+    await patchCase(caseId, patch);
+  }
+
+  async function patchCase(caseId, patch) {
+    try {
+      await fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch)
+      });
+    } catch (err) {
+      // Keep UI responsive even if save fails
+      console.warn("Autosave failed", err);
+    }
+  }
 
 });
 
