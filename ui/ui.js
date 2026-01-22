@@ -431,16 +431,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let patch;
     const tokens = parsePath(path);
-    if (typeof tokens[tokens.length - 1] === "number") {
-      const parentTokens = tokens.slice(0, -1);
-      const parentPath = tokensToPath(parentTokens);
-      const domArray = buildObjectArrayFromDom(parentPath);
+    const lastIndexPos = tokens.reduce((pos, token, idx) => (typeof token === "number" ? idx : pos), -1);
+    if (lastIndexPos >= 0) {
+      const arrayTokens = tokens.slice(0, lastIndexPos);
+      const arrayPath = tokensToPath(arrayTokens);
+      const domArray = buildObjectArrayFromDom(arrayPath);
       if (domArray) {
-        patch = buildPatch(parentPath, domArray);
+        patch = buildPatch(arrayPath, domArray);
       } else {
-        const arrValue = getByPath(caseState, parentTokens);
+        const arrValue = getByPath(caseState, arrayTokens);
         const filled = fillArrayForPatch(arrValue);
-        patch = buildPatch(parentPath, filled);
+        patch = buildPatch(arrayPath, filled);
       }
     } else {
       patch = buildPatch(path, value);
