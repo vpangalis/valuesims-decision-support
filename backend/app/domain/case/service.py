@@ -85,6 +85,8 @@ class CaseService:
     def _is_allowed_new_key(self, path: str, key: str) -> bool:
         if path.endswith(".header"):
             return True
+        if ".data" in path:
+            return True
         if path == "meta":
             return True
         return False
