@@ -1,0 +1,276 @@
+{
+  "case": {
+    "case_number": "INC-20260122-0001",
+    "opening_date": "2026-01-22",
+    "closure_date": "2026-01-23",
+    "status": "closed"
+  },
+  "evidence": [],
+  "phases": {
+    "D1_D2": {
+      "header": {
+        "completed": true,
+        "status": "confirmed",
+        "confirmed_at": "2026-01-22T17:29:12.703Z",
+        "last_updated": "2026-01-22T17:29:12.703Z"
+      },
+      "data": {
+        "problem_description": "vassilis asdfasdfasdf",
+        "organization": {
+          "country": "vienna",
+          "department": "asdfasdf",
+          "site": "asdfasdf"
+        },
+        "team_members": [
+          "VASSILIS AGAIN"
+        ]
+      }
+    },
+    "D3": {
+      "header": {
+        "completed": true,
+        "status": "confirmed",
+        "confirmed_at": "2026-01-22T17:29:15.791Z",
+        "last_updated": "2026-01-22T17:29:15.791Z"
+      },
+      "data": {
+        "what_happened": "asdfasdf",
+        "why_problem": "asdfasdf",
+        "when": "asdf",
+        "where": "asdf",
+        "who": "asdf",
+        "how_identified": "sadf",
+        "impact": "GREAT IMPACT"
+      }
+    },
+    "D4": {
+      "header": {
+        "completed": true,
+        "status": "confirmed",
+        "confirmed_at": "2026-01-22T17:35:33.446Z",
+        "last_updated": "2026-01-22T17:35:33.447Z"
+      },
+      "data": {
+        "actions": [
+          {
+            "action": "FIRST ",
+            "responsible": "Vasislis",
+            "due_date": "2026-01-22",
+            "actual_date": "2026-01-22"
+          },
+          {
+            "action": "SECOND",
+            "responsible": "PETER",
+            "due_date": "2026-01-22",
+            "actual_date": "2026-01-22"
+          },
+          {
+            "action": "THIRD",
+            "responsible": "MARTIN",
+            "due_date": "2026-01-22",
+            "actual_date": "2026-01-28"
+          }
+        ]
+      }
+    },
+    "D5": {
+      "header": {
+        "completed": true,
+        "status": "confirmed",
+        "confirmed_at": "2026-01-22T17:38:49.099Z",
+        "last_updated": "2026-01-22T17:38:49.099Z"
+      },
+      "data": {
+        "fishbone": {
+          "people": [
+            "people org",
+            "adf",
+            "asdf",
+            "asdf"
+          ],
+          "environment": [
+            "asdfasdf",
+            "asdf",
+            "asdf",
+            "asdf"
+          ],
+          "process": [
+            "adsf",
+            "asdf",
+            "adsf",
+            "asdf"
+          ],
+          "management": [
+            "asdf",
+            "asdf",
+            "asfd",
+            "f"
+          ],
+          "tools": [
+            "asdf",
+            "asdf",
+            "asdf",
+            "asdf"
+          ],
+          "place": [
+            "asdf",
+            "asdf",
+            "asdf",
+            "adf"
+          ]
+        },
+        "investigation_tasks": [
+          {
+            "task": "FIST",
+            "responsible": "Vassilis",
+            "due_date": "2026-01-22",
+            "actual_date": "2026-01-22"
+          },
+          {
+            "task": "SEC",
+            "responsible": "MARTIN",
+            "due_date": "2026-01-22",
+            "actual_date": "2026-01-22"
+          },
+          {
+            "task": "THR",
+            "responsible": "PETER",
+            "due_date": "2026-01-22",
+            "actual_date": "2026-01-22"
+          },
+          {
+            "task": "FOUR",
+            "responsible": "VERO",
+            "due_date": "2026-01-23",
+            "actual_date": "2026-01-23"
+          },
+          {
+            "task": "FIR",
+            "responsible": "STELLA",
+            "due_date": "2026-01-22",
+            "actual_date": "2026-01-22"
+          }
+        ],
+        "factors": [
+          {
+            "factor": "F1",
+            "owner": "Vassilis",
+            "reviewed_date": "Y",
+            "status": "Non"
+          },
+          {
+            "factor": "F2",
+            "owner": "Peter",
+            "reviewed_date": "Y",
+            "status": "Y"
+          },
+          {
+            "factor": "F3",
+            "owner": "Martin",
+            "reviewed_date": "Y",
+            "status": "N"
+          },
+          {
+            "factor": "F4",
+            "owner": "Peter",
+            "reviewed_date": "Y",
+            "status": "N"
+          }
+        ],
+        "five_whys": {
+          "A": [
+            "asdf",
+            "asdf",
+            "asdf",
+            "adf",
+            "adf"
+          ],
+          "B": [
+            "asdfa",
+            "asdfasdf",
+            "asdf",
+            "asdfas",
+            "dfsadfsd"
+          ]
+        }
+      }
+    },
+    "D6": {
+      "header": {
+        "completed": true,
+        "status": "confirmed",
+        "confirmed_at": "2026-01-22T17:36:42.018Z",
+        "last_updated": "2026-01-22T17:36:42.018Z"
+      },
+      "data": {
+        "actions": [
+          {
+            "action": "FIRST ",
+            "responsible": "Vassilis",
+            "due_date": "2026-01-22",
+            "actual_date": "2026-01-22"
+          },
+          {
+            "action": "SECOND",
+            "responsible": "PETER",
+            "due_date": "2026-01-22",
+            "actual_date": "2026-01-23"
+          },
+          {
+            "action": "THIRD",
+            "responsible": "MARTIN",
+            "due_date": "2026-01-22",
+            "actual_date": "2026-01-22"
+          },
+          {
+            "action": "FOURTH",
+            "responsible": "VERO",
+            "due_date": "2026-01-22",
+            "actual_date": "2026-01-22"
+          },
+          {
+            "action": "FIFTH",
+            "responsible": "STELLA",
+            "due_date": "2026-01-25",
+            "actual_date": "2026-01-25"
+          }
+        ]
+      }
+    },
+    "D7": {
+      "header": {
+        "completed": true,
+        "status": "confirmed",
+        "confirmed_at": "2026-01-22T17:30:08.295Z",
+        "last_updated": "2026-01-22T17:30:08.295Z"
+      },
+      "data": {
+        "procedures_updated": true,
+        "training_completed": true
+      }
+    },
+    "D8": {
+      "header": {
+        "completed": true,
+        "status": "confirmed",
+        "confirmed_at": "2026-01-22T17:44:25.096Z",
+        "last_updated": "2026-01-22T17:44:25.096Z"
+      },
+      "data": {
+        "quality_approved": true,
+        "closure_date": "2026-01-23"
+      }
+    }
+  },
+  "ai": {
+    "last_run": null,
+    "summary": "",
+    "identified_root_causes": [],
+    "recommended_actions": []
+  },
+  "meta": {
+    "version": 161,
+    "created_at": "2026-01-22T17:03:55.997971",
+    "updated_at": "2026-01-22T17:44:25Z"
+  }
+}
