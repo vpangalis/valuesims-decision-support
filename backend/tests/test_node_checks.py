@@ -49,8 +49,10 @@ from backend.workflow.models import (
     StrategyDraftPayload,
     StrategyNodeOutput,
 )
+from backend.workflow.models import QuestionReadinessResult, QuestionReadinessNodeOutput
 from backend.workflow.nodes.kpi_node import KPINode
 from backend.workflow.nodes.operational_node import OperationalNode
+from backend.workflow.nodes.question_readiness_node import QuestionReadinessNode
 from backend.workflow.nodes.similarity_node import SimilarityNode
 from backend.workflow.nodes.strategy_node import StrategyNode
 
@@ -58,6 +60,7 @@ __all__ = [
     "NodeCheckConfig",
     "OperationalNodeChecks",
     "SimilarityNodeChecks",
+    "QuestionReadinessNodeChecks",
     "StrategyNodeChecks",
     "KPINodeChecks",
     "NodeCheckRunner",
@@ -692,6 +695,7 @@ class _MockLLMClient:
         user_question: Optional[str] = None,
         model_name: Optional[str] = None,
         model_name_override: Optional[str] = None,
+        max_tokens: Optional[int] = None,
     ) -> Any:
         # Return a minimal valid instance of whatever model is requested.
         # This is only used for tests that need complete_json (not nodes themselves).
@@ -2416,6 +2420,262 @@ class KPINodeChecks:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# QuestionReadinessNodeChecks
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+class _MockReadinessLLMClient:
+    """Mock LLM client for QuestionReadinessNode with full control over ready/clarifying."""
+
+    def __init__(self, ready: bool, clarifying_question: str = "") -> None:
+        self._ready = ready
+        self._clarifying = clarifying_question
+
+    def complete_json(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        response_model: type,
+        temperature: float = 0.0,
+        user_question: Optional[str] = None,
+        model_name: Optional[str] = None,
+        model_name_override: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+    ) -> Any:
+        return response_model.model_validate(
+            {"ready": self._ready, "clarifying_question": self._clarifying}
+        )
+
+
+class QuestionReadinessNodeChecks:
+    """Automated checks for QuestionReadinessNode."""
+
+    # Technical / system terms that must never appear in a clarifying question.
+    _BANNED_CLARIFY_TERMS: tuple[str, ...] = (
+        "intent",
+        "node",
+        "classification",
+        "routing",
+        "pipeline",
+        "llm",
+        "vector",
+        "embedding",
+        "langgraph",
+        "operational_case",
+        "similarity_search",
+        "strategy_analysis",
+        "kpi_analysis",
+    )
+
+    def __init__(self, config: NodeCheckConfig) -> None:
+        self._cfg = config
+
+    def _make_node(self, ready: bool, clarifying_question: str = "") -> QuestionReadinessNode:
+        return QuestionReadinessNode(
+            llm_client=_MockReadinessLLMClient(ready=ready, clarifying_question=clarifying_question)  # type: ignore[arg-type]
+        )
+
+    # ── Category 1: Structural ────────────────────────────────────────────
+
+    def test_structural_has_run_method(self) -> CheckResult:
+        _, tree = NodeCheckConfig._read_source(QuestionReadinessNode)
+        methods = _ASTHelper.class_method_names(tree, "QuestionReadinessNode")
+        if "run" not in methods:
+            return CheckResult(
+                "QuestionReadinessNode: has run() method",
+                passed=False,
+                detail="run() method not found",
+            )
+        return CheckResult("QuestionReadinessNode: has run() method", passed=True)
+
+    def test_structural_output_model_fields(self) -> CheckResult:
+        output = QuestionReadinessNodeOutput(
+            question_ready=True,
+            clarifying_question=None,
+            clarifying_suggestions=[],
+        )
+        try:
+            assert hasattr(output, "question_ready")
+            assert hasattr(output, "clarifying_question")
+            assert hasattr(output, "clarifying_suggestions")
+        except AssertionError as exc:
+            return CheckResult(
+                "QuestionReadinessNode: output model fields",
+                passed=False,
+                detail=str(exc),
+            )
+        return CheckResult("QuestionReadinessNode: output model fields", passed=True)
+
+    # ── Category 2: I/O Contract ──────────────────────────────────────────
+
+    def test_readiness_check_case_loaded(self) -> CheckResult:
+        """When case is loaded and intent is OPERATIONAL_CASE, node must return ready=True."""
+        node = self._make_node(ready=True, clarifying_question="")
+        try:
+            output = node.run(
+                question="What should we focus on for the root cause analysis?",
+                intent="OPERATIONAL_CASE",
+                case_id=self._cfg.SAMPLE_CASE_ID,
+                case_context=self._cfg.SAMPLE_CASE_CONTEXT,
+            )
+            if not output.question_ready:
+                return CheckResult(
+                    "QuestionReadinessNode: ready=True when case loaded",
+                    passed=False,
+                    detail="Expected question_ready=True but got False",
+                )
+            if output.clarifying_question is not None:
+                return CheckResult(
+                    "QuestionReadinessNode: ready=True when case loaded",
+                    passed=False,
+                    detail=f"clarifying_question should be None when ready, got: {output.clarifying_question!r}",
+                )
+        except Exception as exc:
+            return CheckResult(
+                "QuestionReadinessNode: ready=True when case loaded",
+                passed=False,
+                detail=f"Exception: {exc}\n{traceback.format_exc()}",
+            )
+        return CheckResult("QuestionReadinessNode: ready=True when case loaded", passed=True)
+
+    def test_readiness_check_no_case_operational(self) -> CheckResult:
+        """When no case and OPERATIONAL_CASE, node must return ready=False with non-empty clarifying_question."""
+        clarify = "Which case are you working on? Load a case from the left panel and I can give you a specific answer."
+        node = self._make_node(ready=False, clarifying_question=clarify)
+        try:
+            output = node.run(
+                question="What should we do next with this case?",
+                intent="OPERATIONAL_CASE",
+                case_id=None,
+                case_context=None,
+            )
+            if output.question_ready:
+                return CheckResult(
+                    "QuestionReadinessNode: ready=False when no case (OPERATIONAL_CASE)",
+                    passed=False,
+                    detail="Expected question_ready=False but got True",
+                )
+            if not output.clarifying_question:
+                return CheckResult(
+                    "QuestionReadinessNode: ready=False when no case (OPERATIONAL_CASE)",
+                    passed=False,
+                    detail="clarifying_question is empty — must provide guidance to the user",
+                )
+            if not output.clarifying_suggestions:
+                return CheckResult(
+                    "QuestionReadinessNode: ready=False when no case (OPERATIONAL_CASE)",
+                    passed=False,
+                    detail="clarifying_suggestions is empty — standard 6 chips must be returned",
+                )
+        except Exception as exc:
+            return CheckResult(
+                "QuestionReadinessNode: ready=False when no case (OPERATIONAL_CASE)",
+                passed=False,
+                detail=f"Exception: {exc}\n{traceback.format_exc()}",
+            )
+        return CheckResult(
+            "QuestionReadinessNode: ready=False when no case (OPERATIONAL_CASE)", passed=True
+        )
+
+    def test_clarifying_question_is_non_technical(self) -> CheckResult:
+        """Clarifying question must not contain any banned technical/system terms."""
+        clarify = (
+            "Which case are you working on right now? "
+            "Load a case from the left panel and I can give you a specific answer."
+        )
+        node = self._make_node(ready=False, clarifying_question=clarify)
+        try:
+            output = node.run(
+                question="What should we do next?",
+                intent="OPERATIONAL_CASE",
+                case_id=None,
+                case_context=None,
+            )
+            cq = (output.clarifying_question or "").lower()
+            hits = [t for t in self._BANNED_CLARIFY_TERMS if t in cq]
+            if hits:
+                return CheckResult(
+                    "QuestionReadinessNode: clarifying question is non-technical",
+                    passed=False,
+                    detail=f"Banned technical terms found: {hits}",
+                )
+        except Exception as exc:
+            return CheckResult(
+                "QuestionReadinessNode: clarifying question is non-technical",
+                passed=False,
+                detail=f"Exception: {exc}\n{traceback.format_exc()}",
+            )
+        return CheckResult(
+            "QuestionReadinessNode: clarifying question is non-technical", passed=True
+        )
+
+    def test_strategy_always_ready(self) -> CheckResult:
+        """STRATEGY_ANALYSIS must always return ready=True regardless of case context."""
+        node = self._make_node(ready=True, clarifying_question="")
+        try:
+            output = node.run(
+                question="What are our most recurring failure categories?",
+                intent="STRATEGY_ANALYSIS",
+                case_id=None,
+                case_context=None,
+            )
+            if not output.question_ready:
+                return CheckResult(
+                    "QuestionReadinessNode: STRATEGY_ANALYSIS always ready",
+                    passed=False,
+                    detail="Expected question_ready=True for STRATEGY_ANALYSIS without case, got False",
+                )
+        except Exception as exc:
+            return CheckResult(
+                "QuestionReadinessNode: STRATEGY_ANALYSIS always ready",
+                passed=False,
+                detail=f"Exception: {exc}\n{traceback.format_exc()}",
+            )
+        return CheckResult(
+            "QuestionReadinessNode: STRATEGY_ANALYSIS always ready", passed=True
+        )
+
+    def test_six_standard_suggestions_when_not_ready(self) -> CheckResult:
+        """When ready=False, exactly 6 standard suggestion chips must be returned."""
+        clarify = "Which case are you asking about?"
+        node = self._make_node(ready=False, clarifying_question=clarify)
+        try:
+            output = node.run(
+                question="What gaps should we address?",
+                intent="OPERATIONAL_CASE",
+                case_id=None,
+                case_context=None,
+            )
+            if len(output.clarifying_suggestions) != 6:
+                return CheckResult(
+                    "QuestionReadinessNode: 6 suggestions when not ready",
+                    passed=False,
+                    detail=f"Expected 6 suggestion chips, got {len(output.clarifying_suggestions)}",
+                )
+        except Exception as exc:
+            return CheckResult(
+                "QuestionReadinessNode: 6 suggestions when not ready",
+                passed=False,
+                detail=f"Exception: {exc}\n{traceback.format_exc()}",
+            )
+        return CheckResult(
+            "QuestionReadinessNode: 6 suggestions when not ready", passed=True
+        )
+
+    def run_all(self) -> list[CheckResult]:
+        """Run all QuestionReadinessNode checks and return results."""
+        return [
+            self.test_structural_has_run_method(),
+            self.test_structural_output_model_fields(),
+            self.test_readiness_check_case_loaded(),
+            self.test_readiness_check_no_case_operational(),
+            self.test_clarifying_question_is_non_technical(),
+            self.test_strategy_always_ready(),
+            self.test_six_standard_suggestions_when_not_ready(),
+        ]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # NodeCheckRunner — orchestrates all checks and produces the report
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -2443,6 +2703,7 @@ class NodeCheckRunner:
             ("SimilarityNode", SimilarityNodeChecks(self._config).run_all()),
             ("StrategyNode", StrategyNodeChecks(self._config).run_all()),
             ("KPINode", KPINodeChecks(self._config).run_all()),
+            ("QuestionReadinessNode", QuestionReadinessNodeChecks(self._config).run_all()),
         ]
 
         total_pass = total_fail = total_skip = 0
@@ -2500,6 +2761,7 @@ class NodeCheckRunner:
             "SimilarityNode": SimilarityNodeChecks(self._config).run_all(),
             "StrategyNode": StrategyNodeChecks(self._config).run_all(),
             "KPINode": KPINodeChecks(self._config).run_all(),
+            "QuestionReadinessNode": QuestionReadinessNodeChecks(self._config).run_all(),
         }
 
 
@@ -2759,6 +3021,47 @@ class TestKPINode:
 # ══════════════════════════════════════════════════════════════════════════════
 # Entry point
 # ══════════════════════════════════════════════════════════════════════════════
+
+
+class TestQuestionReadinessNode:
+    """pytest wrapper for QuestionReadinessNodeChecks."""
+
+    _cfg = NodeCheckConfig()
+    _checks = None
+
+    @classmethod
+    def _get_checks(cls) -> QuestionReadinessNodeChecks:
+        if cls._checks is None:
+            cls._checks = QuestionReadinessNodeChecks(cls._cfg)
+        return cls._checks
+
+    def test_structural_has_run_method(self) -> None:
+        r = self._get_checks().test_structural_has_run_method()
+        assert r.passed or r.skipped, r.detail
+
+    def test_structural_output_model_fields(self) -> None:
+        r = self._get_checks().test_structural_output_model_fields()
+        assert r.passed or r.skipped, r.detail
+
+    def test_readiness_check_case_loaded(self) -> None:
+        r = self._get_checks().test_readiness_check_case_loaded()
+        assert r.passed or r.skipped, r.detail
+
+    def test_readiness_check_no_case_operational(self) -> None:
+        r = self._get_checks().test_readiness_check_no_case_operational()
+        assert r.passed or r.skipped, r.detail
+
+    def test_clarifying_question_is_non_technical(self) -> None:
+        r = self._get_checks().test_clarifying_question_is_non_technical()
+        assert r.passed or r.skipped, r.detail
+
+    def test_strategy_always_ready(self) -> None:
+        r = self._get_checks().test_strategy_always_ready()
+        assert r.passed or r.skipped, r.detail
+
+    def test_six_standard_suggestions_when_not_ready(self) -> None:
+        r = self._get_checks().test_six_standard_suggestions_when_not_ready()
+        assert r.passed or r.skipped, r.detail
 
 
 if __name__ == "__main__":

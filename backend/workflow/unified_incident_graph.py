@@ -32,6 +32,7 @@ from backend.workflow.nodes.kpi_reflection_node import KPIReflectionNode
 from backend.workflow.nodes.operational_node import OperationalNode
 from backend.workflow.nodes.operational_escalation_node import OperationalEscalationNode
 from backend.workflow.nodes.operational_reflection_node import OperationalReflectionNode
+from backend.workflow.nodes.question_readiness_node import QuestionReadinessNode
 from backend.workflow.nodes.response_formatter_node import ResponseFormatterNode
 from backend.workflow.nodes.router_node import RouterNode
 from backend.workflow.nodes.similarity_node import SimilarityNode
@@ -49,6 +50,9 @@ class IncidentGraphState(TypedDict, total=False):
     current_d_state: str | None
     classification: IntentClassificationResult | None
     route: str | None
+    question_ready: bool
+    clarifying_question: str | None
+    clarifying_suggestions: list
     operational_draft: OperationalDraftPayload | None
     operational_result: OperationalGuidance | None
     operational_reflection: ReflectionResult | None
@@ -77,6 +81,7 @@ class UnifiedIncidentGraph:
         context_node: ContextNode,
         intent_classification_node: IntentClassificationNode,
         intent_reflection_node: IntentReflectionNode,
+        question_readiness_node: QuestionReadinessNode,
         router_node: RouterNode,
         operational_node: OperationalNode,
         operational_reflection_node: OperationalReflectionNode,
@@ -96,6 +101,7 @@ class UnifiedIncidentGraph:
         self._context_node = context_node
         self._intent_classification_node = intent_classification_node
         self._intent_reflection_node = intent_reflection_node
+        self._question_readiness_node = question_readiness_node
         self._router_node = router_node
         self._operational_node = operational_node
         self._operational_reflection_node = operational_reflection_node
@@ -116,6 +122,7 @@ class UnifiedIncidentGraph:
         graph.add_node("context_node", self._context)
         graph.add_node("intent_classification_node", self._intent_classification)
         graph.add_node("intent_reflection_node", self._intent_reflection)
+        graph.add_node("question_readiness_node", self._question_readiness)
         graph.add_node("router_node", self._router)
         graph.add_node("operational_node", self._operational)
         graph.add_node("operational_reflection_node", self._operational_reflection)
@@ -136,7 +143,16 @@ class UnifiedIncidentGraph:
         graph.add_edge("start_node", "context_node")
         graph.add_edge("context_node", "intent_classification_node")
         graph.add_edge("intent_classification_node", "intent_reflection_node")
-        graph.add_edge("intent_reflection_node", "router_node")
+        graph.add_edge("intent_reflection_node", "question_readiness_node")
+
+        graph.add_conditional_edges(
+            "question_readiness_node",
+            self._route_question_readiness,
+            {
+                "READY": "router_node",
+                "NOT_READY": "end_node",
+            },
+        )
 
         graph.add_conditional_edges(
             "router_node",
@@ -209,6 +225,41 @@ class UnifiedIncidentGraph:
             classification=classification,
         )
         return cast(IncidentGraphState, output.model_dump())
+
+    def _question_readiness(self, state: IncidentGraphState) -> IncidentGraphState:
+        classification = state.get("classification")
+        if isinstance(classification, dict):
+            classification = IntentClassificationResult.model_validate(classification)
+        intent = classification.intent if classification is not None else "SIMILARITY_SEARCH"
+
+        output = self._question_readiness_node.run(
+            question=str(state.get("question") or ""),
+            intent=intent,
+            case_id=state.get("case_id"),
+            case_context=state.get("case_context"),
+        )
+
+        result: dict = output.model_dump()
+
+        # When not ready, pre-build final_response so end_node can proceed without
+        # going through the response formatter.
+        if not output.question_ready:
+            from datetime import datetime, timezone
+
+            clarify_text = output.clarifying_question or (
+                "Could you give me a bit more context so I can give you a useful answer? "
+                "You can also load a case from the left panel and I can focus on that."
+            )
+            result["final_response"] = FinalResponsePayload(
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                classification=classification,
+                result={
+                    "summary": clarify_text,
+                    "suggestions": output.clarifying_suggestions,
+                },
+            ).model_dump()
+
+        return cast(IncidentGraphState, result)
 
     def _router(self, state: IncidentGraphState) -> IncidentGraphState:
         classification = state.get("classification")
@@ -412,6 +463,15 @@ class UnifiedIncidentGraph:
             raise ValueError("final_response is required for end node")
         payload = FinalResponsePayload.model_validate(response)
         return {"final_response": self._end_node.run(payload).model_dump()}
+
+    def _route_question_readiness(self, state: IncidentGraphState) -> str:
+        question_ready = state.get("question_ready")
+        # Default to READY when field is absent (e.g. first-run without LLM)
+        if question_ready is False:
+            _graph_logger.info("[GRAPH_DEBUG] question_readiness: NOT_READY — returning clarifying question")
+            return "NOT_READY"
+        _graph_logger.info("[GRAPH_DEBUG] question_readiness: READY — proceeding to router")
+        return "READY"
 
     def _route_intent(self, state: IncidentGraphState) -> str:
         route = state.get("route")

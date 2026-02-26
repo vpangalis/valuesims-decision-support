@@ -240,6 +240,21 @@ class ResponseFormatterOutput(BaseModel):
     final_response: FinalResponsePayload
 
 
+class QuestionReadinessResult(BaseModel):
+    """Raw JSON result returned by the LLM readiness check."""
+
+    ready: bool
+    clarifying_question: str = ""
+
+
+class QuestionReadinessNodeOutput(BaseModel):
+    """Output emitted by QuestionReadinessNode into IncidentGraphState."""
+
+    question_ready: bool
+    clarifying_question: Optional[str] = None
+    clarifying_suggestions: list[dict] = Field(default_factory=list)
+
+
 __all__ = [
     "IntentClassificationResult",
     "OperationalGuidance",
@@ -270,4 +285,6 @@ __all__ = [
     "KPIReflectionOutput",
     "FinalResponsePayload",
     "ResponseFormatterOutput",
+    "QuestionReadinessResult",
+    "QuestionReadinessNodeOutput",
 ]

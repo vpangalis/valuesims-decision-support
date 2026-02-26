@@ -34,6 +34,7 @@ class LanguageModelClient:
         response_model: type[TModel],
         temperature: float = 0.1,
         model_name: str | None = None,
+        max_tokens: int | None = None,
     ) -> TModel:
         if self._openai_client is not None:
             content = self._complete_with_sdk(
@@ -41,6 +42,7 @@ class LanguageModelClient:
                 user_prompt,
                 temperature,
                 model_name,
+                max_tokens=max_tokens,
             )
         else:
             content = self._complete_with_rest(
@@ -48,6 +50,7 @@ class LanguageModelClient:
                 user_prompt,
                 temperature,
                 model_name,
+                max_tokens=max_tokens,
             )
         parsed = self._parse_json_content(content)
         try:
@@ -69,6 +72,7 @@ class LanguageModelClient:
         user_prompt: str,
         temperature: float,
         model_name: str | None,
+        max_tokens: int | None = None,
     ) -> str:
         if self._openai_client is None:
             raise ValueError("OpenAI client is not configured.")
@@ -81,7 +85,7 @@ class LanguageModelClient:
         )
         if not deployment:
             raise ValueError("AZURE_OPENAI_CHAT_DEPLOYMENT is not configured.")
-        response = self._openai_client.chat.completions.create(
+        create_kwargs: dict[str, Any] = dict(
             model=deployment,
             response_format={"type": "json_object"},
             temperature=temperature,
@@ -90,6 +94,9 @@ class LanguageModelClient:
                 {"role": "user", "content": user_prompt},
             ],
         )
+        if max_tokens is not None:
+            create_kwargs["max_tokens"] = max_tokens
+        response = self._openai_client.chat.completions.create(**create_kwargs)
         content = response.choices[0].message.content
         if not content:
             raise ValueError("LLM returned empty response content.")
@@ -101,6 +108,7 @@ class LanguageModelClient:
         user_prompt: str,
         temperature: float,
         model_name: str | None,
+        max_tokens: int | None = None,
     ) -> str:
         endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT")
         api_key = os.environ.get("AZURE_OPENAI_API_KEY")
@@ -116,7 +124,7 @@ class LanguageModelClient:
             f"{endpoint.rstrip('/')}/openai/deployments/{deployment}/chat/completions"
             f"?api-version={api_version}"
         )
-        payload = {
+        payload: dict[str, Any] = {
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
@@ -124,6 +132,8 @@ class LanguageModelClient:
             "temperature": temperature,
             "response_format": {"type": "json_object"},
         }
+        if max_tokens is not None:
+            payload["max_tokens"] = max_tokens
         headers = {
             "Content-Type": "application/json",
             "api-key": api_key,
