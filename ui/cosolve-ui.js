@@ -889,6 +889,15 @@ document.addEventListener("DOMContentLoaded", () => {
     `</div>` +
     `</div>` +
     `<div class="ai-welcome-section">` +
+    `<div class="ai-welcome-section-label">HOW ARE WE DOING?</div>` +
+    `<div class="ai-welcome-section-hint">Ask performance and KPI questions about your case portfolio:</div>` +
+    `<div class="ai-welcome-suggestions">` +
+    `<div class="ai-suggestion-chip strategy-chip">How is our overall incident resolution performance?</div>` +
+    `<div class="ai-suggestion-chip strategy-chip">Which areas have the most open cases right now?</div>` +
+    `<div class="ai-suggestion-chip strategy-chip">How long do cases typically take to resolve?</div>` +
+    `</div>` +
+    `</div>` +
+    `<div class="ai-welcome-section">` +
     `<div class="ai-welcome-section-label">HAVE WE SEEN THIS BEFORE?</div>` +
     `<div class="ai-welcome-section-hint">Look through past resolved cases for anything similar:</div>` +
     `<div class="ai-welcome-suggestions">` +
@@ -898,26 +907,11 @@ document.addEventListener("DOMContentLoaded", () => {
     `</div>` +
     `<div class="ai-welcome-section">` +
     `<div class="ai-welcome-section-label">LOOKING AT THE BIGGER PICTURE?</div>` +
-    `<div class="ai-welcome-section-hint">Ask about recurring patterns and trends across all areas and teams:</div>` +
+    `<div class="ai-welcome-section-hint">Ask strategy questions about recurring patterns and organisational trends:</div>` +
     `<div class="ai-welcome-suggestions">` +
     `<div class="ai-suggestion-chip strategy-chip">What are the most recurring failure types we face?</div>` +
     `<div class="ai-suggestion-chip strategy-chip">How are we trending on unplanned failures this year?</div>` +
-    `</div>` +
-    `</div>` +
-    `<div class="ai-welcome-section">` +
-    `<div class="ai-welcome-section-label">HOW ARE WE DOING?</div>` +
-    `<div class="ai-welcome-section-hint">Understand overall performance and where to focus attention:</div>` +
-    `<div class="ai-welcome-suggestions">` +
-    `<div class="ai-suggestion-chip strategy-chip">How is our overall incident resolution performance?</div>` +
-    `<div class="ai-suggestion-chip strategy-chip">Which areas have the most open cases right now?</div>` +
-    `<div class="ai-suggestion-chip strategy-chip">How long do cases typically take to resolve?</div>` +
-    `</div>` +
-    `</div>` +
-    `<div class="ai-welcome-section">` +
-    `<div class="ai-welcome-section-label">JUST DISCOVERED A NEW PROBLEM?</div>` +
-    `<div class="ai-welcome-section-hint">Not sure where to begin? Try:</div>` +
-    `<div class="ai-welcome-suggestions">` +
-    `<div class="ai-suggestion-chip">We just found a problem \u2014 what should we do first?</div>` +
+    `<div class="ai-suggestion-chip strategy-chip">Which areas need organisational attention?</div>` +
     `</div>` +
     `</div>` +
     `<div class="ai-welcome-hint">` +

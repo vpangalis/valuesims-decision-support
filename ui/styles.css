@@ -1388,6 +1388,7 @@ select:focus-visible {
   color: #1e3a8a;
   cursor: pointer;
   line-height: 1.4;
+  white-space: nowrap;
   transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
   user-select: none;
 }
