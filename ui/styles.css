@@ -1620,3 +1620,79 @@ select:focus-visible {
 /* ── Status badge palette alignment ──────────────────────────────── */
 /* .kb-status-indexed and .kb-status-no-text already use the green/amber
    palette consistent with the new design — kept as-is. */
+
+/* ═══════════════════════════════════════════════════════════════════
+   KPI RENDERING COMPONENTS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Two-column key/value table used by table and gauge renders */
+.kpi-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  margin: 4px 0 8px;
+}
+
+.kpi-table th,
+.kpi-table td {
+  padding: 5px 8px;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+}
+
+.kpi-table thead th {
+  font-weight: 600;
+  color: #1e3a8a;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.kpi-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.kpi-label {
+  color: #6b7280;
+  width: 60%;
+}
+
+.kpi-value {
+  color: #111827;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Chart.js canvas container */
+.kpi-chart-container {
+  position: relative;
+  width: 100%;
+  max-height: 220px;
+  margin: 8px 0 4px;
+}
+
+.kpi-chart-container canvas {
+  max-height: 220px;
+}
+
+/* Gauge SVG layout */
+.kpi-gauge-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.kpi-gauge-svg {
+  display: block;
+}
+
+.kpi-gauge-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: #6b7280;
+}

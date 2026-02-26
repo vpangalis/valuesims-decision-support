@@ -1070,14 +1070,225 @@ document.addEventListener("DOMContentLoaded", () => {
         mainText = result?.summary ?? "";
         break;
       case "KPI_ANALYSIS":
-        mainText = result?.summary ?? "";
-        break;
+        // KPI has rich structured rendering — bypass formatAiText
+        return formatKpiResult(result);
       default:
         if (typeof result === "string") mainText = result;
         else mainText = result?.summary ?? result?.answer ?? result?.result ?? JSON.stringify(result, null, 2);
     }
 
     return formatAiText(mainText);
+  }
+
+  // ── KPI rendering ─────────────────────────────────────────────────
+
+  // Chart.js dynamic loading state
+  let _chartJsLoaded = typeof Chart !== "undefined";
+  let _chartJsLoading = false;
+  let _chartJsCallbacks = [];
+  const CHART_JS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js";
+  const _kpiChartInstances = new Map();
+
+  function ensureChartJs(callback) {
+    if (_chartJsLoaded) { callback(); return; }
+    _chartJsCallbacks.push(callback);
+    if (_chartJsLoading) return;
+    _chartJsLoading = true;
+    const script = document.createElement("script");
+    script.src = CHART_JS_CDN;
+    script.onload = () => {
+      _chartJsLoaded = true;
+      _chartJsLoading = false;
+      _chartJsCallbacks.forEach((cb) => cb());
+      _chartJsCallbacks = [];
+    };
+    script.onerror = () => {
+      _chartJsLoading = false;
+      _chartJsCallbacks = [];
+      console.error("[KPI] Chart.js failed to load.");
+    };
+    document.head.appendChild(script);
+  }
+
+  function initPendingKpiCharts() {
+    const canvases = document.querySelectorAll(".kpi-bar-chart.pending-chart");
+    if (!canvases.length) return;
+    ensureChartJs(() => {
+      canvases.forEach((canvas) => {
+        canvas.classList.remove("pending-chart");
+        let chartConfig;
+        try {
+          chartConfig = JSON.parse(canvas.dataset.chartConfig);
+        } catch (e) {
+          console.error("[KPI] Invalid chart config", e);
+          return;
+        }
+        // Assign stable id and destroy any prior instance on this canvas
+        if (!canvas.id) canvas.id = "kpi-chart-" + Date.now() + "-" + Math.floor(Math.random() * 1e6);
+        if (_kpiChartInstances.has(canvas.id)) {
+          _kpiChartInstances.get(canvas.id).destroy();
+          _kpiChartInstances.delete(canvas.id);
+        }
+        const chart = new Chart(canvas, {
+          type: "bar",
+          data: {
+            labels: chartConfig.labels,
+            datasets: [{
+              label: "Avg. Days to Close",
+              data: chartConfig.values,
+              backgroundColor: "rgba(59, 130, 246, 0.55)",
+              borderColor: "rgba(59, 130, 246, 0.9)",
+              borderWidth: 1,
+              borderRadius: 4,
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: (ctx) => ctx.parsed.y + " days" } }
+            },
+            scales: {
+              y: { beginAtZero: true, title: { display: true, text: "Days" } }
+            }
+          }
+        });
+        _kpiChartInstances.set(canvas.id, chart);
+      });
+    });
+  }
+
+  function formatKpiResult(result) {
+    if (!result) return '<em>No performance data available.</em>';
+    const renderHint = result.render_hint ?? result.metrics?.render_hint ?? "summary_text";
+    const scopeLabel = result.scope_label ?? result.metrics?.scope_label ?? "";
+    const metrics = result.metrics ?? {};
+    const summary = result.summary ?? "";
+    const insights = Array.isArray(result.insights) ? result.insights : [];
+
+    let html = "";
+
+    // Scope header
+    if (scopeLabel) {
+      html += '<div class="ai-section"><div class="ai-section-title">' + escapeHtml(scopeLabel) + '</div></div>';
+    }
+
+    // LLM summary paragraph
+    if (summary && renderHint !== "summary_text") {
+      html += '<div class="ai-section-body"><p>' + escapeHtml(summary) + '</p></div>';
+    }
+
+    // Key insights
+    if (insights.length > 0) {
+      html += '<div class="ai-section"><div class="ai-section-title">Key Insights</div><div class="ai-section-body"><ul>';
+      insights.forEach((ins) => { html += '<li>' + escapeHtml(ins) + '</li>'; });
+      html += '</ul></div></div>';
+    }
+
+    // Metric block dispatched by render_hint
+    switch (renderHint) {
+      case "table":     html += _kpiRenderTable(metrics); break;
+      case "bar_chart": html += _kpiRenderBarChart(metrics); break;
+      case "gauge":     html += _kpiRenderGauge(metrics); break;
+      case "summary_text":
+      default:
+        if (summary) html += '<div class="ai-section-body"><p>' + escapeHtml(summary) + '</p></div>';
+        break;
+    }
+
+    return html || '<em>No performance data available.</em>';
+  }
+
+  function _kpiMetricRows(metrics) {
+    const rows = [];
+    if (metrics.total_cases_opened_ytd != null) rows.push(["Cases Opened (Year to Date)", metrics.total_cases_opened_ytd]);
+    if (metrics.total_cases_closed_ytd != null) rows.push(["Cases Closed (Year to Date)", metrics.total_cases_closed_ytd]);
+    if (metrics.avg_closure_days_ytd != null) rows.push(["Average Days to Close (Year to Date)", metrics.avg_closure_days_ytd + " days"]);
+    if (metrics.avg_closure_days_rolling_12m != null) rows.push(["Average Days to Close (12-Month Rolling)", metrics.avg_closure_days_rolling_12m + " days"]);
+    if (metrics.overdue_count != null) rows.push(["Overdue Cases", metrics.overdue_pct != null ? metrics.overdue_count + " (" + metrics.overdue_pct + "%)" : String(metrics.overdue_count)]);
+    if (metrics.first_closure_rate != null) rows.push(["Resolved Without Reopening", Math.round(metrics.first_closure_rate * 100) + "%"]);
+    return rows;
+  }
+
+  function _kpiRenderTable(metrics) {
+    let html = "";
+    const rows = _kpiMetricRows(metrics);
+    if (rows.length > 0) {
+      html += '<div class="ai-section"><div class="ai-section-title">Performance Summary</div><div class="ai-section-body">';
+      html += '<table class="kpi-table"><tbody>';
+      rows.forEach(([label, value]) => {
+        html += '<tr><td class="kpi-label">' + escapeHtml(label) + '</td><td class="kpi-value">' + escapeHtml(String(value)) + '</td></tr>';
+      });
+      html += '</tbody></table></div></div>';
+    }
+    if (metrics.d_stage_distribution && Object.keys(metrics.d_stage_distribution).length > 0) {
+      html += '<div class="ai-section"><div class="ai-section-title">Active Cases by Stage</div><div class="ai-section-body">';
+      html += '<table class="kpi-table"><tbody>';
+      Object.entries(metrics.d_stage_distribution).forEach(([stage, count]) => {
+        html += '<tr><td class="kpi-label">' + escapeHtml(stage) + '</td><td class="kpi-value">' + escapeHtml(String(count)) + '</td></tr>';
+      });
+      html += '</tbody></table></div></div>';
+    }
+    if (Array.isArray(metrics.country_ranking) && metrics.country_ranking.length > 0) {
+      html += '<div class="ai-section"><div class="ai-section-title">Performance by Country</div><div class="ai-section-body">';
+      html += '<table class="kpi-table"><thead><tr><th>Country</th><th>Avg. Days to Close</th><th>Cases Closed</th></tr></thead><tbody>';
+      metrics.country_ranking.forEach((row) => {
+        html += '<tr><td>' + escapeHtml(String(row.country ?? "")) + '</td><td>' + escapeHtml(String(row.avg_closure_days ?? "")) + '</td><td>' + escapeHtml(String(row.total_closed ?? "")) + '</td></tr>';
+      });
+      html += '</tbody></table></div></div>';
+    }
+    return html;
+  }
+
+  function _kpiRenderBarChart(metrics) {
+    // Render summary metrics + stage distribution (suppress ranking table — chart covers it)
+    const metricsWithoutRanking = Object.assign({}, metrics, { country_ranking: null });
+    let html = _kpiRenderTable(metricsWithoutRanking);
+    const ranking = Array.isArray(metrics.country_ranking) ? metrics.country_ranking : [];
+    if (ranking.length > 0) {
+      const chartData = JSON.stringify({ labels: ranking.map((r) => r.country), values: ranking.map((r) => r.avg_closure_days) });
+      html += '<div class="ai-section"><div class="ai-section-title">Average Days to Close by Country</div><div class="ai-section-body"><div class="kpi-chart-container"><canvas class="kpi-bar-chart pending-chart" data-chart-config="' + escapeHtml(chartData) + '" aria-label="Average days to close by country"></canvas></div></div></div>';
+    }
+    return html;
+  }
+
+  function _kpiRenderGauge(metrics) {
+    let html = "";
+    const elapsed = metrics.days_elapsed;
+    const benchmark = metrics.category_benchmark_days;
+    if (elapsed != null && benchmark != null && benchmark > 0) {
+      const maxDays = Math.max(benchmark * 1.5, elapsed);
+      const pct = Math.min(100, Math.round((elapsed / maxDays) * 100));
+      const r = 45;
+      const circumference = +(2 * Math.PI * r).toFixed(2);
+      const dashOffset = +((circumference * (1 - pct / 100)).toFixed(2));
+      const color = pct <= 60 ? "#22c55e" : pct <= 90 ? "#f59e0b" : "#ef4444";
+      html += '<div class="ai-section"><div class="ai-section-title">Case Progress</div><div class="ai-section-body">';
+      html += '<div class="kpi-gauge-container">';
+      html += '<svg class="kpi-gauge-svg" viewBox="0 0 100 100" width="140" height="140" role="img" aria-label="' + pct + '% of expected resolution time">';
+      html += '<circle cx="50" cy="50" r="' + r + '" fill="none" stroke="#e5e7eb" stroke-width="8"/>';
+      html += '<circle cx="50" cy="50" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="8" stroke-linecap="round" stroke-dasharray="' + circumference + '" stroke-dashoffset="' + dashOffset + '" transform="rotate(-90 50 50)"/>';
+      html += '<text x="50" y="47" text-anchor="middle" font-size="18" font-weight="700" fill="currentColor">' + pct + '%</text>';
+      html += '<text x="50" y="62" text-anchor="middle" font-size="8" fill="#6b7280">of expected</text>';
+      html += '</svg>';
+      html += '<div class="kpi-gauge-legend"><span>' + escapeHtml(String(elapsed)) + ' days open</span><span>Typical: ' + escapeHtml(String(Math.round(benchmark))) + ' days</span></div>';
+      html += '</div></div></div>';
+    }
+    const detailRows = [];
+    if (metrics.current_stage) detailRows.push(["Current Stage", metrics.current_stage]);
+    if (metrics.responsible_leader) detailRows.push(["Responsible Leader", metrics.responsible_leader]);
+    if (metrics.department) detailRows.push(["Department", metrics.department]);
+    if (metrics.days_elapsed != null) detailRows.push(["Days Open", metrics.days_elapsed + " days"]);
+    if (metrics.category_benchmark_days != null) detailRows.push(["Typical Resolution", Math.round(metrics.category_benchmark_days) + " days"]);
+    if (detailRows.length > 0) {
+      html += '<div class="ai-section"><div class="ai-section-title">Case Details</div><div class="ai-section-body">';
+      html += '<table class="kpi-table"><tbody>';
+      detailRows.forEach(([label, value]) => {
+        html += '<tr><td class="kpi-label">' + escapeHtml(label) + '</td><td class="kpi-value">' + escapeHtml(String(value)) + '</td></tr>';
+      });
+      html += '</tbody></table></div></div>';
+    }
+    return html;
   }
 
   function formatAiText(text) {
@@ -1414,7 +1625,18 @@ document.addEventListener("DOMContentLoaded", () => {
         suggestions = parseWhatToExploreNext(text);
       }
 
+      // KPI suggestions are plain strings — convert to chip objects
+      if (responseIntent === "KPI_ANALYSIS" && Array.isArray(suggestions) && suggestions.length > 0 && typeof suggestions[0] === "string") {
+        suggestions = suggestions.map((s) => ({
+          label: s.length > 40 ? s.substring(0, 40) + "..." : s,
+          question: s,
+          type: "cosolve"
+        }));
+      }
+
       appendAiExchange(question, activeCaseId, output, false, suggestions, nodeType);
+      // Initialise any bar-chart canvases appended above
+      initPendingKpiCharts();
     } catch (err) {
       console.error("[AI] fetch error:", err);
       appendAiExchange(question, activeCaseId,
