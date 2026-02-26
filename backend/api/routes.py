@@ -15,8 +15,6 @@ from backend.infra.knowledge_search_client import KnowledgeSearchClient
 
 logger = logging.getLogger(__name__)
 
-_CASE_ID_RE = re.compile(r"^[A-Z]{3,4}-\d{8}-\d{4}$", re.IGNORECASE)
-
 
 class CaseSearchRequest(BaseModel):
     query: str
@@ -29,26 +27,28 @@ class SuggestionsRequest(BaseModel):
     case_context: dict = {}
 
 
-def _sanitize(value: str) -> str:
-    """Strip characters unsafe for OData filter string literals."""
-    return value.replace("'", "").replace('"', "").strip()
-
-
-def _normalize_hit(hit: dict) -> dict:
-    """Project raw Azure Search hit to a stable UI-facing shape."""
-    return {
-        "case_id": hit.get("case_id") or hit.get("id", ""),
-        "problem_description": (hit.get("problem_description") or "")[:200],
-        "country": hit.get("organization_country") or hit.get("country") or "",
-        "site": hit.get("organization_site") or hit.get("site") or "",
-        "case_status": hit.get("case_status") or hit.get("status") or "",
-        "opening_date": str(hit.get("opening_date") or ""),
-        "closure_date": str(hit.get("closure_date") or ""),
-        "summary": hit.get("ai_summary") or "",
-    }
-
-
 class ApiRoutes:
+    _CASE_ID_RE = re.compile(r"^[A-Z]{3,4}-\d{8}-\d{4}$", re.IGNORECASE)
+
+    @staticmethod
+    def _sanitize(value: str) -> str:
+        """Strip characters unsafe for OData filter string literals."""
+        return value.replace("'", "").replace('"', "").strip()
+
+    @staticmethod
+    def _normalize_hit(hit: dict) -> dict:
+        """Project raw Azure Search hit to a stable UI-facing shape."""
+        return {
+            "case_id": hit.get("case_id") or hit.get("id", ""),
+            "problem_description": (hit.get("problem_description") or "")[:200],
+            "country": hit.get("organization_country") or hit.get("country") or "",
+            "site": hit.get("organization_site") or hit.get("site") or "",
+            "case_status": hit.get("case_status") or hit.get("status") or "",
+            "opening_date": str(hit.get("opening_date") or ""),
+            "closure_date": str(hit.get("closure_date") or ""),
+            "summary": hit.get("ai_summary") or "",
+        }
+
     def __init__(
         self,
         entry_handler: EntryHandler,
@@ -165,7 +165,7 @@ class ApiRoutes:
 
         try:
             if request.search_type == "case_id":
-                safe = _sanitize(query).upper()
+                safe = ApiRoutes._sanitize(query).upper()
                 filter_expr = f"case_id eq '{safe}'"
                 logger.info("[SEARCH] Running exact case_id filter: %r", filter_expr)
                 hits = self._case_search_client.filtered_search(
@@ -173,7 +173,7 @@ class ApiRoutes:
                     top_k=1,
                 )
             elif request.search_type == "site_or_country":
-                safe = _sanitize(query)
+                safe = ApiRoutes._sanitize(query)
                 safe_lower = safe.lower()
                 filter_expr = (
                     f"organization_country eq '{safe}' or organization_country eq '{safe_lower}' or "
@@ -195,7 +195,7 @@ class ApiRoutes:
             logger.exception("[SEARCH] Uncaught exception during search")
             raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-        results = [_normalize_hit(h) for h in hits]
+        results = [ApiRoutes._normalize_hit(h) for h in hits]
         logger.info(
             "[SEARCH] Returning %d result(s): %s",
             len(results),
@@ -205,7 +205,7 @@ class ApiRoutes:
 
     def get_case(self, case_id: str):
         """Load a single case document from blob storage."""
-        if not _CASE_ID_RE.match(case_id):
+        if not ApiRoutes._CASE_ID_RE.match(case_id):
             raise HTTPException(status_code=400, detail="Invalid case_id format")
         if not self._case_repository.exists(case_id):
             raise HTTPException(status_code=404, detail="Case not found")
@@ -216,7 +216,7 @@ class ApiRoutes:
 
     def list_evidence(self, case_id: str):
         """List evidence files associated with a case."""
-        if not _CASE_ID_RE.match(case_id):
+        if not ApiRoutes._CASE_ID_RE.match(case_id):
             raise HTTPException(status_code=400, detail="Invalid case_id format")
         try:
             files = self._case_repository.list_evidence(case_id)
@@ -226,7 +226,7 @@ class ApiRoutes:
 
     def download_evidence(self, case_id: str, filename: str):
         """Stream a single evidence file."""
-        if not _CASE_ID_RE.match(case_id):
+        if not ApiRoutes._CASE_ID_RE.match(case_id):
             raise HTTPException(status_code=400, detail="Invalid case_id format")
         try:
             data, content_type = self._case_repository.get_evidence(case_id, filename)
@@ -430,7 +430,7 @@ class ApiRoutes:
 
     def debug_reindex_case(self, case_id: str):
         """Force-index a specific case without changing its data. Temporary diagnostic."""
-        if not _CASE_ID_RE.match(case_id):
+        if not ApiRoutes._CASE_ID_RE.match(case_id):
             raise HTTPException(status_code=400, detail="Invalid case_id format")
         try:
             return self._entry_handler.reindex_case(case_id)

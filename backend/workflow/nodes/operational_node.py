@@ -11,53 +11,54 @@ from backend.workflow.models import (
     OperationalNodeOutput,
 )
 
-_D_STATE_LABELS: dict[str, str] = {
-    "D1_2": "Problem Definition",
-    "D3": "Containment Actions",
-    "D4": "Root Cause Analysis",
-    "D5": "Permanent Corrective Actions",
-    "D6": "Implementation & Validation",
-    "D7": "Prevention",
-    "D8": "Closure & Learnings",
-}
 
-_NEW_PROBLEM_KEYWORDS = (
-    "new problem",
-    "just found",
-    "just discovered",
-    "where do we start",
-    "where do i start",
-    "what should we do first",
-    "what do we do first",
-    "never seen this before",
-    "how do we start",
-    "how do i start",
-    "getting started",
-    "don't know where to start",
-    "not sure where to start",
-    "first time",
-    "brand new issue",
-    "just happened",
-    "just occurred",
-)
+class OperationalNode:
+    _D_STATE_LABELS: dict[str, str] = {
+        "D1_2": "Problem Definition",
+        "D3": "Containment Actions",
+        "D4": "Root Cause Analysis",
+        "D5": "Permanent Corrective Actions",
+        "D6": "Implementation & Validation",
+        "D7": "Prevention",
+        "D8": "Closure & Learnings",
+    }
 
+    _NEW_PROBLEM_KEYWORDS = (
+        "new problem",
+        "just found",
+        "just discovered",
+        "where do we start",
+        "where do i start",
+        "what should we do first",
+        "what do we do first",
+        "never seen this before",
+        "how do we start",
+        "how do i start",
+        "getting started",
+        "don't know where to start",
+        "not sure where to start",
+        "first time",
+        "brand new issue",
+        "just happened",
+        "just occurred",
+    )
 
-def _is_new_problem_question(question: str, case_id: str) -> bool:
-    """True when no case is loaded and the question signals a new problem."""
-    if case_id:
+    @staticmethod
+    def _is_new_problem_question(question: str, case_id: str) -> bool:
+        """True when no case is loaded and the question signals a new problem."""
+        if case_id:
+            return False
+        q = question.lower()
+        if any(kw in q for kw in OperationalNode._NEW_PROBLEM_KEYWORDS):
+            return True
+        # Short question (≤10 words) containing a problem-domain word
+        if len(q.split()) <= 10 and any(
+            w in q for w in ("problem", "issue", "fault", "failure")
+        ):
+            return True
         return False
-    q = question.lower()
-    if any(kw in q for kw in _NEW_PROBLEM_KEYWORDS):
-        return True
-    # Short question (≤10 words) containing a problem-domain word
-    if len(q.split()) <= 10 and any(
-        w in q for w in ("problem", "issue", "fault", "failure")
-    ):
-        return True
-    return False
 
-
-_NEW_PROBLEM_SYSTEM_PROMPT = """\
+    _NEW_PROBLEM_SYSTEM_PROMPT = """\
 You are a collaborative problem-solving advisor. A team member has just reported
 a new problem and is not sure where to begin. There is no open case yet.
 
@@ -118,9 +119,7 @@ RULES:
 - Return plain text only. No JSON. No markdown.
 - [WHAT TO EXPLORE NEXT] must be the last section. Nothing may appear after it.
 """
-
-
-_OPERATIONAL_SYSTEM_PROMPT = """\
+    _OPERATIONAL_SYSTEM_PROMPT = """\
 You are a senior 8D problem-solving advisor embedded in an active incident case.
 Your role is to reason like an experienced quality engineer who has just been handed
 a full case file and asked a specific question by the team.
@@ -193,6 +192,10 @@ CRITICAL RULES:
 - The [WHAT TO EXPLORE NEXT] section must always be present with both subsections:
   "Questions to ask your team right now" (two bullet points) and
   "Questions to ask CoSolve" (four icon-prefixed questions).
+- When an active case is loaded (ACTIVE CASE is present in the user prompt), you MUST
+  reference the active case ID by name at least once in either [CURRENT STATE] or
+  [GAPS IN PREVIOUS STATES] — for example: 'In case TRM-20250310-0001, ...' or
+  'Case TRM-20250310-0001 is currently at ...'. This confirms case grounding.
 - Return plain text. No JSON. No markdown headers beyond the section labels above.
 - SECTION ORDER IS MANDATORY. The five sections must appear in exactly this sequence
   and no other:
@@ -202,11 +205,16 @@ CRITICAL RULES:
   4. [GENERAL ADVICE]
   5. [WHAT TO EXPLORE NEXT]
   [WHAT TO EXPLORE NEXT] must always be the final section. Nothing may appear after it.
-- LENGTH RULE: Be concise. Each section should be no longer than strictly necessary to
-  convey the recommendation. Avoid restating what the team already knows from the case
-  data. Avoid padding sentences. Target the total response length at 300-400 words
-  maximum. If a section has nothing meaningful to add, write one sentence stating that
-  rather than filling space.
+- LENGTH RULE: Be concise. Target 300-400 words maximum. IMPORTANT: all five
+  sections are REQUIRED regardless of word count — write one sentence per
+  section if necessary; never skip a section to meet the word target.
+- RESPONSE CHECKLIST (active case mode) — before finishing, verify ALL FIVE are present:
+  ☑ [CURRENT STATE]
+  ☑ [GAPS IN PREVIOUS STATES] — REQUIRED even when gaps are minimal
+  ☑ [NEXT STATE PREVIEW]
+  ☑ [GENERAL ADVICE] — MUST start with the ⚠️ warning prefix
+  ☑ [WHAT TO EXPLORE NEXT] — MUST contain both subsections
+  If any section is absent, add it before returning your response.
 - NEW PROBLEM DETECTION: If no case context is available and the question indicates a
   new problem has just been discovered (keywords: 'new problem', 'just found',
   'just discovered', 'where do we start', 'where do i start',
@@ -271,8 +279,6 @@ CRITICAL RULES:
   Replace [describe symptom] with the actual symptom mentioned in the question.
 """
 
-
-class OperationalNode:
     def __init__(
         self,
         hybrid_retriever: HybridRetriever,
@@ -308,9 +314,9 @@ class OperationalNode:
     ) -> OperationalNodeOutput:
         # Route new-problem questions (no case loaded) to a dedicated prompt so the
         # LLM is not confused by the "embedded in an active case" framing.
-        if _is_new_problem_question(question, case_id):
+        if OperationalNode._is_new_problem_question(question, case_id):
             response_text = self._llm_client.complete_text(
-                system_prompt=_NEW_PROBLEM_SYSTEM_PROMPT,
+                system_prompt=OperationalNode._NEW_PROBLEM_SYSTEM_PROMPT,
                 user_prompt=f"USER QUESTION: {question}",
                 temperature=0.2,
                 user_question=question,
@@ -349,7 +355,7 @@ class OperationalNode:
         )
 
         response_text = self._llm_client.complete_text(
-            system_prompt=_OPERATIONAL_SYSTEM_PROMPT,
+            system_prompt=OperationalNode._OPERATIONAL_SYSTEM_PROMPT,
             user_prompt=user_prompt,
             temperature=0.2,
             user_question=question,
@@ -460,7 +466,7 @@ class OperationalNode:
         for key in ["D1_2", "D3", "D4", "D5", "D6", "D7", "D8"]:
             if key not in d_states:
                 continue
-            label = _D_STATE_LABELS.get(key, key)
+            label = OperationalNode._D_STATE_LABELS.get(key, key)
             lines.append(f"{label}:")
             entry = d_states[key]
             data: dict[str, Any] = {}

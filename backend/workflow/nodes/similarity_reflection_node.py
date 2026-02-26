@@ -13,7 +13,9 @@ from backend.workflow.models import (
 
 _debug_logger = logging.getLogger(__name__)
 
-_REFLECTION_SYSTEM_PROMPT = """\
+
+class SimilarityReflectionNode:
+    _REFLECTION_SYSTEM_PROMPT = """\
 You are a quality auditor reviewing a similarity analysis response.
 Your job is to catch reasoning failures, not check JSON schema.
 
@@ -63,7 +65,7 @@ needs_regeneration = true if ANY of:
   - explore_next_quality is MISSING or GENERIC\
 """
 
-_REGENERATION_SYSTEM_PROMPT = """\
+    _REGENERATION_SYSTEM_PROMPT = """\
 The previous response failed on this specific dimension: {regeneration_focus}
 
 Rewrite ONLY the failing section. Keep all other sections unchanged.
@@ -82,8 +84,6 @@ Retrieved cases: {formatted_cases}
 Question: {question}\
 """
 
-
-class SimilarityReflectionNode:
     def __init__(
         self,
         llm_client: LoggedLanguageModelClient,
@@ -102,7 +102,7 @@ class SimilarityReflectionNode:
         )
 
         assessment = self._llm_client.complete_json(
-            system_prompt=_REFLECTION_SYSTEM_PROMPT,
+            system_prompt=SimilarityReflectionNode._REFLECTION_SYSTEM_PROMPT,
             user_prompt=(
                 f"question: {question}\n"
                 f"retrieved_cases_summary: {cases_summary}\n"
@@ -124,7 +124,7 @@ class SimilarityReflectionNode:
                 indent=2,
                 default=str,
             )
-            regen_prompt = _REGENERATION_SYSTEM_PROMPT.format(
+            regen_prompt = SimilarityReflectionNode._REGENERATION_SYSTEM_PROMPT.format(
                 regeneration_focus=assessment.regeneration_focus or "",
                 draft=draft.summary,
                 formatted_cases=formatted_cases,
@@ -150,5 +150,8 @@ class SimilarityReflectionNode:
             similarity_reflection=assessment,
         )
 
+
+# Remove module-level prompt names — they now live exclusively as
+# SimilarityReflectionNode class attributes.
 
 __all__ = ["SimilarityReflectionNode"]

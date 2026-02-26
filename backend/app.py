@@ -41,7 +41,7 @@ from backend.ingestion.knowledge_ingestion import (
     KnowledgeSearchIndex,
 )
 from backend.retrieval.hybrid_retriever import HybridRetriever
-from backend.tools.kpi_tool import KPIAnalyticsTool
+from backend.tools.kpi_tool import KPITool, KPIAnalyticsTool
 from backend.workflow.nodes.context_node import ContextNode
 from backend.workflow.nodes.end_node import EndNode
 from backend.workflow.nodes.intent_classification_node import IntentClassificationNode
@@ -188,7 +188,7 @@ class BackendContainer:
             model_name=settings.LLM_MODEL_KPI_REFLECTION,
         )
 
-        self.kpi_tool = KPIAnalyticsTool(
+        self.kpi_tool = KPITool(
             hybrid_retriever=self.hybrid_retriever,
             settings=settings,
         )

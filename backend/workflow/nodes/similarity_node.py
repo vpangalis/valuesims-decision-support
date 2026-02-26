@@ -7,8 +7,11 @@ from backend.config import Settings
 from backend.infra.llm_logging_client import LoggedLanguageModelClient
 from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.workflow.models import SimilarityDraftPayload, SimilarityNodeOutput
+from backend.workflow.nodes.operational_node import OperationalNode
 
-_SIMILARITY_SYSTEM_PROMPT = """\
+
+class SimilarityNode:
+    _SIMILARITY_SYSTEM_PROMPT = """\
 You are a senior failure analysis expert with access to a library of \
 closed incident cases. Your role is to reason like an experienced \
 engineer asked: "Have we seen this before, and what can we learn?"
@@ -67,11 +70,16 @@ Only after Steps 1 and 2, structure your answer in exactly this order:
     that the team should proactively rule out
   Every recommendation must trace back to a specific retrieved case.
   No generic 8D advice here.
+  If no cases were retrieved, state: "No matching precedents found; \
+  recommend broadening the search scope."
 
   [GENERAL ADVICE]
-  \u26a0\ufe0f The following is general similarity analysis guidance not specific \
+  ⚠️ The following is general similarity analysis guidance not specific \
   to this problem:
-  <general advice about using precedent cases in problem solving>
+  <one or two sentences of general guidance about using precedent cases>
+  IMPORTANT: This section MUST appear as its own separate section with \
+  the exact header [GENERAL ADVICE]. Do not embed its content in \
+  [WHAT THIS MEANS FOR YOUR INVESTIGATION].
 
   [WHAT TO EXPLORE NEXT]
   Based on the cases found and patterns identified:
@@ -112,67 +120,21 @@ CRITICAL RULES:
   3. [WHAT THIS MEANS FOR YOUR INVESTIGATION]
   4. [GENERAL ADVICE]
   5. [WHAT TO EXPLORE NEXT]
-- LENGTH RULE: Be concise. Target 300-400 words total. Each case in \
-  [SIMILAR CASES FOUND] should be 2-3 sentences maximum. If a section \
-  has nothing meaningful to add, write one sentence rather than padding.
+- LENGTH RULE: Be concise. Target 300-400 words total. IMPORTANT: all five \
+  sections are REQUIRED regardless of word count — write one sentence per \
+  section if necessary; never skip a section to meet the word target.
+  Each case in [SIMILAR CASES FOUND] should be 2-3 sentences maximum.
 - Use plain language. No D-step codes (D1, D4 etc.) — use step names:
   Problem Definition, Root Cause Analysis, Corrective Actions etc.
-- Return plain text. No JSON. No markdown beyond the section labels.\
+- Return plain text. No JSON. No markdown beyond the section labels.
+- RESPONSE CHECKLIST — before finishing, verify each item is present:
+  ☑ [SIMILAR CASES FOUND]
+  ☑ [PATTERNS ACROSS CASES]
+  ☑ [WHAT THIS MEANS FOR YOUR INVESTIGATION]
+  ☑ [GENERAL ADVICE] — MUST start with the ⚠️ warning prefix
+  ☑ [WHAT TO EXPLORE NEXT] — MUST contain both subsections\
 """
 
-_D_STATE_LABELS: dict[str, str] = {
-    "D1_2": "Problem Definition",
-    "D3": "Containment Actions",
-    "D4": "Root Cause Analysis",
-    "D5": "Permanent Corrective Actions",
-    "D6": "Implementation & Validation",
-    "D7": "Prevention",
-    "D8": "Closure & Learnings",
-}
-
-
-def _normalize_d_states(case_context: dict[str, Any]) -> dict[str, Any] | None:
-    d_states = case_context.get("d_states")
-    if isinstance(d_states, dict) and d_states:
-        return d_states
-    phases = case_context.get("phases")
-    if isinstance(phases, dict) and phases:
-        normalized: dict[str, Any] = {}
-        for k, v in phases.items():
-            norm_key = "D1_2" if k == "D1_D2" else k
-            normalized[norm_key] = v
-        return normalized
-    return None
-
-
-def _format_d_states(case_context: dict[str, Any]) -> str:
-    d_states = _normalize_d_states(case_context)
-    if not isinstance(d_states, dict) or not d_states:
-        return "No case history available."
-    lines: list[str] = []
-    for key in ["D1_2", "D3", "D4", "D5", "D6", "D7", "D8"]:
-        if key not in d_states:
-            continue
-        label = _D_STATE_LABELS.get(key, key)
-        lines.append(f"{label}:")
-        entry = d_states[key]
-        data: dict[str, Any] = {}
-        if isinstance(entry, dict):
-            data = entry.get("data") or entry
-        if isinstance(data, dict) and data:
-            for field, value in data.items():
-                display = (
-                    str(value).strip()
-                    if value not in (None, "", [], {})
-                    else "NOT ENTERED"
-                )
-                lines.append(f"  {field}: {display}")
-        else:
-            lines.append("  (no data entered)")
-    return "\n".join(lines) if lines else "No case history available."
-
-
-class SimilarityNode:
     def __init__(
         self,
         hybrid_retriever: HybridRetriever,
@@ -198,7 +160,7 @@ class SimilarityNode:
 
         # Build case context summary
         if case_context:
-            case_context_summary = _format_d_states(case_context)
+            case_context_summary = OperationalNode._format_d_states(case_context)
         else:
             case_context_summary = (
                 "No active case loaded — reasoning from question description only."
@@ -220,9 +182,9 @@ class SimilarityNode:
         )
 
         response_text = self._llm_client.complete_text(
-            system_prompt=_SIMILARITY_SYSTEM_PROMPT,
+            system_prompt=SimilarityNode._SIMILARITY_SYSTEM_PROMPT,
             user_prompt=user_prompt,
-            temperature=0.2,
+            temperature=0.1,
             user_question=question,
         )
 
@@ -281,5 +243,8 @@ class SimilarityNode:
             pass
         return suggestions
 
+
+# Remove module-level prompt name — it now lives exclusively as
+# SimilarityNode._SIMILARITY_SYSTEM_PROMPT.
 
 __all__ = ["SimilarityNode"]

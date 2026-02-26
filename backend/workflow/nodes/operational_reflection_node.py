@@ -26,53 +26,38 @@ class OperationalReflectionAssessment(BaseModel):
     issues: list[str]
 
 
-_NEW_PROBLEM_KEYWORDS = (
-    "new problem",
-    "just found",
-    "just discovered",
-    "where do we start",
-    "where do i start",
-    "what should we do first",
-    "what do we do first",
-    "never seen this before",
-    "how do we start",
-    "how do i start",
-    "getting started",
-    "don't know where to start",
-    "not sure where to start",
-    "first time",
-    "brand new issue",
-    "just happened",
-    "just occurred",
-)
+class OperationalReflectionNode:
+    _NEW_PROBLEM_NO_CASE_MARKERS = (
+        "[SIMILAR CASES — CHECK FIRST]",
+        "[IF THIS IS A NEW PROBLEM — HOW TO START]",
+    )
 
-_NEW_PROBLEM_NO_CASE_MARKERS = (
-    "[SIMILAR CASES \u2014 CHECK FIRST]",
-    "[IF THIS IS A NEW PROBLEM \u2014 HOW TO START]",
-)
-
-
-def _is_new_problem_bypass(question: str, draft_text: str, case_loaded: bool) -> bool:
-    """Return True when the response used the NEW PROBLEM DETECTION path
-    and reflection should be skipped entirely."""
-    if case_loaded:
+    @staticmethod
+    def _is_new_problem_bypass(
+        question: str, draft_text: str, case_loaded: bool
+    ) -> bool:
+        """Return True when the response used the NEW PROBLEM DETECTION path
+        and reflection should be skipped entirely."""
+        if case_loaded:
+            return False
+        q = question.lower()
+        # keyword match
+        if any(kw in q for kw in OperationalNode._NEW_PROBLEM_KEYWORDS):
+            return True
+        # short question + problem-domain word
+        if len(q.split()) <= 10 and any(
+            w in q for w in ("problem", "issue", "fault", "failure")
+        ):
+            return True
+        # the draft itself already uses the alternate section markers
+        if any(
+            m in draft_text
+            for m in OperationalReflectionNode._NEW_PROBLEM_NO_CASE_MARKERS
+        ):
+            return True
         return False
-    q = question.lower()
-    # keyword match
-    if any(kw in q for kw in _NEW_PROBLEM_KEYWORDS):
-        return True
-    # short question + problem-domain word
-    if len(q.split()) <= 10 and any(
-        w in q for w in ("problem", "issue", "fault", "failure")
-    ):
-        return True
-    # the draft itself already uses the alternate section markers
-    if any(m in draft_text for m in _NEW_PROBLEM_NO_CASE_MARKERS):
-        return True
-    return False
 
-
-_REFLECTION_SYSTEM_PROMPT = """\
+    _REFLECTION_SYSTEM_PROMPT = """\
 You are a quality auditor reviewing an operational advisory response before it reaches the team.
 Your job is not to check JSON schema. Your job is to catch reasoning failures.
 
@@ -102,7 +87,7 @@ Evaluate the draft response against these five criteria:
    (a) "Questions to ask your team right now" containing at least two bullet-point
        questions grounded in the actual case data, AND
    (b) "Questions to ask CoSolve" containing all four icon-prefixed questions
-       (🔍 similar cases, ⚙️ operational, 📊 strategic, 📈 KPI)?
+       (\U0001f50d similar cases, \u2699\ufe0f operational, \U0001f4ca strategic, \U0001f4c8 KPI)?
    Are all six questions specific to this case, or are they generic?
    Score: SPECIFIC_MULTI_DOMAIN | GENERIC | INCOMPLETE | MISSING
    SPECIFIC_MULTI_DOMAIN: both subsections present, all six questions case-specific
@@ -129,8 +114,7 @@ or explore_next_quality is MISSING or INCOMPLETE.
 
 issues: list every specific criterion that failed, empty list if all pass.\
 """
-
-_REGENERATION_SYSTEM_PROMPT = """\
+    _REGENERATION_SYSTEM_PROMPT = """\
 You are a senior operational problem-solving advisor. A previous draft advisory response
 was rejected by the quality auditor for the following reasons:
 
@@ -151,7 +135,7 @@ Every section is mandatory. [CURRENT STATE] and [GAPS] must reference actual cas
 [WHAT TO EXPLORE NEXT] must contain BOTH:
   - "Questions to ask your team right now" with two case-grounded bullet points
   - "Questions to ask CoSolve" with all four icon-prefixed questions
-    (🔍 similar cases, ⚙️ operational deep-dive, 📊 strategic view, 📈 KPI & trends)
+    (\U0001f50d similar cases, \u2699\ufe0f operational deep-dive, \U0001f4ca strategic view, \U0001f4c8 KPI & trends)
     all grounded in this case.
 Section order is mandatory: [CURRENT STATE], [GAPS IN PREVIOUS STATES],
 [NEXT STATE PREVIEW], [GENERAL ADVICE], [WHAT TO EXPLORE NEXT].
@@ -160,19 +144,6 @@ Section order is mandatory: [CURRENT STATE], [GAPS IN PREVIOUS STATES],
 Return plain text only. No JSON.\
 """
 
-
-def _extract_section(text: str, start_marker: str, end_marker: str) -> str:
-    start_idx = text.find(start_marker)
-    if start_idx < 0:
-        return ""
-    content_start = start_idx + len(start_marker)
-    end_idx = text.find(end_marker, content_start)
-    if end_idx < 0:
-        return text[content_start:].strip()
-    return text[content_start:end_idx].strip()
-
-
-class OperationalReflectionNode:
     def __init__(
         self,
         llm_client: LoggedLanguageModelClient,
@@ -189,7 +160,7 @@ class OperationalReflectionNode:
         case_loaded = bool(
             draft.current_state and draft.current_state != "No case loaded"
         )
-        if _is_new_problem_bypass(
+        if OperationalReflectionNode._is_new_problem_bypass(
             question, draft.current_state_recommendations, case_loaded
         ):
             result = OperationalGuidance(
@@ -212,7 +183,7 @@ class OperationalReflectionNode:
             )
 
         assessment = self._llm_client.complete_json(
-            system_prompt=_REFLECTION_SYSTEM_PROMPT,
+            system_prompt=OperationalReflectionNode._REFLECTION_SYSTEM_PROMPT,
             user_prompt=(
                 f"question: {question}\n\n"
                 f"draft_response:\n{draft.current_state_recommendations}"
@@ -274,7 +245,9 @@ class OperationalReflectionNode:
                 else "- General quality below threshold."
             )
             regenerated_text = self._regeneration_llm_client.complete_text(
-                system_prompt=_REGENERATION_SYSTEM_PROMPT.format(issues=issues_text),
+                system_prompt=OperationalReflectionNode._REGENERATION_SYSTEM_PROMPT.format(
+                    issues=issues_text
+                ),
                 user_prompt=(
                     f"question: {question}\n\n"
                     f"original_draft:\n{draft.current_state_recommendations}"

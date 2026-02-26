@@ -97,13 +97,6 @@ class EntryHandler:
             data=data,
         )
 
-    # Maps node_override value → LangGraph route + classification intent
-    _NODE_OVERRIDE_MAP: dict[str, str] = {
-        "operational": "OPERATIONAL_CASE",
-        "similarity": "SIMILARITY_SEARCH",
-        "strategy": "STRATEGY_ANALYSIS",
-    }
-
     def _handle_ai_reasoning(self, envelope: EntryEnvelope) -> EntryResponseEnvelope:
         print(f"[DEBUG AI ENTRY] raw envelope={envelope.model_dump()!r}")
         payload = envelope.payload or {}
@@ -123,26 +116,6 @@ class EntryHandler:
             "question": question,
         }
 
-        # node_override bypass: skip AI classifier and route directly
-        node_override = str(payload.get("node_override") or "").strip().lower()
-        _logger.info(
-            "[ENTRY_DEBUG] node_override extracted: %s", node_override or "(none)"
-        )
-        if node_override in self._NODE_OVERRIDE_MAP:
-            intent_value = self._NODE_OVERRIDE_MAP[node_override]
-            initial_state["node_override"] = node_override
-            initial_state["route"] = intent_value
-            initial_state["classification"] = {  # type: ignore[typeddict-item]
-                "intent": intent_value,
-                "scope": "GLOBAL",
-                "confidence": 1.0,
-            }
-
-        _logger.info(
-            "[ENTRY_DEBUG] node_override=%s node_type=%s",
-            node_override or "(none)",
-            initial_state.get("route", "CLASSIFY"),
-        )
         try:
             graph_result = self._unified_graph.invoke(initial_state)
         except Exception as e:
@@ -175,10 +148,16 @@ class EntryHandler:
         return {"status": "created", "case_id": doc.get("case_id")}
 
     def _update_case(self, envelope: EntryEnvelope) -> dict[str, Any]:
-        case_id = envelope.case_id or (envelope.payload or {}).get("case_id")
+        payload = envelope.payload or {}
+        # Bulk-import mode: UI sends a 'cases' array with no top-level case_id.
+        cases = payload.get("cases")
+        if isinstance(cases, list) and cases:
+            return self._import_bulk_cases(cases)
+
+        case_id = envelope.case_id or payload.get("case_id")
         if not case_id:
             raise ValueError("case_id is required")
-        result = self._case_entry.patch_case(case_id, envelope.payload or {})
+        result = self._case_entry.patch_case(case_id, payload)
         _logger.info("[UPDATE_CASE] patch complete for %s, starting re-index", case_id)
         try:
             self._case_ingestion.index_open_case(str(case_id))
@@ -186,6 +165,35 @@ class EntryHandler:
         except Exception as exc:
             _logger.exception("[UPDATE_CASE] re-index FAILED for %s: %s", case_id, exc)
         return {"status": "updated", **result}
+
+    def _import_bulk_cases(self, cases: list[dict[str, Any]]) -> dict[str, Any]:
+        """Import a batch of closed case documents sent as a JSON array."""
+        imported: list[dict[str, Any]] = []
+        failed: list[dict[str, Any]] = []
+        for item in cases:
+            case_id = str(item.get("case_id") or "").strip()
+            case_doc = item.get("case_doc") or {}
+            if not case_id:
+                failed.append({"case_id": None, "error": "missing case_id in item"})
+                continue
+            try:
+                if not isinstance(case_doc, dict):
+                    case_doc = {}
+                case_doc.setdefault("case_id", case_id)
+                self._case_entry.save_case_document(case_id, case_doc)
+                self._case_ingestion.ingest_closed_case(case_id)
+                imported.append({"case_id": case_id, "status": "imported"})
+            except Exception as exc:
+                _logger.exception(
+                    "[BULK_IMPORT] failed for %s: %s", case_id, exc
+                )
+                failed.append({"case_id": case_id, "error": str(exc)})
+        return {
+            "status": "bulk_imported",
+            "imported": len(imported),
+            "failed": len(failed),
+            "results": imported + failed,
+        }
 
     def reindex_case(self, case_id: str) -> dict[str, Any]:
         """Force-index a single case by case_id (used by diagnostic endpoint)."""

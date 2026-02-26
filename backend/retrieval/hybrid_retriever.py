@@ -161,25 +161,67 @@ class HybridRetriever:
             top_k=effective_top_k,
         )
 
-        mapped: list[CaseSummary] = []
-        for item in raw_results:
-            case_id = item.get("case_id")
-            if not case_id:
-                continue
-            mapped.append(
-                CaseSummary(
-                    case_id=str(case_id),
-                    organization_country=item.get("organization_country"),
-                    organization_site=item.get("organization_site"),
-                    opening_date=item.get("opening_date"),
-                    closure_date=item.get("closure_date"),
-                    problem_description=item.get("problem_description"),
-                    five_whys_text=item.get("five_whys_text"),
-                    permanent_actions_text=item.get("permanent_actions_text"),
-                    ai_summary=item.get("ai_summary"),
-                )
-            )
-        return mapped
+        return [
+            self._map_case_summary(item) for item in raw_results if item.get("case_id")
+        ]
+
+    def retrieve_active_cases_for_kpi(
+        self,
+        country: Optional[str],
+        top_k: int = 200,
+    ) -> list[CaseSummary]:
+        """Retrieve active (non-closed) cases for D-stage distribution and
+        overdue analysis."""
+        filters = ["status ne 'closed'"]
+        if country:
+            safe_country = country.replace("'", "''")
+            filters.append(f"organization_country eq '{safe_country}'")
+        filter_expression = " and ".join(filters)
+
+        self._logger.info(
+            "Retrieving active cases for KPI",
+            extra={"country": country, "top_k": top_k},
+        )
+        raw_results = self._case_search_client.filtered_search(
+            filter_expression=filter_expression,
+            top_k=top_k,
+        )
+        return [
+            self._map_case_summary(item) for item in raw_results if item.get("case_id")
+        ]
+
+    def retrieve_case_by_id(self, case_id: str) -> Optional[CaseSummary]:
+        """Retrieve a single case by case_id for case-scope KPI analysis."""
+        safe_id = case_id.replace("'", "''")
+        raw_results = self._case_search_client.filtered_search(
+            filter_expression=f"case_id eq '{safe_id}'",
+            top_k=1,
+        )
+        if not raw_results:
+            return None
+        return self._map_case_summary(raw_results[0])
+
+    @staticmethod
+    def _map_case_summary(item: dict) -> CaseSummary:
+        """Map a raw search document to a CaseSummary, including the new
+        KPI-relevant fields (current_stage, responsible_leader, department)."""
+        team_members: list = item.get("team_members") or []
+        responsible_leader: Optional[str] = team_members[0] if team_members else None
+        return CaseSummary(
+            case_id=str(item.get("case_id")),
+            organization_country=item.get("organization_country"),
+            organization_site=item.get("organization_site"),
+            opening_date=item.get("opening_date"),
+            closure_date=item.get("closure_date"),
+            problem_description=item.get("problem_description"),
+            five_whys_text=item.get("five_whys_text"),
+            permanent_actions_text=item.get("permanent_actions_text"),
+            ai_summary=item.get("ai_summary"),
+            status=item.get("status"),
+            current_stage=item.get("current_stage"),
+            responsible_leader=responsible_leader,
+            department=item.get("organization_unit"),
+        )
 
     def retrieve_knowledge(
         self,

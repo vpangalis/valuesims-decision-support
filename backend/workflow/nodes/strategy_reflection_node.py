@@ -27,7 +27,8 @@ class StrategyReflectionAssessment(BaseModel):
     fail_reason: str  # one sentence or NONE
 
 
-_REFLECTION_SYSTEM_PROMPT = """\
+class StrategyReflectionNode:
+    _REFLECTION_SYSTEM_PROMPT = """\
 You are a quality auditor reviewing a strategic portfolio analysis response.
 Your job is to catch reasoning failures, not check JSON schema.
 
@@ -84,8 +85,6 @@ fail_section: the first failing section label (using the exact bracket format), 
 fail_reason: one sentence, or NONE.\
 """
 
-
-class StrategyReflectionNode:
     def __init__(
         self,
         llm_client: LoggedLanguageModelClient,
@@ -109,7 +108,7 @@ class StrategyReflectionNode:
         )
 
         assessment = self._llm_client.complete_json(
-            system_prompt=_REFLECTION_SYSTEM_PROMPT,
+            system_prompt=StrategyReflectionNode._REFLECTION_SYSTEM_PROMPT,
             user_prompt=(
                 f"question: {question}\n\n"
                 f"retrieved_cases: {cases_summary}\n\n"
@@ -173,5 +172,8 @@ class StrategyReflectionNode:
             strategy_fail_reason=fail_reason,
         )
 
+
+# Remove module-level prompt name — it now lives exclusively as
+# StrategyReflectionNode._REFLECTION_SYSTEM_PROMPT.
 
 __all__ = ["StrategyReflectionNode"]

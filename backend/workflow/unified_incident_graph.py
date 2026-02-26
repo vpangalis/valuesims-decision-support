@@ -11,7 +11,7 @@ from backend.ai.escalation_controller import EscalationController
 from backend.workflow.models import (
     ContextNodeOutput,
     KPIInterpretation,
-    KPIMetrics,
+    KPIResult,
     FinalResponsePayload,
     IntentClassificationResult,
     OperationalDraftPayload,
@@ -49,7 +49,6 @@ class IncidentGraphState(TypedDict, total=False):
     current_d_state: str | None
     classification: IntentClassificationResult | None
     route: str | None
-    node_override: str | None
     operational_draft: OperationalDraftPayload | None
     operational_result: OperationalGuidance | None
     operational_reflection: ReflectionResult | None
@@ -65,7 +64,7 @@ class IncidentGraphState(TypedDict, total=False):
     strategy_fail_section: str | None
     strategy_fail_reason: str | None
     strategy_response: str | None
-    kpi_metrics: KPIMetrics | None
+    kpi_metrics: KPIResult | None
     kpi_interpretation: KPIInterpretation | None
     final_response: dict | None
 
@@ -191,14 +190,6 @@ class UnifiedIncidentGraph:
         return cast(IncidentGraphState, output.model_dump())
 
     def _intent_classification(self, state: IncidentGraphState) -> IncidentGraphState:
-        # If node_override has already set a route, skip the LLM classifier entirely.
-        if state.get("route") or state.get("node_override"):
-            _graph_logger.info(
-                "[GRAPH_DEBUG] _intent_classification: bypass (route=%s, node_override=%s)",
-                state.get("route"),
-                state.get("node_override"),
-            )
-            return {}  # already routed – keep existing state unchanged
         output = self._intent_classification_node.run(
             question=str(state.get("question") or ""),
             case_id=state.get("case_id"),
@@ -206,19 +197,6 @@ class UnifiedIncidentGraph:
         return cast(IncidentGraphState, output.model_dump())
 
     def _intent_reflection(self, state: IncidentGraphState) -> IncidentGraphState:
-        # If node_override already set route + classification, skip reflection.
-        if (
-            state.get("node_override")
-            and state.get("route")
-            and state.get("classification")
-        ):
-            cls = state["classification"]
-            if isinstance(cls, dict):
-                cls = IntentClassificationResult.model_validate(cls)
-            return cast(
-                IncidentGraphState,
-                {"classification": cls, "route": state["route"]},
-            )
         classification = state.get("classification")
         if classification is None:
             raise ValueError("classification is required before intent reflection")
@@ -231,37 +209,7 @@ class UnifiedIncidentGraph:
         )
         return cast(IncidentGraphState, output.model_dump())
 
-    # Mirrors EntryHandler._NODE_OVERRIDE_MAP so the router can re-enforce the
-    # override even if an LLM bypass failed upstream.
-    _OVERRIDE_TO_ROUTE: dict[str, str] = {
-        "operational": "OPERATIONAL_CASE",
-        "similarity": "SIMILARITY_SEARCH",
-        "strategy": "STRATEGY_ANALYSIS",
-    }
-
     def _router(self, state: IncidentGraphState) -> IncidentGraphState:
-        # node_override always wins: re-force route AND classification so that
-        # response_formatter picks the correct branch even if the LLM upstream
-        # produced a different intent (e.g. classified "failure categories" as
-        # KPI_ANALYSIS instead of STRATEGY_ANALYSIS).
-        node_override = (state.get("node_override") or "").lower()
-        if node_override in self._OVERRIDE_TO_ROUTE:
-            forced_route = self._OVERRIDE_TO_ROUTE[node_override]
-            forced_cls = IntentClassificationResult(
-                intent=forced_route,  # type: ignore[arg-type]
-                scope="GLOBAL",
-                confidence=1.0,
-            )
-            _graph_logger.info(
-                "[GRAPH_DEBUG] _router: node_override=%s → forcing route=%s",
-                node_override,
-                forced_route,
-            )
-            return cast(
-                IncidentGraphState,
-                {"route": forced_route, "classification": forced_cls},
-            )
-
         classification = state.get("classification")
         if classification is None:
             raise ValueError("classification is required before routing")
@@ -278,11 +226,9 @@ class UnifiedIncidentGraph:
         # Allow the operational node to run (with empty context) for new-problem
         # questions even when no case is loaded, so the NEW PROBLEM DETECTION
         # prompt rule can produce the appropriate guidance.
-        from backend.workflow.nodes.operational_reflection_node import (
-            _is_new_problem_bypass,
+        is_new_problem = self._operational_reflection_node._is_new_problem_bypass(
+            question, "", case_loaded=False
         )
-
-        is_new_problem = _is_new_problem_bypass(question, "", case_loaded=False)
 
         if (not case_id or not isinstance(case_context, dict)) and not is_new_problem:
             # No case loaded — return a stub draft so the graph can continue
@@ -338,10 +284,6 @@ class UnifiedIncidentGraph:
         return cast(IncidentGraphState, output.model_dump())
 
     def _strategy(self, state: IncidentGraphState) -> IncidentGraphState:
-        _graph_logger.info(
-            "[STRATEGY_DEBUG] routing to strategy node, node_override=%s",
-            state.get("node_override"),
-        )
         output = self._strategy_node.run(
             question=str(state.get("question") or ""),
             country=self._resolve_country(state),
@@ -410,7 +352,18 @@ class UnifiedIncidentGraph:
         return result
 
     def _kpi(self, state: IncidentGraphState) -> IncidentGraphState:
-        output = self._kpi_node.run(country=self._resolve_country(state))
+        classification = state.get("classification")
+        if isinstance(classification, dict):
+            classification = IntentClassificationResult.model_validate(classification)
+        classification_scope = (
+            classification.scope if classification is not None else "GLOBAL"
+        )
+        output = self._kpi_node.run(
+            question=str(state.get("question") or ""),
+            case_id=state.get("case_id"),
+            classification_scope=classification_scope,
+            country=self._resolve_country(state),
+        )
         return cast(IncidentGraphState, output.model_dump())
 
     def _kpi_reflection(self, state: IncidentGraphState) -> IncidentGraphState:
@@ -418,7 +371,7 @@ class UnifiedIncidentGraph:
         if metrics is None:
             raise ValueError("kpi_metrics is required before reflection")
         if isinstance(metrics, dict):
-            metrics = KPIMetrics.model_validate(metrics)
+            metrics = KPIResult.model_validate(metrics)
         output = self._kpi_reflection_node.run(
             question=str(state.get("question") or ""),
             metrics=metrics,

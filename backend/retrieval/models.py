@@ -16,6 +16,11 @@ class CaseSummary(BaseModel):
     five_whys_text: Optional[str]
     permanent_actions_text: Optional[str]
     ai_summary: Optional[str]
+    # KPI-relevant fields — populated from filterable index fields.
+    status: Optional[str] = None
+    current_stage: Optional[str] = None
+    responsible_leader: Optional[str] = None
+    department: Optional[str] = None
 
 
 class KnowledgeSummary(BaseModel):

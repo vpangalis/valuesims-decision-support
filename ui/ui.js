@@ -3,9 +3,6 @@ const API_BASE = "http://127.0.0.1:8005";
 
 let caseState = {};
 
-// Tracks which node mode is manually selected (null = auto-classify).
-let activeNodeOverride = null;
-
 const PHASE_META = {
   D1_2: { name: "Problem Definition", discipline: ["D1", "D2"] },
   D3: { name: "Containment Actions", discipline: "D3" },
@@ -509,11 +506,6 @@ document.addEventListener("DOMContentLoaded", () => {
         input.focus();
         if (chip.closest(".ai-suggestions-bar")) {
           input.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        }
-        // Set activeNodeOverride from the welcome-screen section, if present
-        const section = chip.closest(".ai-welcome-section[data-node]");
-        if (section) {
-          activeNodeOverride = section.dataset.node || null;
         }
       }
     });
@@ -1376,8 +1368,7 @@ document.addEventListener("DOMContentLoaded", () => {
         question,
         case_context: caseContext,
         evidence_metadata: evidenceMetadata,
-        knowledge_references: collectKnowledgeReferences(),
-        node_override: activeNodeOverride
+        knowledge_references: collectKnowledgeReferences()
       }
     };
 
@@ -1424,7 +1415,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       appendAiExchange(question, activeCaseId, output, false, suggestions, nodeType);
-      activeNodeOverride = null; // reset after each response; next question goes through classifier
     } catch (err) {
       console.error("[AI] fetch error:", err);
       appendAiExchange(question, activeCaseId,
@@ -2127,12 +2117,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const listEl = document.getElementById("knowledge_upload_list");
     if (!listEl) return;
 
-    const rows = Array.from(listEl.querySelectorAll(".doc-row"));
+    // Match placeholder rows rendered by the companion change listener.
+    // Each row is <div class="kb-doc-row"> whose .kb-doc-name last child text
+    // node holds the raw filename; status is updated via .kb-status-badge.
+    const rows = Array.from(listEl.querySelectorAll(".kb-doc-row"));
     const byName = new Map();
     rows.forEach((row) => {
-      const name = row.firstChild?.textContent || "";
-      const linkEl = row.querySelector(".evidence-link");
-      if (name && linkEl) byName.set(name, linkEl);
+      const nameEl = row.querySelector(".kb-doc-name");
+      const badgeEl = row.querySelector(".kb-status-badge");
+      const name = nameEl?.lastChild?.textContent?.trim() || "";
+      if (name && badgeEl) byName.set(name, badgeEl);
     });
 
     const documents = [];

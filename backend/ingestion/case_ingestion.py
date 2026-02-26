@@ -755,6 +755,9 @@ class CaseIngestionService:
                 case.get("closure_date")
                 or self._safe_get(phases, "D8", "data", "closure_date", default=None)
             ),
+            "current_stage": self._determine_current_stage(
+                phases, case_doc.get("d_states") or {}, case
+            ),
             "created_at": self._to_search_datetime(
                 self._safe_get(case_doc, "meta", "created_at")
             ),
@@ -834,6 +837,68 @@ class CaseIngestionService:
         }
         document["searchable_hash"] = self._searchable_hash(document)
         return document
+
+    _D_STAGE_ORDER: list[str] = [
+        "D1_D2",
+        "D3",
+        "D4",
+        "D5",
+        "D6",
+        "D7",
+        "D8",
+    ]
+    # Maps canonical phase keys (as stored in the index) to user-facing labels.
+    _D_STAGE_LABELS: dict[str, str] = {
+        "D1_D2": "Problem Definition",
+        "D1_2": "Problem Definition",
+        "D3": "Containment Actions",
+        "D4": "Root Cause Analysis",
+        "D5": "Permanent Corrective Actions",
+        "D6": "Implementation & Validation",
+        "D7": "Prevention",
+        "D8": "Closure & Learnings",
+    }
+
+    def _determine_current_stage(
+        self,
+        phases: dict,
+        d_states: dict,
+        case: dict,
+    ) -> str | None:
+        """Return the plain-language label of the active D-stage.
+
+        Logic:
+        - Closed cases → 'Closure & Learnings' (D8).
+        - Otherwise walk the phase order (D1_D2 … D8) and return the label
+          of the first phase whose ``header.completed`` is not True.
+        - Falls back to None if no phases are present.
+        """
+        if case.get("status") == "closed":
+            return "Closure & Learnings"
+
+        # Try legacy phases structure first.
+        if phases:
+            for phase_key in self._D_STAGE_ORDER:
+                phase = phases.get(phase_key)
+                if isinstance(phase, dict):
+                    header = phase.get("header") or {}
+                    if not header.get("completed"):
+                        return self._D_STAGE_LABELS.get(phase_key, phase_key)
+            # All phases completed — treat as Closure.
+            return "Closure & Learnings"
+
+        # Try native d_states structure (D1_2, D3, …).
+        native_order = ["D1_2", "D3", "D4", "D5", "D6", "D7", "D8"]
+        if d_states:
+            for stage_key in native_order:
+                stage = d_states.get(stage_key)
+                if isinstance(stage, dict):
+                    header = stage.get("header") or {}
+                    if not header.get("completed"):
+                        return self._D_STAGE_LABELS.get(stage_key, stage_key)
+            return "Closure & Learnings"
+
+        return None
 
 
 __all__ = ["CaseEntryService", "CaseIngestionService", "CaseSearchIndex"]

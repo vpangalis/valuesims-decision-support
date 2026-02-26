@@ -27,6 +27,7 @@ class CaseSearchClient:
             "doc_id",
             "status",
             "opening_date",
+            "closure_date",
             "problem_description",
             "organization_country",
             "organization_site",

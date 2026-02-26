@@ -48,11 +48,54 @@ class ScopeContext(BaseModel):
         return normalized
 
 
-class KPIMetrics(BaseModel):
-    total_closed_cases: int
-    min_closure_days: int | None = None
-    avg_closure_days: float | None = None
-    max_closure_days: int | None = None
+class KPIResult(BaseModel):
+    """Computed KPI metrics produced by KPITool.get_kpis().
+
+    Contains the raw metric values plus rendering hints and follow-up
+    suggestions for the frontend chips.
+    """
+
+    scope: Literal["global", "country", "case"] = "global"
+    scope_label: str = "Global"
+    render_hint: Literal["table", "bar_chart", "gauge", "summary_text"] = "table"
+    suggestions: list[str] = Field(default_factory=list)
+
+    # ── Common metrics (global + country) ──────────────────────────────────
+    total_cases_opened_ytd: Optional[int] = None
+    total_cases_closed_ytd: Optional[int] = None
+    avg_closure_days_ytd: Optional[float] = None
+    avg_closure_days_rolling_12m: Optional[float] = None
+    recurrence_rate: Optional[float] = None
+    first_closure_rate: Optional[float] = None
+    overdue_count: Optional[int] = None
+    overdue_pct: Optional[float] = None
+    d_stage_distribution: Optional[dict[str, int]] = None
+    avg_days_per_stage: Optional[dict[str, float]] = None
+
+    # ── Country-scope additions ────────────────────────────────────────────
+    country_ranking: Optional[list[dict[str, Any]]] = None
+    active_case_load: Optional[list[dict[str, Any]]] = None
+    ytd_closed_count: Optional[int] = None
+    global_avg_closure_days: Optional[float] = None
+
+    # ── Case-scope additions ───────────────────────────────────────────────
+    days_elapsed: Optional[int] = None
+    category_benchmark_days: Optional[float] = None
+    current_stage: Optional[str] = None
+    responsible_leader: Optional[str] = None
+    department: Optional[str] = None
+    days_stuck_at_current_stage: Optional[int] = None
+    similar_cases_avg_resolution_days: Optional[float] = None
+
+    # ── Backward-compat fields (kept so old code that reads these still works) ─
+    total_closed_cases: Optional[int] = None
+    min_closure_days: Optional[int] = None
+    avg_closure_days: Optional[float] = None
+    max_closure_days: Optional[int] = None
+
+
+# Backward-compatibility alias so callers that still import KPIMetrics keep working.
+KPIMetrics = KPIResult
 
 
 class ReflectionVerdict(BaseModel):
@@ -168,13 +211,17 @@ class StrategyReflectionOutput(BaseModel):
 
 
 class KPINodeOutput(BaseModel):
-    kpi_metrics: KPIMetrics
+    kpi_metrics: KPIResult
 
 
 class KPIInterpretation(BaseModel):
     summary: str
     insights: list[str] = Field(default_factory=list)
-    metrics: KPIMetrics
+    metrics: KPIResult
+    # Forwarded from the computed KPIResult so the formatter has them in one place.
+    render_hint: Literal["table", "bar_chart", "gauge", "summary_text"] = "table"
+    scope_label: str = "Global"
+    suggestions: list[str] = Field(default_factory=list)
 
 
 class KPIReflectionOutput(BaseModel):
@@ -197,6 +244,7 @@ __all__ = [
     "OperationalGuidance",
     "OperationalReasoningDraft",
     "ScopeContext",
+    "KPIResult",
     "KPIMetrics",
     "ReflectionVerdict",
     "ReflectionResult",

@@ -11,17 +11,9 @@ from backend.workflow.models import StrategyDraftPayload, StrategyNodeOutput
 
 _logger = logging.getLogger("strategy_node")
 
-_D_STATE_LABELS: dict[str, str] = {
-    "D1_2": "Problem Definition",
-    "D3": "Containment Actions",
-    "D4": "Root Cause Analysis",
-    "D5": "Permanent Corrective Actions",
-    "D6": "Implementation & Validation",
-    "D7": "Prevention",
-    "D8": "Closure & Learnings",
-}
 
-_STRATEGY_SYSTEM_PROMPT = """\
+class StrategyNode:
+    _STRATEGY_SYSTEM_PROMPT = """\
 You are a senior quality strategy advisor with access to the full portfolio of incident cases.
 Your role is to reason across the entire case history and answer the user's strategic question.
 
@@ -89,11 +81,13 @@ CRITICAL RULES:
   [SYSTEMIC PATTERNS IDENTIFIED] and reason conservatively throughout.
 - [WHAT TO EXPLORE NEXT] items must be portfolio/fleet/org level, not incident level.
 - SECTION ORDER IS MANDATORY. No sections may be omitted or reordered.
+- The [GENERAL ADVICE] section MUST start with the exact characters ⚠️ (warning emoji)
+  immediately after the section marker — this signals to the reader that the advice is
+  generic and not grounded in the retrieved case data.
 - Return plain text only. No JSON. No markdown beyond the section labels.
 - [WHAT TO EXPLORE NEXT] must be the final section. Nothing may appear after it.\
 """
-
-_ESCALATION_SYSTEM_PROMPT = """\
+    _ESCALATION_SYSTEM_PROMPT = """\
 A previous draft strategy response was rejected by the quality auditor.
 
 The failing section was: {fail_section}
@@ -116,8 +110,6 @@ Retrieved cases for context:
 {formatted_cases}\
 """
 
-
-class StrategyNode:
     def __init__(
         self,
         hybrid_retriever: HybridRetriever,
@@ -233,7 +225,7 @@ class StrategyNode:
 
         # If escalated and a specific section failed, use targeted regeneration prompt
         if strategy_escalated and strategy_fail_section and strategy_response:
-            system_prompt = _ESCALATION_SYSTEM_PROMPT.format(
+            system_prompt = StrategyNode._ESCALATION_SYSTEM_PROMPT.format(
                 fail_section=strategy_fail_section,
                 fail_reason=strategy_fail_reason,
                 original_response=strategy_response,
@@ -241,7 +233,7 @@ class StrategyNode:
             )
             user_prompt = f"USER QUESTION: {question}"
         else:
-            system_prompt = _STRATEGY_SYSTEM_PROMPT
+            system_prompt = StrategyNode._STRATEGY_SYSTEM_PROMPT
             user_prompt = (
                 f"USER QUESTION: {question}\n\n"
                 "--- RETRIEVED CASES ---\n"
