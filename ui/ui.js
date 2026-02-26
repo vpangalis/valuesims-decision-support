@@ -889,19 +889,28 @@ document.addEventListener("DOMContentLoaded", () => {
     `</div>` +
     `</div>` +
     `<div class="ai-welcome-section">` +
-    `<div class="ai-welcome-section-label">HAS THIS HAPPENED BEFORE?</div>` +
-    `<div class="ai-welcome-section-hint">Search across all closed cases in the knowledge base:</div>` +
+    `<div class="ai-welcome-section-label">HAVE WE SEEN THIS BEFORE?</div>` +
+    `<div class="ai-welcome-section-hint">Look through past resolved cases for anything similar:</div>` +
     `<div class="ai-welcome-suggestions">` +
-    `<div class="ai-suggestion-chip">Find similar incidents involving bearing failures</div>` +
-    `<div class="ai-suggestion-chip">Have we seen software faults on this fleet before?</div>` +
+    `<div class="ai-suggestion-chip">Have we dealt with a problem like this before?</div>` +
+    `<div class="ai-suggestion-chip">Has anything similar come up in other parts of the operation?</div>` +
     `</div>` +
     `</div>` +
     `<div class="ai-welcome-section">` +
     `<div class="ai-welcome-section-label">LOOKING AT THE BIGGER PICTURE?</div>` +
-    `<div class="ai-welcome-section-hint">Ask about recurring patterns or performance trends across the fleet:</div>` +
+    `<div class="ai-welcome-section-hint">Ask about recurring patterns and trends across all areas and teams:</div>` +
     `<div class="ai-welcome-suggestions">` +
     `<div class="ai-suggestion-chip">What are the most recurring failure types we face?</div>` +
     `<div class="ai-suggestion-chip">How are we trending on unplanned failures this year?</div>` +
+    `</div>` +
+    `</div>` +
+    `<div class="ai-welcome-section">` +
+    `<div class="ai-welcome-section-label">HOW ARE WE DOING?</div>` +
+    `<div class="ai-welcome-section-hint">Understand overall performance and where to focus attention:</div>` +
+    `<div class="ai-welcome-suggestions">` +
+    `<div class="ai-suggestion-chip">How is our overall incident resolution performance?</div>` +
+    `<div class="ai-suggestion-chip">Which areas have the most open cases right now?</div>` +
+    `<div class="ai-suggestion-chip">How long do cases typically take to resolve?</div>` +
     `</div>` +
     `</div>` +
     `<div class="ai-welcome-section">` +
@@ -973,22 +982,22 @@ document.addEventListener("DOMContentLoaded", () => {
       `<div class="ai-welcome-subtitle">Suggested questions based on this case</div>` +
 
       `<div class="ai-welcome-section">` +
-      `<div class="ai-welcome-section-label">Current investigation</div>` +
+      `<div class="ai-welcome-section-label">CURRENT INVESTIGATION</div>` +
       `<div class="ai-welcome-section-hint">Questions about the active case state and next steps:</div>` +
       `<div class="ai-welcome-suggestions">` +
       operational.map(chipHtml).join("") +
       `</div></div>` +
 
       `<div class="ai-welcome-section">` +
-      `<div class="ai-welcome-section-label">Similar cases</div>` +
-      `<div class="ai-welcome-section-hint">Search the closed case knowledge base:</div>` +
+      `<div class="ai-welcome-section-label">HAVE WE SEEN THIS BEFORE?</div>` +
+      `<div class="ai-welcome-section-hint">Look through past resolved cases for anything similar:</div>` +
       `<div class="ai-welcome-suggestions">` +
       similarity.map(chipHtml).join("") +
       `</div></div>` +
 
       `<div class="ai-welcome-section">` +
-      `<div class="ai-welcome-section-label">Broader view</div>` +
-      `<div class="ai-welcome-section-hint">Strategic patterns and performance trends:</div>` +
+      `<div class="ai-welcome-section-label">LOOKING AT THE BIGGER PICTURE?</div>` +
+      `<div class="ai-welcome-section-hint">Patterns and trends across all areas and teams:</div>` +
       `<div class="ai-welcome-suggestions">` +
       broader.map(chipHtml).join("") +
       `</div></div>` +
@@ -1187,9 +1196,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Metric block dispatched by render_hint
     switch (renderHint) {
-      case "table":     html += _kpiRenderTable(metrics); break;
+      case "table": html += _kpiRenderTable(metrics); break;
       case "bar_chart": html += _kpiRenderBarChart(metrics); break;
-      case "gauge":     html += _kpiRenderGauge(metrics); break;
+      case "gauge": html += _kpiRenderGauge(metrics); break;
       case "summary_text":
       default:
         if (summary) html += '<div class="ai-section-body"><p>' + escapeHtml(summary) + '</p></div>';
