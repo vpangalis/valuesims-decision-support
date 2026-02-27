@@ -1318,6 +1318,7 @@ document.addEventListener("DOMContentLoaded", () => {
       { marker: '[SIMILAR CASES FOUND]', title: 'Similar Cases Found' },
       { marker: '[PATTERNS ACROSS CASES]', title: 'Patterns Across Cases' },
       { marker: '[WHAT THIS MEANS FOR YOUR INVESTIGATION]', title: 'What This Means For Your Investigation' },
+      { marker: '[WHAT THIS REVEALS]', title: 'What This Reveals' },
       { marker: '[SIMILAR CASES — CHECK FIRST]', title: 'Check If This Has Happened Before' },
       { marker: '[IF THIS IS A NEW PROBLEM — HOW TO START]', title: 'How To Start' },
       { marker: '[CURRENT STATE]', title: 'Current State' },
