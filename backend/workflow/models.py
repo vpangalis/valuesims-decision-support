@@ -134,6 +134,16 @@ class OperationalNodeOutput(BaseModel):
     operational_draft: OperationalPayload
 
 
+class OperationalReflectionAssessment(BaseModel):
+    case_grounding: str  # GROUNDED | GENERIC | MIXED
+    gap_detection: str  # SPECIFIC | VAGUE | MISSING
+    next_state_relevance: str  # CONNECTED | DISCONNECTED | MISSING
+    general_advice_flagged: str  # PRESENT_FLAGGED | PRESENT_UNFLAGGED | MISSING
+    explore_next_quality: str  # SPECIFIC_MULTI_DOMAIN | GENERIC | INCOMPLETE | MISSING
+    should_regenerate: bool
+    issues: list[str]
+
+
 class OperationalReflectionOutput(BaseModel):
     operational_result: OperationalPayload
     operational_reflection: ReflectionResult
@@ -235,6 +245,7 @@ __all__ = [
     "IntentReflectionOutput",
     "RouterNodeOutput",
     "OperationalNodeOutput",
+    "OperationalReflectionAssessment",
     "OperationalReflectionOutput",
     "SimilarityPayload",
     "SimilarityNodeOutput",
