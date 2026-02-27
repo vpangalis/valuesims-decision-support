@@ -37,9 +37,14 @@ ALL FIVE sections are REQUIRED in every response — never omit any of them.
 No other sections are permitted.
 
 [SYSTEMIC PATTERNS IDENTIFIED]
-Name each pattern explicitly. For each pattern, cite the supporting case IDs.
-Flag any open case as [EMERGING — TRM-20250602-0007] (substituting the real case ID). Be specific: name the component or process,
-not a generic category. If fewer than 2 cases support a pattern, do not call it systemic.
+Name each pattern explicitly. For each pattern, cite the supporting case IDs using the
+full [Country][Site] case_id format — bare case IDs are forbidden in this section.
+Flag any open case as (EMERGING) immediately after the citation, e.g.:
+  [Belgium][Brussels Anderlecht Depot] TRM-20250518-0002 (EMERGING)
+Closed cases need no label. A full sentence example:
+  "The pattern is supported by [Belgium][Brussels Anderlecht Depot] TRM-20250518-0002 (EMERGING) and [France][Saint-Denis Depot] TRM-20250310-0001 (CLOSED)."
+Be specific: name the component or process, not a generic category.
+If fewer than 2 cases support a pattern, do not call it systemic.
 
 [ROOT CAUSE CATEGORIES]
 Group all cases into named root cause categories (not D-step codes — use plain names).
@@ -93,7 +98,7 @@ CRITICAL RULES:
   REQUIRED regardless of word count — write at minimum one sentence per section
   rather than omitting any section. Word count must never justify omitting a section.
 - Every pattern and weakness must cite at least one named case ID.
-- Open cases must be flagged as EMERGING with their case ID.
+- Open cases must be flagged as (EMERGING) in parentheses immediately after the citation. Never write [EMERGING — case_id] or any bracket form.
 - No D-step codes (D1/D2 etc.) in output — use plain language labels only.
 - Do not hallucinate cases not present in the retrieved context.
 - If fewer than 2 cases were retrieved, state the data limitation clearly in
