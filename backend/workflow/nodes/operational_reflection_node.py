@@ -259,7 +259,7 @@ Return plain text only. No JSON.\
             next_state_preview=next_preview,
             supporting_cases=draft.supporting_cases,
             referenced_evidence=draft.referenced_evidence,
-            suggestions=OperationalNode._extract_suggestions(recommendations),
+            suggestions=extract_suggestions(recommendations),
         )
         return OperationalReflectionOutput(
             operational_result=result,
