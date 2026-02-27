@@ -127,6 +127,11 @@ class EntryHandler:
             _logger.info("[ENTRY] low-confidence classification — returning clarifying response")
             return self._clarifying_response(envelope)
 
+        if not graph_result.get("question_ready", True):
+            _logger.info("[ENTRY] question not ready — returning clarifying question")
+            cq = str(graph_result.get("clarifying_question") or "")
+            return self._clarifying_question_response(envelope, cq)
+
         response = graph_result.get("final_response") or {}
         return EntryResponseEnvelope(
             intent=envelope.intent,
@@ -168,6 +173,29 @@ class EntryHandler:
         return EntryResponseEnvelope(
             intent=envelope.intent,
             status="accepted",
+            data=data,
+        )
+
+    def _clarifying_question_response(
+        self, envelope: EntryEnvelope, clarifying_question: str
+    ) -> EntryResponseEnvelope:
+        summary = clarifying_question if clarifying_question else self._CLARIFYING_TEXT
+        data = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "classification": {
+                "intent": "SIMILARITY_SEARCH",
+                "scope": "GLOBAL",
+                "confidence": 0.3,
+            },
+            "result": {
+                "summary": summary,
+                "supporting_cases": [],
+                "suggestions": list(self._CLARIFYING_SUGGESTIONS),
+            },
+        }
+        return EntryResponseEnvelope(
+            intent=envelope.intent,
+            status="ok",
             data=data,
         )
 

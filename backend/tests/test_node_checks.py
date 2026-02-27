@@ -44,6 +44,8 @@ from backend.workflow.models import (
     KPIResult,
     OperationalDraftPayload,
     OperationalNodeOutput,
+    QuestionReadinessNodeOutput,
+    QuestionReadinessResult,
     SimilarityDraftPayload,
     SimilarityNodeOutput,
     StrategyDraftPayload,
@@ -51,12 +53,14 @@ from backend.workflow.models import (
 )
 from backend.workflow.nodes.kpi_node import KPINode
 from backend.workflow.nodes.operational_node import OperationalNode
+from backend.workflow.nodes.question_readiness_node import QuestionReadinessNode
 from backend.workflow.nodes.similarity_node import SimilarityNode
 from backend.workflow.nodes.strategy_node import StrategyNode
 
 __all__ = [
     "NodeCheckConfig",
     "OperationalNodeChecks",
+    "QuestionReadinessNodeChecks",
     "SimilarityNodeChecks",
     "StrategyNodeChecks",
     "KPINodeChecks",
@@ -696,6 +700,25 @@ class _MockLLMClient:
         # Return a minimal valid instance of whatever model is requested.
         # This is only used for tests that need complete_json (not nodes themselves).
         return response_model.model_validate({})
+
+
+class _MockQuestionReadinessLLMClient:
+    """Mock LLM client that returns a fixed QuestionReadinessResult."""
+
+    def __init__(self, ready: bool, clarifying_question: str = "") -> None:
+        self._ready = ready
+        self._cq = clarifying_question
+
+    def complete_json(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        response_model: type,
+        temperature: float = 0.0,
+        user_question: Optional[str] = None,
+        **_kwargs: Any,
+    ) -> Any:
+        return response_model(ready=self._ready, clarifying_question=self._cq)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -2416,6 +2439,139 @@ class KPINodeChecks:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# QuestionReadinessNodeChecks
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+class QuestionReadinessNodeChecks:
+    """Automated checks for QuestionReadinessNode."""
+
+    _JARGON_TERMS: tuple[str, ...] = (
+        "intent",
+        "node",
+        "classification",
+        "routing",
+        "azure",
+        "langgraph",
+        "index",
+        "retriever",
+        "embedding",
+    )
+
+    def __init__(self, config: NodeCheckConfig) -> None:
+        self._cfg = config
+
+    # ── Check 1: question ready when case is loaded ───────────────────────
+
+    def test_ready_when_case_loaded(self) -> CheckResult:
+        node = QuestionReadinessNode(
+            llm_client=_MockQuestionReadinessLLMClient(ready=True, clarifying_question="")
+        )
+        try:
+            result = node.run(
+                question="What should we focus on next?",
+                intent="OPERATIONAL_CASE",
+                case_loaded=True,
+            )
+            if not isinstance(result, QuestionReadinessNodeOutput):
+                return CheckResult(
+                    "QuestionReadinessNode: ready when case loaded",
+                    passed=False,
+                    detail=f"Expected QuestionReadinessNodeOutput, got {type(result).__name__}",
+                )
+            if not result.question_ready:
+                return CheckResult(
+                    "QuestionReadinessNode: ready when case loaded",
+                    passed=False,
+                    detail=f"question_ready={result.question_ready}, expected True",
+                )
+        except Exception as exc:
+            return CheckResult(
+                "QuestionReadinessNode: ready when case loaded",
+                passed=False,
+                detail=f"Exception: {exc}",
+            )
+        return CheckResult("QuestionReadinessNode: ready when case loaded", passed=True)
+
+    # ── Check 2: not ready when operational question with no case loaded ──
+
+    def test_not_ready_operational_no_case(self) -> CheckResult:
+        cq = "Could you describe the problem you are currently investigating?"
+        node = QuestionReadinessNode(
+            llm_client=_MockQuestionReadinessLLMClient(ready=False, clarifying_question=cq)
+        )
+        try:
+            result = node.run(
+                question="What should we focus on next?",
+                intent="OPERATIONAL_CASE",
+                case_loaded=False,
+            )
+            if result.question_ready:
+                return CheckResult(
+                    "QuestionReadinessNode: not ready when no case loaded",
+                    passed=False,
+                    detail=f"question_ready=True, expected False for operational question without case",
+                )
+            if not result.clarifying_question:
+                return CheckResult(
+                    "QuestionReadinessNode: not ready when no case loaded",
+                    passed=False,
+                    detail="clarifying_question is empty when ready=False",
+                )
+        except Exception as exc:
+            return CheckResult(
+                "QuestionReadinessNode: not ready when no case loaded",
+                passed=False,
+                detail=f"Exception: {exc}",
+            )
+        return CheckResult(
+            "QuestionReadinessNode: not ready when no case loaded", passed=True
+        )
+
+    # ── Check 3: clarifying question contains no technical jargon ─────────
+
+    def test_no_jargon_in_clarifying_question(self) -> CheckResult:
+        cq = "Could you describe the specific problem your team is currently looking into?"
+        node = QuestionReadinessNode(
+            llm_client=_MockQuestionReadinessLLMClient(ready=False, clarifying_question=cq)
+        )
+        try:
+            result = node.run(
+                question="What next?",
+                intent="OPERATIONAL_CASE",
+                case_loaded=False,
+            )
+            text_lower = result.clarifying_question.lower()
+            hits = [
+                term
+                for term in QuestionReadinessNodeChecks._JARGON_TERMS
+                if term.lower() in text_lower
+            ]
+            if hits:
+                return CheckResult(
+                    "QuestionReadinessNode: no jargon in clarifying question",
+                    passed=False,
+                    detail=f"Jargon terms found: {hits}",
+                )
+        except Exception as exc:
+            return CheckResult(
+                "QuestionReadinessNode: no jargon in clarifying question",
+                passed=False,
+                detail=f"Exception: {exc}",
+            )
+        return CheckResult(
+            "QuestionReadinessNode: no jargon in clarifying question", passed=True
+        )
+
+    def run_all(self) -> list[CheckResult]:
+        return [
+            self.test_ready_when_case_loaded(),
+            self.test_not_ready_operational_no_case(),
+            self.test_no_jargon_in_clarifying_question(),
+        ]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # NodeCheckRunner — orchestrates all checks and produces the report
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -2443,6 +2599,7 @@ class NodeCheckRunner:
             ("SimilarityNode", SimilarityNodeChecks(self._config).run_all()),
             ("StrategyNode", StrategyNodeChecks(self._config).run_all()),
             ("KPINode", KPINodeChecks(self._config).run_all()),
+            ("QuestionReadinessNode", QuestionReadinessNodeChecks(self._config).run_all()),
         ]
 
         total_pass = total_fail = total_skip = 0
@@ -2500,6 +2657,7 @@ class NodeCheckRunner:
             "SimilarityNode": SimilarityNodeChecks(self._config).run_all(),
             "StrategyNode": StrategyNodeChecks(self._config).run_all(),
             "KPINode": KPINodeChecks(self._config).run_all(),
+            "QuestionReadinessNode": QuestionReadinessNodeChecks(self._config).run_all(),
         }
 
 
@@ -2753,6 +2911,31 @@ class TestKPINode:
 
     def test_extract_country_from_question(self) -> None:
         r = self._get_checks().test_extract_country_from_question()
+        assert r.passed or r.skipped, r.detail
+
+
+class TestQuestionReadinessNode:
+    """pytest wrapper for QuestionReadinessNodeChecks."""
+
+    _cfg = NodeCheckConfig()
+    _checks = None
+
+    @classmethod
+    def _get_checks(cls) -> QuestionReadinessNodeChecks:
+        if cls._checks is None:
+            cls._checks = QuestionReadinessNodeChecks(cls._cfg)
+        return cls._checks
+
+    def test_ready_when_case_loaded(self) -> None:
+        r = self._get_checks().test_ready_when_case_loaded()
+        assert r.passed or r.skipped, r.detail
+
+    def test_not_ready_operational_no_case(self) -> None:
+        r = self._get_checks().test_not_ready_operational_no_case()
+        assert r.passed or r.skipped, r.detail
+
+    def test_no_jargon_in_clarifying_question(self) -> None:
+        r = self._get_checks().test_no_jargon_in_clarifying_question()
         assert r.passed or r.skipped, r.detail
 
 

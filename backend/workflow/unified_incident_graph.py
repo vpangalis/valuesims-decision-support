@@ -16,6 +16,7 @@ from backend.workflow.models import (
     IntentClassificationResult,
     OperationalDraftPayload,
     OperationalGuidance,
+    QuestionReadinessNodeOutput,
     ReflectionResult,
     SimilarityDraftPayload,
     SimilarityReflectionAssessment,
@@ -26,6 +27,7 @@ from backend.workflow.models import (
 from backend.workflow.nodes.context_node import ContextNode
 from backend.workflow.nodes.end_node import EndNode
 from backend.workflow.nodes.intent_classification_node import IntentClassificationNode
+from backend.workflow.nodes.question_readiness_node import QuestionReadinessNode
 from backend.workflow.nodes.intent_reflection_node import IntentReflectionNode
 from backend.workflow.nodes.kpi_node import KPINode
 from backend.workflow.nodes.kpi_reflection_node import KPIReflectionNode
@@ -68,6 +70,8 @@ class IncidentGraphState(TypedDict, total=False):
     kpi_interpretation: KPIInterpretation | None
     final_response: dict | None
     classification_low_confidence: bool
+    question_ready: bool
+    clarifying_question: str
 
 
 class UnifiedIncidentGraph:
@@ -76,6 +80,7 @@ class UnifiedIncidentGraph:
         start_node: StartNode,
         context_node: ContextNode,
         intent_classification_node: IntentClassificationNode,
+        question_readiness_node: QuestionReadinessNode,
         intent_reflection_node: IntentReflectionNode,
         router_node: RouterNode,
         operational_node: OperationalNode,
@@ -95,6 +100,7 @@ class UnifiedIncidentGraph:
         self._start_node = start_node
         self._context_node = context_node
         self._intent_classification_node = intent_classification_node
+        self._question_readiness_node = question_readiness_node
         self._intent_reflection_node = intent_reflection_node
         self._router_node = router_node
         self._operational_node = operational_node
@@ -115,6 +121,7 @@ class UnifiedIncidentGraph:
         graph.add_node("start_node", self._start)
         graph.add_node("context_node", self._context)
         graph.add_node("intent_classification_node", self._intent_classification)
+        graph.add_node("question_readiness_node", self._question_readiness)
         graph.add_node("intent_reflection_node", self._intent_reflection)
         graph.add_node("router_node", self._router)
         graph.add_node("operational_node", self._operational)
@@ -135,7 +142,15 @@ class UnifiedIncidentGraph:
 
         graph.add_edge("start_node", "context_node")
         graph.add_edge("context_node", "intent_classification_node")
-        graph.add_edge("intent_classification_node", "intent_reflection_node")
+        graph.add_edge("intent_classification_node", "question_readiness_node")
+        graph.add_conditional_edges(
+            "question_readiness_node",
+            self._route_question_readiness,
+            {
+                "READY": "intent_reflection_node",
+                "NOT_READY": "response_formatter_node",
+            },
+        )
         graph.add_edge("intent_reflection_node", "router_node")
 
         graph.add_conditional_edges(
@@ -196,6 +211,27 @@ class UnifiedIncidentGraph:
             case_id=state.get("case_id"),
         )
         return cast(IncidentGraphState, output.model_dump())
+
+    def _question_readiness(self, state: IncidentGraphState) -> IncidentGraphState:
+        classification = state.get("classification")
+        intent = ""
+        if isinstance(classification, dict):
+            intent = str(classification.get("intent") or "")
+        elif classification is not None:
+            intent = str(classification.intent)
+        case_loaded = bool(state.get("case_id") and str(state.get("case_id") or "").strip())
+        output: QuestionReadinessNodeOutput = self._question_readiness_node.run(
+            question=str(state.get("question") or ""),
+            intent=intent,
+            case_loaded=case_loaded,
+        )
+        return cast(IncidentGraphState, output.model_dump())
+
+    def _route_question_readiness(self, state: IncidentGraphState) -> str:
+        if not state.get("question_ready", True):
+            _graph_logger.info("[GRAPH_DEBUG] question not ready — short-circuiting to response_formatter")
+            return "NOT_READY"
+        return "READY"
 
     def _intent_reflection(self, state: IncidentGraphState) -> IncidentGraphState:
         classification = state.get("classification")

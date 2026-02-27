@@ -46,6 +46,7 @@ from backend.workflow.nodes.context_node import ContextNode
 from backend.workflow.nodes.end_node import EndNode
 from backend.workflow.nodes.intent_classification_node import IntentClassificationNode
 from backend.workflow.nodes.intent_reflection_node import IntentReflectionNode
+from backend.workflow.nodes.question_readiness_node import QuestionReadinessNode
 from backend.workflow.nodes.kpi_node import KPINode
 from backend.workflow.nodes.kpi_reflection_node import KPIReflectionNode
 from backend.workflow.nodes.operational_node import OperationalNode
@@ -196,6 +197,15 @@ class BackendContainer:
         self.intent_classification_node = IntentClassificationNode(
             llm_client=self.classifier_llm
         )
+        self.question_readiness_llm = LoggedLanguageModelClient(
+            base_client=self.language_model_client,
+            settings=settings,
+            node_name="question_readiness",
+            model_name=settings.LLM_MODEL_CLASSIFIER,
+        )
+        self.question_readiness_node = QuestionReadinessNode(
+            llm_client=self.question_readiness_llm
+        )
         self.intent_reflection_node = IntentReflectionNode(
             llm_client=self.intent_reflection_llm,
             regeneration_llm_client=self.classifier_llm,
@@ -251,6 +261,7 @@ class BackendContainer:
             start_node=self.start_node,
             context_node=self.context_node,
             intent_classification_node=self.intent_classification_node,
+            question_readiness_node=self.question_readiness_node,
             intent_reflection_node=self.intent_reflection_node,
             router_node=self.router_node,
             operational_node=self.operational_node,

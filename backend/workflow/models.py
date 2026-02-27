@@ -230,6 +230,16 @@ class KPIReflectionOutput(BaseModel):
     kpi_reflection: ReflectionVerdict
 
 
+class QuestionReadinessResult(BaseModel):
+    ready: bool
+    clarifying_question: str = ""
+
+
+class QuestionReadinessNodeOutput(BaseModel):
+    question_ready: bool
+    clarifying_question: str = ""
+
+
 class FinalResponsePayload(BaseModel):
     timestamp: str
     classification: IntentClassificationResult | None
@@ -268,6 +278,8 @@ __all__ = [
     "KPINodeOutput",
     "KPIInterpretation",
     "KPIReflectionOutput",
+    "QuestionReadinessResult",
+    "QuestionReadinessNodeOutput",
     "FinalResponsePayload",
     "ResponseFormatterOutput",
 ]
