@@ -2370,7 +2370,8 @@ class KPINodeChecks:
         return CheckResult("KPINode: banned term detection", passed=True)
 
     def test_resolve_scope_logic(self) -> CheckResult:
-        """Unit-test the scope resolution static method."""
+        """Unit-test the scope resolution method."""
+        node = NodeCheckConfig._make_kpi_node(self._cfg)
         issues: list[str] = []
         cases = [
             ("GLOBAL", None, "global"),
@@ -2381,7 +2382,7 @@ class KPINodeChecks:
             ("LOCAL", None, "global"),  # graceful fallback
         ]
         for classification, case_id, expected in cases:
-            actual = KPINode._resolve_scope(classification, case_id)
+            actual = node._resolve_scope(classification, case_id)
             if actual != expected:
                 issues.append(
                     f"_resolve_scope({classification!r}, {case_id!r}) "
@@ -2397,6 +2398,7 @@ class KPINodeChecks:
 
     def test_extract_country_from_question(self) -> CheckResult:
         """Unit-test the country extraction helper."""
+        node = NodeCheckConfig._make_kpi_node(self._cfg)
         issues: list[str] = []
         cases = [
             ("What are KPIs? country: France", "France"),
@@ -2404,7 +2406,7 @@ class KPINodeChecks:
             ("Show global KPIs.", None),
         ]
         for question, expected in cases:
-            actual = KPINode._extract_country(question)
+            actual = node._extract_country(question)
             if actual != expected:
                 issues.append(
                     f"_extract_country({question!r}) → {actual!r}, expected {expected!r}"

@@ -8,8 +8,8 @@ from backend.workflow.models import KPINodeOutput, KPIResult
 
 
 class KPINode:
-    @staticmethod
     def _resolve_scope(
+        self,
         classification_scope: str,
         case_id: Optional[str],
     ) -> Literal["global", "country", "case"]:
@@ -27,8 +27,7 @@ class KPINode:
         # LOCAL scope
         return "case" if case_id else "global"
 
-    @staticmethod
-    def _extract_country(question: str) -> Optional[str]:
+    def _extract_country(self, question: str) -> Optional[str]:
         """Pull a country name from 'country: <name>' in the question string."""
         marker = "country:"
         idx = question.lower().find(marker)
@@ -58,12 +57,12 @@ class KPINode:
             classification_scope: 'GLOBAL' | 'COUNTRY' | 'LOCAL' from the classifier.
             country:              Country resolved by the graph, if any.
         """
-        scope = KPINode._resolve_scope(classification_scope, case_id)
+        scope = self._resolve_scope(classification_scope, case_id)
 
         # If scope is country but we haven't resolved one yet, try extracting
         # it from the question text.
         effective_country = country or (
-            KPINode._extract_country(question) if scope == "country" else None
+            self._extract_country(question) if scope == "country" else None
         )
 
         kpi_result: KPIResult = self._kpi_tool.get_kpis(
