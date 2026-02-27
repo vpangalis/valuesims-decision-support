@@ -33,6 +33,7 @@ For each identified pattern, name the organisational gap that allowed it to recu
 Be specific about what process, oversight, or capability is missing.
 
 Now answer the question using EXACTLY these five sections in EXACTLY this order.
+ALL FIVE sections are REQUIRED in every response — never omit any of them.
 No other sections are permitted.
 
 [SYSTEMIC PATTERNS IDENTIFIED]
@@ -52,11 +53,11 @@ If there is only one case for a weakness, note that more data is needed to confi
 Every weakness must cite at least one named case ID.
 Do not list generic weaknesses not supported by the retrieved cases.
 
-[GENERAL ADVICE]
+[GENERAL ADVICE]  ← MANDATORY SECTION — must appear in every response
 \u26a0\ufe0f General portfolio-level guidance not specific to this data:
-Provide 3-5 recommendations at the portfolio or fleet level.
-These should be generic quality management / continuous improvement recommendations.
-Do not give single-incident advice here.
+Provide 2-4 generic quality management / continuous improvement recommendations
+at the portfolio or fleet level. Do not give single-incident advice here.
+Do NOT skip this section even if you are near the word limit.
 
 [WHAT TO EXPLORE NEXT]
 Provide exactly 6 items: 3 prefixed with TEAM: and 3 prefixed with COSOLVE:
@@ -72,7 +73,9 @@ COSOLVE: <question>
 COSOLVE: <question>
 
 CRITICAL RULES:
-- 300-400 words total across all five sections.
+- Target 300-500 words total across all five sections. ALL FIVE sections are
+  REQUIRED regardless of word count — write at minimum one sentence per section
+  rather than omitting any section. Word count must never justify omitting a section.
 - Every pattern and weakness must cite at least one named case ID.
 - Open cases must be flagged as EMERGING with their case ID.
 - No D-step codes (D1/D2 etc.) in output — use plain language labels only.
@@ -81,11 +84,24 @@ CRITICAL RULES:
   [SYSTEMIC PATTERNS IDENTIFIED] and reason conservatively throughout.
 - [WHAT TO EXPLORE NEXT] items must be portfolio/fleet/org level, not incident level.
 - SECTION ORDER IS MANDATORY. No sections may be omitted or reordered.
+- [GENERAL ADVICE] MUST always be present — it is a mandatory section. A response
+  that omits [GENERAL ADVICE] entirely is INVALID. If you realise you have not
+  written it, you MUST add it before returning your response.
 - The [GENERAL ADVICE] section MUST start with the exact characters ⚠️ (warning emoji)
   immediately after the section marker — this signals to the reader that the advice is
-  generic and not grounded in the retrieved case data.
+  generic and not grounded in the retrieved case data. The ⚠ character (Unicode U+26A0)
+  is a REQUIRED LITERAL in your output — the very first character of your [GENERAL ADVICE]
+  content must be ⚠️. Any response where this character is missing is INVALID and
+  will be rejected by the quality auditor. Do not paraphrase or replace it with words.
 - Return plain text only. No JSON. No markdown beyond the section labels.
-- [WHAT TO EXPLORE NEXT] must be the final section. Nothing may appear after it.\
+- [WHAT TO EXPLORE NEXT] must be the final section. Nothing may appear after it.
+- RESPONSE CHECKLIST — before returning, verify ALL FIVE sections are present:
+  ☑ [SYSTEMIC PATTERNS IDENTIFIED]
+  ☑ [ROOT CAUSE CATEGORIES]
+  ☑ [ORGANISATIONAL WEAKNESSES]
+  ☑ [GENERAL ADVICE] — MUST start with the ⚠️ warning prefix
+  ☑ [WHAT TO EXPLORE NEXT] — MUST have exactly 3 TEAM: and 3 COSOLVE: items
+  If any section is absent, add it before returning your response.\
 """
     _ESCALATION_SYSTEM_PROMPT = """\
 A previous draft strategy response was rejected by the quality auditor.
