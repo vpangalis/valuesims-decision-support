@@ -22,6 +22,10 @@ class QuestionReadinessNode:
         "A loaded case means the user is actively working on that case. "
         "Never return ready: false citing a missing case when case_loaded is true. "
         "This rule takes absolute precedence over all other reasoning.\n\n"
+        "PORTFOLIO OVERRIDE: If intent is KPI_ANALYSIS or STRATEGY_ANALYSIS, you MUST return "
+        "ready: true regardless of whether case_loaded is true or false. Portfolio-level questions "
+        "about counts, trends, patterns, and systemic issues never require a loaded case. "
+        "This rule takes absolute precedence over all other reasoning.\n\n"
         "Return ONLY this JSON:\n"
         '{{"ready": true, "clarifying_question": ""}} or\n'
         '{{"ready": false, "clarifying_question": "<one plain sentence asking for clarification>"}}\n\n'
