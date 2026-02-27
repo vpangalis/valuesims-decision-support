@@ -1935,6 +1935,41 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+    // ── Transform 5 — Lift root-level date fields ─────────────────────────
+    // The UI reads opened_at and closed_at at the document root; the seeded
+    // JSON stores them inside doc.case.opening_date / closure_date.
+    if (result.opened_at === undefined && result.case && result.case.opening_date !== undefined) {
+      result.opened_at = result.case.opening_date;
+    }
+    if (result.closed_at === undefined && result.case && result.case.closure_date !== undefined) {
+      result.closed_at = result.case.closure_date;
+    }
+    // D8 Closure & Learnings panel reads d_states.D8.closure_date; the seeded
+    // JSON stores the value one level deeper at d_states.D8.data.closure_date.
+    const d8 = result.d_states.D8;
+    if (d8 && d8.closure_date === undefined && d8.data && d8.data.closure_date !== undefined) {
+      d8.closure_date = d8.data.closure_date;
+    }
+
+    // ── Transform 6 — Fishbone field-name rename ──────────────────────────
+    // Seeded JSON uses short keys; the UI reads compound keys.
+    const d5 = result.d_states.D5;
+    if (d5 && d5.data && d5.data.fishbone && typeof d5.data.fishbone === "object") {
+      const fb = d5.data.fishbone;
+      const fbRenames = [
+        ["people",      "people_organization"],
+        ["process",     "process_workflow"],
+        ["tools",       "tools_systems"],
+        ["environment", "environment_context"],
+        ["management",  "policy_management"],
+      ];
+      fbRenames.forEach(([oldKey, newKey]) => {
+        if (fb[oldKey] !== undefined && fb[newKey] === undefined) {
+          fb[newKey] = fb[oldKey];
+        }
+      });
+    }
+
     return result;
   }
 
