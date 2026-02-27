@@ -834,6 +834,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const teamSuggestions = suggestions.filter((s) => s.type === "team");
     const coSolveSuggestions = suggestions.filter((s) => s.type === "cosolve");
+    const loadCaseSuggestions = suggestions.filter((s) => s.type === "load_case");
     const coSolveChipClass = isStrategy
       ? "ai-suggestion-chip ai-chip-cosolve strategy-chip"
       : "ai-suggestion-chip ai-chip-cosolve";
@@ -854,6 +855,14 @@ document.addEventListener("DOMContentLoaded", () => {
         `<span class="ai-suggestions-group-label">Ask CoSolve:</span>` +
         coSolveSuggestions.map((s) =>
           `<div class="${coSolveChipClass}" data-question="${escapeHtml(s.question)}">${escapeHtml(s.label)}</div>`
+        ).join("") +
+        `</div>`
+        : "") +
+      (loadCaseSuggestions.length > 0 ?
+        `<div class="ai-suggestions-group">` +
+        `<span class="ai-suggestions-group-label">Load a case first:</span>` +
+        loadCaseSuggestions.map((s) =>
+          `<div class="ai-suggestion-chip ai-chip-load-case" data-question="">${escapeHtml(s.label)}</div>`
         ).join("") +
         `</div>`
         : "") +

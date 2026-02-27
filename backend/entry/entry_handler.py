@@ -124,7 +124,9 @@ class EntryHandler:
             return self._clarifying_response(envelope)
 
         if graph_result.get("classification_low_confidence", False):
-            _logger.info("[ENTRY] low-confidence classification — returning clarifying response")
+            _logger.info(
+                "[ENTRY] low-confidence classification — returning clarifying response"
+            )
             return self._clarifying_response(envelope)
 
         if not graph_result.get("question_ready", True):
@@ -148,12 +150,26 @@ class EntryHandler:
     )
 
     _CLARIFYING_SUGGESTIONS = [
-        {"label": "Focus areas", "question": "What should we focus on right now?", "type": "cosolve"},
-        {"label": "Investigation gaps", "question": "Are there any gaps we might have missed?", "type": "cosolve"},
-        {"label": "Similar cases", "question": "Have we dealt with a problem like this before?", "type": "cosolve"},
-        {"label": "Past incidents", "question": "Has anything similar come up in other parts of the operation?", "type": "cosolve"},
-        {"label": "Recurring patterns", "question": "What are the most recurring failure types we face?", "type": "cosolve"},
-        {"label": "Performance metrics", "question": "How is our overall incident resolution performance?", "type": "cosolve"},
+        {
+            "label": "Overall performance",
+            "question": "How is our overall performance this year?",
+            "type": "cosolve",
+        },
+        {
+            "label": "Recurring problems",
+            "question": "Which areas have the most recurring problems?",
+            "type": "cosolve",
+        },
+        {
+            "label": "Organisational attention",
+            "question": "Which areas need organisational attention?",
+            "type": "cosolve",
+        },
+        {
+            "label": "I\u2019ll load a case and ask again",
+            "question": "I\u2019ll load a case and ask again",
+            "type": "load_case",
+        },
     ]
 
     def _clarifying_response(self, envelope: EntryEnvelope) -> EntryResponseEnvelope:
