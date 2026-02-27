@@ -1596,10 +1596,17 @@ select:focus-visible {
   margin-bottom: 6px;
 }
 
-/* Indented sub-bullets (e.g. ROOT CAUSE CATEGORIES case IDs) — keep compact */
-.ai-section-body li.sub-bullet {
+/* Compact sub-bullet list for case ID citations (e.g. ROOT CAUSE CATEGORIES) */
+ul.sub-bullet-list {
+  margin: 2px 0 4px 16px;
+  padding-left: 0;
+  list-style: none;
+}
+
+ul.sub-bullet-list li {
   margin-bottom: 1px;
   margin-top: 0;
+  padding: 0;
 }
 
 .ai-section-callout {

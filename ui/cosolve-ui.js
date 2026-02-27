@@ -1395,8 +1395,10 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/^[ \t]*[•\-]\s+([^\[].*)$/gm, '<li>$1</li>')
       // Convert numbered lines (1. 2. etc.) to list items
       .replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>')
-      // Wrap consecutive <li> elements in <ul>
-      .replace(/(<li>[\s\S]*?<\/li>(\s*<li>[\s\S]*?<\/li>)*)/g, '<ul>$1</ul>')
+      // Wrap consecutive sub-bullet <li> runs in their own <ul class="sub-bullet-list">
+      .replace(/(<li class="sub-bullet">(?:[\s\S]*?)<\/li>(?:\s*<li class="sub-bullet">(?:[\s\S]*?)<\/li>)*)/g, '<ul class="sub-bullet-list">$1</ul>')
+      // Wrap remaining consecutive plain <li> runs in <ul>
+      .replace(/(<li>(?:[\s\S]*?)<\/li>(?:\s*<li>(?:[\s\S]*?)<\/li>)*)/g, '<ul>$1</ul>')
       // Convert **bold** markdown
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       // Double newline → paragraph break
@@ -1409,6 +1411,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Clean up artefacts
     html = html.replace(/<p>\s*<\/p>/g, '');
     html = html.replace(/<p>(<ul>)/g, '$1');
+    html = html.replace(/(<\/ul>)<\/p>/g, '$1');
+    html = html.replace(/<p>(<ul class="sub-bullet-list">)/g, '$1');
     html = html.replace(/(<\/ul>)<\/p>/g, '$1');
 
     return html;
