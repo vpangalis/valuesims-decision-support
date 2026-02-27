@@ -53,8 +53,7 @@ class BaseReflectionNode:
             assessment = self._llm_client.complete_json(
                 system_prompt=self._reflection_prompt,
                 user_prompt=(
-                    f"question: {question}\n\n"
-                    f"draft_response:\n{draft_text}"
+                    f"question: {question}\n\n" f"draft_response:\n{draft_text}"
                 ),
                 response_model=self._assessment_model,
                 temperature=0.0,

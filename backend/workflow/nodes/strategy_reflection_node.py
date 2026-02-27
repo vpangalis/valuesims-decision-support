@@ -96,19 +96,24 @@ fail_reason: one sentence, or NONE.\
         overall_pass = assessment.overall.upper() == "PASS"
         if overall_pass:
             return 1.0
-        return sum(
-            1.0
-            for v in [
-                assessment.portfolio_breadth,
-                assessment.pattern_specificity,
-                assessment.weakness_strength,
-                assessment.knowledge_grounding,
-                assessment.explore_next_quality,
-            ]
-            if v.upper() == "PASS"
-        ) / 5.0
+        return (
+            sum(
+                1.0
+                for v in [
+                    assessment.portfolio_breadth,
+                    assessment.pattern_specificity,
+                    assessment.weakness_strength,
+                    assessment.knowledge_grounding,
+                    assessment.explore_next_quality,
+                ]
+                if v.upper() == "PASS"
+            )
+            / 5.0
+        )
 
-    def _build_output(self, draft_text: str, assessment: StrategyReflectionAssessment) -> dict:
+    def _build_output(
+        self, draft_text: str, assessment: StrategyReflectionAssessment
+    ) -> dict:
         draft = self._current_draft
         overall_pass = assessment.overall.upper() == "PASS"
         fail_section = (

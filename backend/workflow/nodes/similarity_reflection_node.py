@@ -101,14 +101,29 @@ Question: {question}\
         self._current_draft: SimilarityPayload | None = None
 
     def _score(self, assessment: SimilarityReflectionAssessment) -> float:
-        c = {"SPECIFIC": 1.0, "VAGUE": 0.5, "MISSING": 0.0}.get(assessment.case_specificity, 0.5)
-        r = {"HONEST": 1.0, "FORCED": 0.3, "MISSING": 0.0}.get(assessment.relevance_honesty, 0.5)
-        p = {"GENUINE": 1.0, "RESTATEMENT": 0.5, "MISSING": 0.0}.get(assessment.pattern_quality, 0.5)
-        a = {"PRESENT_FLAGGED": 1.0, "PRESENT_UNFLAGGED": 0.6, "MISSING": 0.0}.get(assessment.general_advice_flagged, 0.5)
-        e = {"SPECIFIC_MULTI_DOMAIN": 1.0, "GENERIC": 0.5, "INCOMPLETE": 0.3, "MISSING": 0.0}.get(assessment.explore_next_quality, 0.5)
+        c = {"SPECIFIC": 1.0, "VAGUE": 0.5, "MISSING": 0.0}.get(
+            assessment.case_specificity, 0.5
+        )
+        r = {"HONEST": 1.0, "FORCED": 0.3, "MISSING": 0.0}.get(
+            assessment.relevance_honesty, 0.5
+        )
+        p = {"GENUINE": 1.0, "RESTATEMENT": 0.5, "MISSING": 0.0}.get(
+            assessment.pattern_quality, 0.5
+        )
+        a = {"PRESENT_FLAGGED": 1.0, "PRESENT_UNFLAGGED": 0.6, "MISSING": 0.0}.get(
+            assessment.general_advice_flagged, 0.5
+        )
+        e = {
+            "SPECIFIC_MULTI_DOMAIN": 1.0,
+            "GENERIC": 0.5,
+            "INCOMPLETE": 0.3,
+            "MISSING": 0.0,
+        }.get(assessment.explore_next_quality, 0.5)
         return max(0.0, min(1.0, (c + r + p + a + e) / 5.0))
 
-    def _build_output(self, draft_text: str, assessment: SimilarityReflectionAssessment) -> dict:
+    def _build_output(
+        self, draft_text: str, assessment: SimilarityReflectionAssessment
+    ) -> dict:
         draft = self._current_draft
         suggestions = extract_similarity_suggestions(draft_text)
         return SimilarityReflectionOutput(
@@ -120,7 +135,9 @@ Question: {question}\
             similarity_reflection=assessment,
         ).model_dump()
 
-    def run(self, question: str, draft: SimilarityPayload) -> SimilarityReflectionOutput:
+    def run(
+        self, question: str, draft: SimilarityPayload
+    ) -> SimilarityReflectionOutput:
         self._current_draft = draft
         try:
             result_dict = super().run(

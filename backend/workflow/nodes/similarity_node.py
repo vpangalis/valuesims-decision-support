@@ -7,7 +7,10 @@ from backend.config import Settings
 from backend.infra.llm_logging_client import LoggedLanguageModelClient
 from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.workflow.models import SimilarityPayload, SimilarityNodeOutput
-from backend.workflow.nodes.node_parsing_utils import extract_similarity_suggestions, format_d_states
+from backend.workflow.nodes.node_parsing_utils import (
+    extract_similarity_suggestions,
+    format_d_states,
+)
 
 
 class SimilarityNode:
@@ -208,9 +211,9 @@ CRITICAL RULES:
             )
         )
 
-
     def _extract_suggestions(self, response_text: str) -> list[dict]:
         """Delegate to the shared utility in node_parsing_utils."""
         return extract_similarity_suggestions(response_text)
+
 
 __all__ = ["SimilarityNode"]

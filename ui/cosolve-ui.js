@@ -1,5 +1,5 @@
 // ===== API CONFIG (single source of truth) =====
-const API_BASE = "http://127.0.0.1:8005";
+const API_BASE = "http://127.0.0.1:8009";
 
 let caseState = {};
 
@@ -901,7 +901,7 @@ document.addEventListener("DOMContentLoaded", () => {
     `<div class="ai-welcome-section-label">HOW ARE WE DOING?</div>` +
     `<div class="ai-welcome-section-hint">Ask performance and KPI questions:</div>` +
     `<div class="ai-welcome-suggestions">` +
-    `<div class="ai-suggestion-chip strategy-chip">How is our overall incident resolution performance?</div>` +
+    `<div class="ai-suggestion-chip strategy-chip">Show me incident counts, resolution times, and performance trends across the case portfolio.</div>` +
     `<div class="ai-suggestion-chip strategy-chip">Which areas have the most open cases right now?</div>` +
     `<div class="ai-suggestion-chip strategy-chip">How long do cases typically take to resolve?</div>` +
     `</div>` +
@@ -1320,6 +1320,11 @@ document.addEventListener("DOMContentLoaded", () => {
       { marker: '[SYSTEMIC PATTERNS IDENTIFIED]', title: 'Systemic Patterns Identified' },
       { marker: '[ROOT CAUSE CATEGORIES]', title: 'Root Cause Categories' },
       { marker: '[ORGANISATIONAL WEAKNESSES]', title: 'Organisational Weaknesses' },
+      // Closed case summary sections
+      { marker: '[RESOLUTION SUMMARY]', title: 'Resolution Summary' },
+      { marker: '[ROOT CAUSE]', title: 'Root Cause' },
+      { marker: '[ACTIONS TAKEN]', title: 'Actions Taken' },
+      { marker: '[LESSONS LEARNED]', title: 'Lessons Learned' },
       { marker: '[GENERAL ADVICE]', title: null },  // render as callout, no header
       { marker: '[WHAT TO EXPLORE NEXT]', title: null },  // rendered as chips only
     ];

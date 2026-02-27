@@ -116,7 +116,10 @@ Return plain text only. No JSON.\
             return False
         if is_new_problem_question(question, case_id=""):
             return True
-        if any(m in draft_text for m in OperationalReflectionNode._NEW_PROBLEM_NO_CASE_MARKERS):
+        if any(
+            m in draft_text
+            for m in OperationalReflectionNode._NEW_PROBLEM_NO_CASE_MARKERS
+        ):
             return True
         return False
 
@@ -137,14 +140,29 @@ Return plain text only. No JSON.\
         self._current_draft: OperationalPayload | None = None
 
     def _score(self, assessment: OperationalReflectionAssessment) -> float:
-        g = {"GROUNDED": 1.0, "MIXED": 0.6, "GENERIC": 0.0}.get(assessment.case_grounding, 0.5)
-        d = {"SPECIFIC": 1.0, "VAGUE": 0.5, "MISSING": 0.0}.get(assessment.gap_detection, 0.5)
-        n = {"CONNECTED": 1.0, "DISCONNECTED": 0.3, "MISSING": 0.0}.get(assessment.next_state_relevance, 0.5)
-        a = {"PRESENT_FLAGGED": 1.0, "PRESENT_UNFLAGGED": 0.6, "MISSING": 0.0}.get(assessment.general_advice_flagged, 0.5)
-        e = {"SPECIFIC_MULTI_DOMAIN": 1.0, "GENERIC": 0.5, "INCOMPLETE": 0.3, "MISSING": 0.0}.get(assessment.explore_next_quality, 0.5)
+        g = {"GROUNDED": 1.0, "MIXED": 0.6, "GENERIC": 0.0}.get(
+            assessment.case_grounding, 0.5
+        )
+        d = {"SPECIFIC": 1.0, "VAGUE": 0.5, "MISSING": 0.0}.get(
+            assessment.gap_detection, 0.5
+        )
+        n = {"CONNECTED": 1.0, "DISCONNECTED": 0.3, "MISSING": 0.0}.get(
+            assessment.next_state_relevance, 0.5
+        )
+        a = {"PRESENT_FLAGGED": 1.0, "PRESENT_UNFLAGGED": 0.6, "MISSING": 0.0}.get(
+            assessment.general_advice_flagged, 0.5
+        )
+        e = {
+            "SPECIFIC_MULTI_DOMAIN": 1.0,
+            "GENERIC": 0.5,
+            "INCOMPLETE": 0.3,
+            "MISSING": 0.0,
+        }.get(assessment.explore_next_quality, 0.5)
         return max(0.0, min(1.0, (g + d + n + a + e) / 5.0))
 
-    def _build_output(self, draft_text: str, assessment: OperationalReflectionAssessment) -> dict:
+    def _build_output(
+        self, draft_text: str, assessment: OperationalReflectionAssessment
+    ) -> dict:
         draft = self._current_draft
         needs_escalation = (
             assessment.case_grounding == "GENERIC"
@@ -167,14 +185,22 @@ Return plain text only. No JSON.\
                 quality_score=self._score(assessment),
                 needs_escalation=needs_escalation,
                 reasoning_feedback=(
-                    "; ".join(assessment.issues) if assessment.issues else "Operational draft accepted."
+                    "; ".join(assessment.issues)
+                    if assessment.issues
+                    else "Operational draft accepted."
                 ),
             ),
         ).model_dump()
 
-    def run(self, question: str, draft: OperationalPayload) -> OperationalReflectionOutput:
-        case_loaded = bool(draft.current_state and draft.current_state != "No case loaded")
-        if self._is_new_problem_bypass(question, draft.current_state_recommendations, case_loaded):
+    def run(
+        self, question: str, draft: OperationalPayload
+    ) -> OperationalReflectionOutput:
+        case_loaded = bool(
+            draft.current_state and draft.current_state != "No case loaded"
+        )
+        if self._is_new_problem_bypass(
+            question, draft.current_state_recommendations, case_loaded
+        ):
             return OperationalReflectionOutput(
                 operational_result=OperationalPayload(
                     current_state=draft.current_state,
@@ -182,7 +208,9 @@ Return plain text only. No JSON.\
                     next_state_preview=draft.next_state_preview,
                     supporting_cases=draft.supporting_cases,
                     referenced_evidence=draft.referenced_evidence,
-                    suggestions=extract_suggestions(draft.current_state_recommendations),
+                    suggestions=extract_suggestions(
+                        draft.current_state_recommendations
+                    ),
                 ),
                 operational_reflection=ReflectionResult(
                     quality_score=1.0,

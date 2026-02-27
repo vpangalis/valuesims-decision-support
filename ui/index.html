@@ -1,4 +1,4 @@
-<!-- Development: use http://127.0.0.1:5500 (Live Server). FastAPI on port 8005 serves API only — it does not serve the UI. -->
+<!-- Development: use http://127.0.0.1:5500 (Live Server). FastAPI on port 8009 serves API only — it does not serve the UI. -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -87,7 +87,8 @@
         <div class="column col-middle" data-column="workspace">
             <div class="header">CoSolve Case Board</div>
             <div class="content">
-                <div id="case-closed-banner" class="case-closed-banner" hidden>🔒 This case is closed and is read-only. It is available for reference and analysis.</div>
+                <div id="case-closed-banner" class="case-closed-banner" hidden>🔒 This case is closed and is read-only.
+                    It is available for reference and analysis.</div>
                 <div class="d-nav-bar" id="d-nav-bar">
                     <button class="btn-standard d-state-btn" data-d-state="D1" data-phase-target="D1_2"
                         title="Maps to D1–D2">
@@ -622,9 +623,8 @@
                                 <div class="ai-welcome-section-label">HOW ARE WE DOING?</div>
                                 <div class="ai-welcome-section-hint">Ask performance and KPI questions:</div>
                                 <div class="ai-welcome-suggestions">
-                                    <div class="ai-suggestion-chip strategy-chip">How is our overall incident resolution
-                                        performance?
-                                    </div>
+                                    <div class="ai-suggestion-chip strategy-chip">Show me incident counts, resolution
+                                        times, and performance trends across the case portfolio.</div>
                                     <div class="ai-suggestion-chip strategy-chip">Which areas have the most open cases
                                         right now?
                                     </div>
