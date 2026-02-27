@@ -186,6 +186,17 @@ class StrategyNodeOutput(BaseModel):
     strategy_draft: StrategyPayload
 
 
+class StrategyReflectionAssessment(BaseModel):
+    portfolio_breadth: str  # PASS | FAIL
+    pattern_specificity: str  # PASS | FAIL
+    weakness_strength: str  # PASS | FAIL
+    knowledge_grounding: str  # PASS | FAIL
+    explore_next_quality: str  # PASS | FAIL
+    overall: str  # PASS | FAIL
+    fail_section: str  # exact section label or NONE
+    fail_reason: str  # one sentence or NONE
+
+
 class StrategyReflectionOutput(BaseModel):
     strategy_result: StrategyPayload
     strategy_reflection: ReflectionResult
@@ -253,6 +264,7 @@ __all__ = [
     "SimilarityReflectionOutput",
     "StrategyPayload",
     "StrategyNodeOutput",
+    "StrategyReflectionAssessment",
     "StrategyReflectionOutput",
     "KPINodeOutput",
     "KPIInterpretation",
