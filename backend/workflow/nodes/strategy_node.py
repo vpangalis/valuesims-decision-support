@@ -43,8 +43,16 @@ not a generic category. If fewer than 2 cases support a pattern, do not call it 
 
 [ROOT CAUSE CATEGORIES]
 Group all cases into named root cause categories (not D-step codes — use plain names).
-For each category, list the case IDs that fall into it.
-If a case's root cause is unknown or not documented, say so explicitly.
+Format each category as a top-level bullet (•) followed by nested sub-bullets (  •) for
+the case IDs that fall into it. Do not use dashes (- ) for any sub-items in this section.
+Example format:
+  • Equipment Wear & Fatigue
+    • [France][Lyon] TRM-20250301-0001
+    • [Germany][Hamburg] TRM-20250415-0004
+  • Process Control Gap
+    • [France][Lyon] TRM-20250518-0002
+If a case's root cause is unknown or not documented, list it under a separate
+  • Unknown / Undocumented Root Cause category with the same nested bullet format.
 
 [ORGANISATIONAL WEAKNESSES]
 Identify the process, oversight or capability gaps revealed by the patterns.
