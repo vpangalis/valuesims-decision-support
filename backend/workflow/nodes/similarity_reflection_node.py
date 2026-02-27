@@ -4,6 +4,7 @@ import logging
 
 from backend.infra.llm_logging_client import LoggedLanguageModelClient
 from backend.workflow.nodes.base_reflection_node import BaseReflectionNode
+from backend.workflow.nodes.node_parsing_utils import extract_similarity_suggestions
 from backend.workflow.models import (
     SimilarityPayload,
     SimilarityReflectionAssessment,
@@ -109,11 +110,7 @@ Question: {question}\
 
     def _build_output(self, draft_text: str, assessment: SimilarityReflectionAssessment) -> dict:
         draft = self._current_draft
-        # Re-extract suggestions from the (possibly regenerated) text.
-        # Local import to avoid circular dependencies with similarity_node.
-        from backend.workflow.nodes.similarity_node import SimilarityNode
-
-        suggestions = SimilarityNode._extract_suggestions(draft_text)
+        suggestions = extract_similarity_suggestions(draft_text)
         return SimilarityReflectionOutput(
             similarity_result=SimilarityPayload(
                 summary=draft_text,

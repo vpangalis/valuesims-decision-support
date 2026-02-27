@@ -150,10 +150,60 @@ def format_d_states(case_context: dict[str, Any]) -> str:
     return "\n".join(lines) if lines else "No case history available."
 
 
+def extract_similarity_suggestions(response_text: str) -> list[dict]:
+    """Extract [WHAT TO EXPLORE NEXT] items as structured suggestions.
+
+    Used by SimilarityNode and SimilarityReflectionNode.
+    The label_map here matches the SimilarityNode prompt's icon set.
+    """
+    suggestions: list[dict] = []
+    try:
+        marker = "[WHAT TO EXPLORE NEXT]"
+        if marker not in response_text:
+            return []
+        section = response_text.split(marker, 1)[1].strip()
+
+        label_map: dict[str, str] = {
+            "\u2699\ufe0f": "Operational deep-dive",
+            "\U0001f4ca": "Strategic view",
+            "\U0001f4c8": "KPI & trends",
+            "\U0001f50d": "Dig deeper",
+        }
+
+        for line in section.split("\n"):
+            line = line.strip()
+            if line.startswith("\u2022") or line.startswith("-"):
+                question_text = line.lstrip("\u2022-").strip().strip('"')
+                if question_text:
+                    suggestions.append(
+                        {
+                            "label": (
+                                question_text[:40] + "..."
+                                if len(question_text) > 40
+                                else question_text
+                            ),
+                            "question": question_text,
+                            "type": "team",
+                        }
+                    )
+            for emoji, label in label_map.items():
+                if line.startswith(emoji):
+                    parts = line.split(":", 1)
+                    if len(parts) > 1:
+                        raw = parts[1].strip().strip('"')
+                        suggestions.append(
+                            {"label": label, "question": raw, "type": "cosolve"}
+                        )
+    except Exception:
+        pass
+    return suggestions
+
+
 __all__ = [
     "NEW_PROBLEM_KEYWORDS",
     "is_new_problem_question",
     "extract_suggestions",
+    "extract_similarity_suggestions",
     "normalize_d_states",
     "format_d_states",
 ]

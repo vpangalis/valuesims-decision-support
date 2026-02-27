@@ -7,7 +7,7 @@ from backend.config import Settings
 from backend.infra.llm_logging_client import LoggedLanguageModelClient
 from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.workflow.models import SimilarityPayload, SimilarityNodeOutput
-from backend.workflow.nodes.node_parsing_utils import format_d_states
+from backend.workflow.nodes.node_parsing_utils import extract_similarity_suggestions, format_d_states
 
 
 class SimilarityNode:
@@ -198,7 +198,7 @@ CRITICAL RULES:
             user_question=question,
         )
 
-        suggestions = self._extract_suggestions(response_text)
+        suggestions = extract_similarity_suggestions(response_text)
 
         return SimilarityNodeOutput(
             similarity_draft=SimilarityPayload(
@@ -208,52 +208,9 @@ CRITICAL RULES:
             )
         )
 
+
     def _extract_suggestions(self, response_text: str) -> list[dict]:
-        """Extract [WHAT TO EXPLORE NEXT] items as structured suggestions."""
-        suggestions: list[dict] = []
-        try:
-            marker = "[WHAT TO EXPLORE NEXT]"
-            if marker not in response_text:
-                return []
-            section = response_text.split(marker, 1)[1].strip()
-
-            label_map: dict[str, str] = {
-                "\u2699\ufe0f": "Operational deep-dive",
-                "\U0001f4ca": "Strategic view",
-                "\U0001f4c8": "KPI & trends",
-                "\U0001f50d": "Dig deeper",
-            }
-
-            for line in section.split("\n"):
-                line = line.strip()
-                if line.startswith("\u2022") or line.startswith("-"):
-                    question_text = line.lstrip("\u2022-").strip().strip('"')
-                    if question_text:
-                        suggestions.append(
-                            {
-                                "label": (
-                                    question_text[:40] + "..."
-                                    if len(question_text) > 40
-                                    else question_text
-                                ),
-                                "question": question_text,
-                                "type": "team",
-                            }
-                        )
-                for emoji, label in label_map.items():
-                    if line.startswith(emoji):
-                        parts = line.split(":", 1)
-                        if len(parts) > 1:
-                            raw = parts[1].strip().strip('"')
-                            suggestions.append(
-                                {"label": label, "question": raw, "type": "cosolve"}
-                            )
-        except Exception:
-            pass
-        return suggestions
-
-
-# Remove module-level prompt name — it now lives exclusively as
-# SimilarityNode._SIMILARITY_SYSTEM_PROMPT.
+        """Delegate to the shared utility in node_parsing_utils."""
+        return extract_similarity_suggestions(response_text)
 
 __all__ = ["SimilarityNode"]
