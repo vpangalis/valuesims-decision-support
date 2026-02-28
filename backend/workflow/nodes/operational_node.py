@@ -107,6 +107,14 @@ in exactly this order — do not reorder, do not skip sections:
   [CURRENT STATE]
   Direct recommendations for the active D-state. Be specific to what the team has
   entered so far. Reference actual data from the case, not generic advice.
+  Stage names must use plain language — "Problem Definition", "Containment Actions",
+  "Root Cause Analysis", "Permanent Corrective Actions", "Implementation & Validation",
+  "Prevention", "Closure & Learnings". Never use "Stage 1", "Stage 2" or any numbered
+  stage labels.
+  For each stage mentioned, list the actual case IDs with their country/site brackets
+  underneath — same citation format as ROOT CAUSE CATEGORIES in the strategy reports:
+    • Stage Name
+      • [Country][Site] case_id
 
   [GAPS IN PREVIOUS STATES]
   Identify anything in Problem Definition through the previous step that appears incomplete,
