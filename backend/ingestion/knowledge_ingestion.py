@@ -107,9 +107,27 @@ class KnowledgeIngestionService:
             text = data.decode("utf-8", errors="ignore").strip()
         elif ext == ".docx":
             doc = Document(BytesIO(data))
-            text = "\n".join(
-                p.text for p in doc.paragraphs if isinstance(p.text, str) and p.text
-            ).strip()
+            parts: list[str] = []
+            # 1. Top-level paragraphs
+            for p in doc.paragraphs:
+                if isinstance(p.text, str) and p.text:
+                    parts.append(p.text)
+            # 2. Table cells (all rows, all cells, all paragraphs within each cell)
+            for table in doc.tables:
+                for row in table.rows:
+                    for cell in row.cells:
+                        for p in cell.paragraphs:
+                            if isinstance(p.text, str) and p.text:
+                                parts.append(p.text)
+            # 3. Headers and footers from each section
+            for section in doc.sections:
+                for p in section.header.paragraphs:
+                    if isinstance(p.text, str) and p.text:
+                        parts.append(p.text)
+                for p in section.footer.paragraphs:
+                    if isinstance(p.text, str) and p.text:
+                        parts.append(p.text)
+            text = "\n".join(parts).strip()
         elif ext == ".pdf":
             # PDF extraction is handled by a dedicated fallback chain.
             return self._extract_pdf_text(data, filename)
