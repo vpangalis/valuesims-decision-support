@@ -1812,6 +1812,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       applyClosedState(Boolean(caseState?.case_status === "closed"));
+      document.getElementById("section-evidence")?.classList.remove("is-collapsed");
       loadEvidence(caseId);
       // Reset AI panel: clear old exchanges, conversation history (DOM), and case ID header
       // before generating new suggestions for the newly loaded case.
@@ -2631,6 +2632,7 @@ document.addEventListener("DOMContentLoaded", () => {
     leftCol.querySelectorAll(".section-collapsible").forEach((section) => {
       const title = section.querySelector(":scope > .section-title");
       if (!title) return;
+      section.classList.add("is-collapsed");
       title.addEventListener("click", () => {
         section.classList.toggle("is-collapsed");
       });
