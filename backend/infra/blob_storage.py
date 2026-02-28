@@ -86,6 +86,10 @@ class BlobStorageClient:
         except ResourceNotFoundError:
             pass  # already gone — treat as success
 
+    def delete_knowledge_blob(self, filename: str) -> None:
+        """Delete a file from the knowledge/ prefix by bare filename."""
+        self.delete_file(f"knowledge/{filename}")
+
 
 class CaseRepository:
     def __init__(self, blob_client: BlobStorageClient):

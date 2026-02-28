@@ -59,8 +59,8 @@ class KnowledgeIngestionService:
         self._search_index = search_index
         self._logger = logging.getLogger("knowledge_ingestion")
 
-    # Maximum characters per chunk (≈ 6 000 tokens × 4 chars/token)
-    _CHUNK_MAX_CHARS: int = 24_000
+    # Maximum characters per chunk (≈ 3 000 tokens × 4 chars/token, safely under 8 192 token limit)
+    _CHUNK_MAX_CHARS: int = 12_000
 
     def upload_document(self, filename: str, data: bytes, content_type: str) -> None:
         path = f"{self._prefix}{filename}"
@@ -132,9 +132,7 @@ class KnowledgeIngestionService:
         """Delete an orphaned blob from storage (no index record required)."""
         path = f"{self._prefix}{filename}"
         self._blob_client.delete_file(path)
-        self._logger.info(
-            "[KNOWLEDGE] deleted orphan blob: %s", path
-        )
+        self._logger.info("[KNOWLEDGE] deleted orphan blob: %s", path)
         print(f"[KNOWLEDGE] deleted orphan blob: {path}")
 
     # ------------------------------------------------------------------
