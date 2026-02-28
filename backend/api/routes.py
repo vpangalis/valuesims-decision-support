@@ -103,7 +103,7 @@ class ApiRoutes:
             "/knowledge/file/{filename}", self.get_knowledge_file, methods=["GET"]
         )
         router.add_api_route(
-            "/knowledge/{doc_id}", self.delete_knowledge_document, methods=["DELETE"]
+            "/knowledge/{filename}", self.delete_knowledge_document, methods=["DELETE"]
         )
         # Temporary diagnostic routes — remove after debugging
         router.add_api_route(
@@ -294,11 +294,14 @@ class ApiRoutes:
     def get_knowledge_file(self, filename: str):
         """Stream a raw knowledge file blob so the browser can open it inline."""
         import io
+
         blob_path = f"knowledge/{filename}"
         try:
             data, content_type = self._blob_client.download_file(blob_path)
         except FileNotFoundError as exc:
-            raise HTTPException(status_code=404, detail="Knowledge file not found") from exc
+            raise HTTPException(
+                status_code=404, detail="Knowledge file not found"
+            ) from exc
         except Exception as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -322,50 +325,61 @@ class ApiRoutes:
             headers={"Content-Disposition": f'inline; filename="{filename}"'},
         )
 
-    def delete_knowledge_document(self, doc_id: str):
-        """Remove a knowledge document from the search index and its blob."""
-        # 1. Fetch the document to learn the filename (stored as title/source).
+    def delete_knowledge_document(self, filename: str):
+        """Remove all indexed chunks for a source file and its blob."""
+        # 1. Find every chunk in the index whose source == filename.
+        safe = filename.replace("'", "''")
         try:
             raw = list(
                 self._knowledge_search_client._search_client.search(
                     search_text="*",
-                    filter=f"doc_id eq '{doc_id}'",
-                    top=1,
-                    select=["doc_id", "title"],
+                    filter=f"source eq '{safe}'",
+                    top=1000,
+                    select=["doc_id"],
                 )
             )
         except Exception as exc:
-            logger.exception("[KNOWLEDGE] delete lookup failed for %r", doc_id)
+            logger.exception("[KNOWLEDGE] delete lookup failed for source=%r", filename)
             raise HTTPException(status_code=500, detail=str(exc)) from exc
 
         if not raw:
             raise HTTPException(status_code=404, detail="Knowledge document not found")
 
-        title = raw[0].get("title", "")
+        doc_ids = [r["doc_id"] for r in raw if r.get("doc_id")]
+        logger.info(
+            "[KNOWLEDGE] deleting %d chunk(s) for source=%r", len(doc_ids), filename
+        )
 
-        # 2. Delete the blob (knowledge/ prefix matches ingestion upload path).
-        if title:
-            blob_path = f"knowledge/{title}"
-            try:
-                self._blob_client.delete_file(blob_path)
-                logger.info("[KNOWLEDGE] deleted blob %r", blob_path)
-            except Exception as exc:
-                # Log but don't abort — index deletion still useful even if blob is gone.
-                logger.warning(
-                    "[KNOWLEDGE] blob delete failed for %r: %s", blob_path, exc
-                )
+        # 2. Delete the blob.
+        blob_path = f"knowledge/{filename}"
+        try:
+            self._blob_client.delete_file(blob_path)
+            logger.info("[KNOWLEDGE] deleted blob %r", blob_path)
+        except Exception as exc:
+            # Log but don't abort — index deletion is still useful even if blob is gone.
+            logger.warning(
+                "[KNOWLEDGE] blob delete failed for %r: %s", blob_path, exc
+            )
 
-        # 3. Delete from search index.
+        # 3. Batch-delete all chunks from the search index.
         try:
             self._knowledge_search_client._search_client.delete_documents(
-                documents=[{"doc_id": doc_id}]
+                documents=[{"doc_id": did} for did in doc_ids]
             )
-            logger.info("[KNOWLEDGE] deleted index document %r", doc_id)
+            logger.info(
+                "[KNOWLEDGE] deleted %d index chunk(s) for source=%r",
+                len(doc_ids),
+                filename,
+            )
         except Exception as exc:
-            logger.exception("[KNOWLEDGE] index delete failed for %r", doc_id)
+            logger.exception("[KNOWLEDGE] index delete failed for source=%r", filename)
             raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-        return {"status": "deleted", "doc_id": doc_id, "title": title}
+        return {
+            "status": "deleted",
+            "filename": filename,
+            "chunks_deleted": len(doc_ids),
+        }
 
     # ------------------------------------------------------------------ #
     # Temporary diagnostic endpoints — remove after debugging            #

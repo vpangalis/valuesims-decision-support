@@ -432,7 +432,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const name = doc.title || doc.doc_id;
           if (!confirm(`Delete "${name}"?`)) return;
           try {
-            const delRes = await fetch(`${API_BASE}/knowledge/${encodeURIComponent(doc.doc_id)}`, { method: "DELETE" });
+            const delRes = await fetch(`${API_BASE}/knowledge/${encodeURIComponent(doc.source || doc.title || doc.doc_id)}`, { method: "DELETE" });
             if (!delRes.ok) throw new Error(`HTTP ${delRes.status}`);
             await refreshKnowledgeList();
           } catch (err) {
