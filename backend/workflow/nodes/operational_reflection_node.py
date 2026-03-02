@@ -58,13 +58,6 @@ Evaluate the draft response against these five criteria:
    INCOMPLETE: fewer than six questions total, or one of the two subsections missing
    MISSING: [WHAT TO EXPLORE NEXT] section absent entirely
 
-6. KNOWLEDGE GROUNDING
-   If knowledge documents were available for this case (i.e. the knowledge block was
-   not empty), does the response cite at least one document inline using the format
-   Per [Document Name]: [point]? Return CITED if yes, MISSING if documents were
-   available but not cited, NOT_APPLICABLE if the knowledge block was empty.
-   Score: CITED | NOT_APPLICABLE | MISSING
-
 Return ONLY this JSON:
 {
   "case_grounding": "GROUNDED|GENERIC|MIXED",
@@ -72,7 +65,6 @@ Return ONLY this JSON:
   "next_state_relevance": "CONNECTED|DISCONNECTED|MISSING",
   "general_advice_flagged": "PRESENT_FLAGGED|PRESENT_UNFLAGGED|MISSING",
   "explore_next_quality": "SPECIFIC_MULTI_DOMAIN|GENERIC|INCOMPLETE|MISSING",
-  "knowledge_grounding": "CITED|NOT_APPLICABLE|MISSING",
   "should_regenerate": false,
   "issues": []
 }
