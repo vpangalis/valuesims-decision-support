@@ -1609,7 +1609,15 @@ select:focus-visible {
 }
 
 .ai-section-body li {
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+.ai-section-body li p {
+  margin: 0;
+}
+
+.ai-section-body li p:last-child {
+  margin-bottom: 0;
 }
 
 /* Compact sub-bullet list for case ID citations (e.g. ROOT CAUSE CATEGORIES) */
@@ -1755,4 +1763,30 @@ ul.sub-bullet-list li {
   gap: 16px;
   font-size: 11px;
   color: #6b7280;
+}
+
+/* ── Knowledge reference score badge ─────────────────────────────── */
+.kb-score-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #e8f0fe;
+  color: #1a56db;
+  font-size: 0.72em;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+/* ── Knowledge reference score badge ─────────────────────────────── */
+.kb-score-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #e8f0fe;
+  color: #1a56db;
+  font-size: 0.72em;
+  font-weight: 600;
+  vertical-align: middle;
 }

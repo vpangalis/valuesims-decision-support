@@ -434,6 +434,7 @@ document.addEventListener("DOMContentLoaded", () => {
           try {
             const delRes = await fetch(`${API_BASE}/knowledge/${encodeURIComponent(doc.source || doc.title || doc.doc_id)}`, { method: "DELETE" });
             if (!delRes.ok) throw new Error(`HTTP ${delRes.status}`);
+            await new Promise(resolve => setTimeout(resolve, 1500));
             await refreshKnowledgeList();
           } catch (err) {
             alert(`Delete failed: ${err.message}`);
@@ -1399,6 +1400,56 @@ document.addEventListener("DOMContentLoaded", () => {
         if (sectionDef.marker === '[GENERAL ADVICE]') {
           // Render general advice as an amber callout block
           html += `<div class="ai-section-callout">${formatSectionContent(content)}</div>`;
+        } else if (sectionDef.marker === '[KNOWLEDGE REFERENCES]') {
+          const lines = content.split('\n').filter(l => l.trim());
+          let innerHtml = '';
+          const refLines = lines.filter(l => l.startsWith('KNOWLEDGEREF|'));
+          const otherLines = lines.filter(l => !l.startsWith('KNOWLEDGEREF|'));
+
+          if (refLines.length > 0) {
+            innerHtml += '<ul class="knowledge-refs-list" style="list-style:none;padding:0;margin:0;">';
+            refLines.forEach(line => {
+              const parts = line.split('|');
+              // parts: [0]=KNOWLEDGEREF [1]=filename [2]=section [3]=page [4+]=excerpt
+              const filename = parts[1] || '';
+              const section = parts[2] || '';
+              const page = parts[3] || '';
+              const scorePct = (parts[5] && parts[5].match(/^\d+%$/)) ? parts[5] : '';
+              const excerpt = parts[4] || '';
+
+              let meta = '';
+              if (section) meta += ` | \u00a7${section}`;
+              if (page) meta += ` (p.${page})`;
+
+              innerHtml +=
+                '<li style="margin-bottom:12px;">' +
+                `<a href="${API_BASE}/knowledge/file/${encodeURIComponent(filename)}" ` +
+                `target="_blank" rel="noopener noreferrer" class="knowledge-file-link" ` +
+                `data-filename="${filename}" style="font-weight:600;">` +
+                `${filename}</a>` +
+                `<span style="color:#666;">${meta}</span>` +
+                (excerpt
+                  ? `<div class="knowledge-excerpt" style="margin-top:4px;font-style:italic;` +
+                  `color:#444;font-size:0.9em;">"${excerpt}"` +
+                  (scorePct ? `<span class="kb-score-badge">${scorePct}</span>` : '') +
+                  `</div>`
+                  : '') +
+                '</li>';
+            });
+            innerHtml += '</ul>';
+          }
+
+          // Fallback: render any non-KNOWLEDGEREF lines as plain text
+          if (otherLines.length > 0) {
+            innerHtml += `<p style="margin-top:8px;">${otherLines.join('<br>')}</p>`;
+          }
+
+          html +=
+            '<div class="ai-section">' +
+            `<div class="ai-section-title">Knowledge References</div>` +
+            `<div class="ai-section-body">${innerHtml}</div>` +
+            '</div>';
+
         } else if (sectionDef.title) {
           // Render as a titled section
           html +=
@@ -1422,11 +1473,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function formatSectionContent(text) {
     if (!text) return '';
 
-    text = text.replace(
-      /Per ([\w\-. ]+\.(?:pdf|docx|doc)):/g,
-      `Per <a href="${API_BASE}/knowledge/file/$1" target="_blank" rel="noopener noreferrer" class="knowledge-cite-link">$1</a>:`
-    );
-
     let html = text
       // Sub-bullet: bullet line whose content starts with [ — indicates a case ID citation
       // e.g. • [France][Lyon] TRM-20250301-0001  (no indentation required)
@@ -1445,6 +1491,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/\n\n+/g, '</p><p>')
       // Single newline → <br>
       .replace(/\n/g, '<br>')
+      // Strip <br> injected between </li> and <li> by the pass above
+      .replace(/(<\/li>)\s*<br\s*\/?>\s*(<li)/g, '$1$2')
       // Wrap the whole thing in <p> tags
       .replace(/^(.+)$/, '<p>$1</p>');
 
