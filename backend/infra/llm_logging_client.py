@@ -4,7 +4,7 @@ import hashlib
 import json
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -31,15 +31,36 @@ class LoggedLanguageModelClient:
         self._logger = logging.getLogger("llm_prompt_logger")
 
     def _write_llm_log(self, record: dict) -> None:
-        """Append one JSON record to the LLM evaluation log file.
+        """Append one JSON record and prune entries older than 28 days.
 
-        Creates logs/ directory and the file if they do not exist.
-        Silently ignores write errors to avoid disrupting LLM calls.
+        Reads the existing file, filters to the rolling 28-day window,
+        appends the new record, then rewrites the file atomically.
+        Silently ignores all I/O errors to avoid disrupting LLM calls.
         """
         try:
             _LLM_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-            with _LLM_LOG_PATH.open("a", encoding="utf-8") as f:
-                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+            cutoff = datetime.now(timezone.utc) - timedelta(days=365)
+
+            existing: list[dict] = []
+            if _LLM_LOG_PATH.exists():
+                with _LLM_LOG_PATH.open("r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            entry = json.loads(line)
+                            ts = datetime.fromisoformat(entry.get("timestamp", ""))
+                            if ts >= cutoff:
+                                existing.append(entry)
+                        except Exception:  # noqa: BLE001
+                            pass  # skip malformed lines
+
+            existing.append(record)
+
+            with _LLM_LOG_PATH.open("w", encoding="utf-8") as f:
+                for entry in existing:
+                    f.write(json.dumps(entry, ensure_ascii=False) + "\n")
         except Exception:  # noqa: BLE001
             pass
 

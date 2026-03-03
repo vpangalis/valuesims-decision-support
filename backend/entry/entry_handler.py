@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import base64
+import json
 import logging
 import re
+from collections import defaultdict
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Optional, Literal
 
 from pydantic import BaseModel
@@ -45,6 +48,13 @@ class EntryResponseEnvelope(BaseModel):
 
 
 class EntryHandler:
+    _STATS_TRIGGER = "show me llm performance stats"
+    _LLM_LOG_PATH = Path("logs/llm_calls.jsonl")
+    _MODEL_COSTS: dict[str, dict[str, float]] = {
+        "gpt-4o":      {"prompt": 0.0025,  "completion": 0.010},
+        "gpt-4o-mini": {"prompt": 0.00015, "completion": 0.0006},
+    }
+
     def __init__(
         self,
         case_entry: CaseEntryService,
@@ -99,6 +109,123 @@ class EntryHandler:
             data=data,
         )
 
+    def _compute_llm_stats(self) -> str:
+        """Read llm_calls.jsonl and compute 6 performance metrics.
+
+        Returns a formatted plain-text response ready for the UI.
+        """
+        if not self._LLM_LOG_PATH.exists():
+            return "No LLM call data found. Ask a few questions first."
+
+        records: list[dict] = []
+        with self._LLM_LOG_PATH.open("r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    records.append(json.loads(line))
+                except Exception:  # noqa: BLE001
+                    pass
+
+        if not records:
+            return "Log file exists but contains no records."
+
+        # ── Per-node aggregations ────────────────────────────────────
+        node_times: dict[str, list[float]] = defaultdict(list)
+        node_prompt: dict[str, list[int]] = defaultdict(list)
+        node_completion: dict[str, list[int]] = defaultdict(list)
+        node_total: dict[str, list[int]] = defaultdict(list)
+        node_calls: dict[str, int] = defaultdict(int)
+        total_cost = 0.0
+
+        for r in records:
+            node = r.get("node_name", "unknown")
+            node_calls[node] += 1
+            rt = r.get("response_time_ms")
+            if rt is not None:
+                node_times[node].append(float(rt))
+            pt = r.get("prompt_tokens")
+            ct = r.get("completion_tokens")
+            tt = r.get("total_tokens")
+            if pt is not None:
+                node_prompt[node].append(int(pt))
+            if ct is not None:
+                node_completion[node].append(int(ct))
+            if tt is not None:
+                node_total[node].append(int(tt))
+
+            # cost estimate
+            model = (r.get("model_name") or "").lower()
+            rates = None
+            for key, val in self._MODEL_COSTS.items():
+                if key in model:
+                    rates = val
+                    break
+            if rates and pt is not None and ct is not None:
+                total_cost += (pt * rates["prompt"] + ct * rates["completion"]) / 1000
+
+        # ── Regeneration rate ────────────────────────────────────────
+        reflection_calls = sum(
+            v for k, v in node_calls.items() if "reflection" in k
+        )
+        total_calls = len(records)
+        regen_rate = (reflection_calls / total_calls * 100) if total_calls else 0
+
+        # ── Slow calls top 5 ────────────────────────────────────────
+        timed = [
+            (r.get("response_time_ms", 0), r.get("node_name", "?"),
+             r.get("user_question", "")[:60])
+            for r in records if r.get("response_time_ms") is not None
+        ]
+        timed.sort(reverse=True)
+        top5 = timed[:5]
+
+        # ── Date range ───────────────────────────────────────────────
+        timestamps = [r.get("timestamp", "") for r in records if r.get("timestamp")]
+        date_range = f"{min(timestamps)[:10]} → {max(timestamps)[:10]}" if timestamps else "unknown"
+
+        # ── Format output ────────────────────────────────────────────
+        lines: list[str] = [
+            f"⚙️ LLM PERFORMANCE STATS  ({total_calls} calls · {date_range})",
+            "",
+            "CALL VOLUME PER NODE",
+        ]
+        for node in sorted(node_calls):
+            lines.append(f"  {node}: {node_calls[node]} calls")
+
+        lines += ["", "RESPONSE TIME PER NODE (ms)"]
+        for node in sorted(node_times):
+            times = node_times[node]
+            lines.append(
+                f"  {node}: avg {sum(times)/len(times):.0f} · "
+                f"min {min(times):.0f} · max {max(times):.0f}"
+            )
+
+        lines += ["", "TOKEN COUNTS PER NODE (avg prompt / completion / total)"]
+        for node in sorted(node_prompt):
+            pt_avg = sum(node_prompt[node]) / len(node_prompt[node]) if node_prompt[node] else 0
+            ct_avg = sum(node_completion[node]) / len(node_completion[node]) if node_completion.get(node) else 0
+            tt_avg = sum(node_total[node]) / len(node_total[node]) if node_total.get(node) else 0
+            lines.append(f"  {node}: {pt_avg:.0f} / {ct_avg:.0f} / {tt_avg:.0f}")
+
+        lines += [
+            "",
+            f"ESTIMATED COST (28-day window)",
+            f"  Total: ${total_cost:.4f}",
+            f"  Per call: ${total_cost/total_calls:.5f}" if total_calls else "  Per call: n/a",
+            "",
+            f"REGENERATION RATE",
+            f"  Reflection calls: {reflection_calls} / {total_calls} ({regen_rate:.1f}%)",
+            "",
+            "SLOWEST 5 CALLS",
+        ]
+        for ms, node, q in top5:
+            q_display = (q + "...") if len(q) == 60 else q
+            lines.append(f"  {ms:.0f}ms · {node} · \"{q_display}\"")
+
+        return "\n".join(lines)
+
     def _handle_ai_reasoning(self, envelope: EntryEnvelope) -> EntryResponseEnvelope:
         _logger.debug("[DEBUG AI ENTRY] raw envelope=%r", envelope.model_dump())
         payload = envelope.payload or {}
@@ -111,6 +238,18 @@ class EntryHandler:
                 intent=envelope.intent,
                 status="accepted",
                 data=response,
+            )
+
+        if question.lower().strip() == self._STATS_TRIGGER:
+            stats_text = self._compute_llm_stats()
+            return EntryResponseEnvelope(
+                intent=envelope.intent,
+                status="accepted",
+                data={
+                    "status": "stats",
+                    "answer": stats_text,
+                    "suggestions": [],
+                },
             )
 
         initial_state: IncidentGraphState = {
