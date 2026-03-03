@@ -146,17 +146,18 @@ class LanguageModelClient:
         if response.status_code != 200:
             raise RuntimeError(f"LLM request failed: {response.text}")
         data = response.json()
+        usage = data.get("usage") or {}
+        self._last_usage = {
+            "prompt_tokens": usage.get("prompt_tokens"),
+            "completion_tokens": usage.get("completion_tokens"),
+            "total_tokens": usage.get("total_tokens"),
+        }
         choices = data.get("choices") or []
         if not choices:
             raise RuntimeError("LLM request returned no choices.")
         message = (choices[0].get("message") or {}).get("content")
         if not message:
             raise RuntimeError("LLM response content was empty.")
-        self._last_usage = {
-            "prompt_tokens": None,
-            "completion_tokens": None,
-            "total_tokens": None,
-        }
         return str(message)
 
     def complete_text(
@@ -243,17 +244,18 @@ class LanguageModelClient:
         if response.status_code != 200:
             raise RuntimeError(f"LLM request failed: {response.text}")
         data = response.json()
+        usage = data.get("usage") or {}
+        self._last_usage = {
+            "prompt_tokens": usage.get("prompt_tokens"),
+            "completion_tokens": usage.get("completion_tokens"),
+            "total_tokens": usage.get("total_tokens"),
+        }
         choices = data.get("choices") or []
         if not choices:
             raise RuntimeError("LLM request returned no choices.")
         message = (choices[0].get("message") or {}).get("content")
         if not message:
             raise RuntimeError("LLM response content was empty.")
-        self._last_usage = {
-            "prompt_tokens": None,
-            "completion_tokens": None,
-            "total_tokens": None,
-        }
         return str(message)
 
     def _coerce_to_model(

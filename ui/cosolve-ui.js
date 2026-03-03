@@ -1,4 +1,4 @@
-// ===== API CONFIG (single source of truth) =====
+﻿// ===== API CONFIG (single source of truth) =====
 const API_BASE = "http://127.0.0.1:8010";
 
 let caseState = {};
@@ -1064,7 +1064,280 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function buildStatsHtml(sd) {
+    const nodeNames = Object.keys(sd.call_volume || {});
+    const shortName = n => n.replace("_reasoning", "").replace("_reflection", " \u21a9").replace(/_/g, " ");
+    const chartId = () => "chart-" + Math.random().toString(36).slice(2, 8);
+
+    // \u2500\u2500 Pie chart \u2014 call distribution \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    const pieId = chartId();
+    const pieLabels = nodeNames.map(shortName);
+    const pieData = nodeNames.map(n => sd.call_volume[n]);
+    const pieColors = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f",
+      "#edc948", "#b07aa1", "#ff9da7", "#9c755f"];
+
+    // \u2500\u2500 Bar \u2014 call volume \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    const volId = chartId();
+
+    // \u2500\u2500 Bar \u2014 avg response time \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    const rtId = chartId();
+    const rtNodes = Object.keys(sd.response_time || {});
+    const rtAvg = rtNodes.map(n => sd.response_time[n].avg);
+    const rtMin = rtNodes.map(n => sd.response_time[n].min);
+    const rtMax = rtNodes.map(n => sd.response_time[n].max);
+
+    // \u2500\u2500 Bar \u2014 token counts \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    const tokId = chartId();
+    const tokNodes = Object.keys(sd.token_counts || {});
+    const tokPrompt = tokNodes.map(n => sd.token_counts[n].prompt);
+    const tokCompletion = tokNodes.map(n => sd.token_counts[n].completion);
+
+    const lineId = chartId();
+    const timeSeries = sd.time_series || [];
+    const tsLabels = timeSeries.map(t => t.hour.slice(11) + ":00");
+    const tsCalls  = timeSeries.map(t => t.calls);
+
+    // \u2500\u2500 Cost table \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    const cost = sd.cost || {};
+    const regen = sd.regeneration || {};
+    const slow = sd.slow_calls || [];
+
+    const html = `
+<div class="stats-dashboard" style="font-family:inherit;padding:0 0 12px">
+  <div style="font-size:1.1em;font-weight:700;color:#1a3a5c;margin-bottom:4px">
+    &#9881;&#65039; LLM Performance Stats
+  </div>
+  <div style="font-size:0.82em;color:#666;margin-bottom:16px">
+    ${sd.total_calls} calls &middot; ${sd.date_range}
+  </div>
+
+  <!-- Row 0: Call volume over time -->
+  <div style="background:#f8fafc;border-radius:8px;padding:12px;margin-bottom:16px">
+    <div style="font-size:0.8em;font-weight:600;color:#444;margin-bottom:8px">
+      CALL VOLUME OVER TIME
+    </div>
+    <canvas id="${lineId}" height="80"></canvas>
+  </div>
+
+  <!-- Row 1: Pie + Call Volume -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div style="background:#f8fafc;border-radius:8px;padding:12px">
+      <div style="font-size:0.8em;font-weight:600;color:#444;margin-bottom:8px">
+        CALL DISTRIBUTION
+      </div>
+      <canvas id="${pieId}" height="200"></canvas>
+    </div>
+    <div style="background:#f8fafc;border-radius:8px;padding:12px">
+      <div style="font-size:0.8em;font-weight:600;color:#444;margin-bottom:8px">
+        CALL VOLUME PER NODE
+      </div>
+      <canvas id="${volId}" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- Row 2: Response Time -->
+  <div style="background:#f8fafc;border-radius:8px;padding:12px;margin-bottom:16px">
+    <div style="font-size:0.8em;font-weight:600;color:#444;margin-bottom:8px">
+      RESPONSE TIME PER NODE (ms)
+    </div>
+    <canvas id="${rtId}" height="140"></canvas>
+  </div>
+
+  <!-- Row 3: Token Counts -->
+  <div style="background:#f8fafc;border-radius:8px;padding:12px;margin-bottom:16px">
+    <div style="font-size:0.8em;font-weight:600;color:#444;margin-bottom:8px">
+      AVG TOKEN COUNTS PER NODE
+    </div>
+    <canvas id="${tokId}" height="140"></canvas>
+  </div>
+
+  <!-- Row 4: Cost + Regeneration -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div style="background:#f8fafc;border-radius:8px;padding:12px">
+      <div style="font-size:0.8em;font-weight:600;color:#444;margin-bottom:8px">
+        ESTIMATED COST
+      </div>
+      <table style="width:100%;font-size:0.82em;border-collapse:collapse">
+        <tr><td style="padding:3px 0;color:#555">Total (window)</td>
+            <td style="text-align:right;font-weight:600">$${cost.total?.toFixed(4)}</td></tr>
+        <tr><td style="padding:3px 0;color:#555">Per call</td>
+            <td style="text-align:right;font-weight:600">$${cost.per_call?.toFixed(5)}</td></tr>
+        <tr><td colspan="2" style="padding-top:6px;font-size:0.78em;color:#999">
+            ${cost.disclaimer || ""}</td></tr>
+      </table>
+    </div>
+    <div style="background:#f8fafc;border-radius:8px;padding:12px">
+      <div style="font-size:0.8em;font-weight:600;color:#444;margin-bottom:8px">
+        REGENERATION RATE
+      </div>
+      <div style="font-size:1.8em;font-weight:700;color:#4e79a7">
+        ${regen.rate_pct}%
+      </div>
+      <div style="font-size:0.8em;color:#666;margin-top:4px">
+        ${regen.reflection_calls} reflection calls / ${regen.total_calls} total
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 5: Slowest calls -->
+  <div style="background:#f8fafc;border-radius:8px;padding:12px">
+    <div style="font-size:0.8em;font-weight:600;color:#444;margin-bottom:8px">
+      SLOWEST 5 CALLS
+    </div>
+    <table style="width:100%;font-size:0.8em;border-collapse:collapse">
+      <tr style="color:#888;font-size:0.78em">
+        <th style="text-align:left;padding:3px 6px 3px 0">ms</th>
+        <th style="text-align:left;padding:3px 6px">node</th>
+        <th style="text-align:left;padding:3px 0">question</th>
+      </tr>
+      ${slow.map(s => `
+      <tr style="border-top:1px solid #eee">
+        <td style="padding:4px 6px 4px 0;font-weight:600;color:#e15759">${s.ms}</td>
+        <td style="padding:4px 6px;color:#555">${shortName(s.node)}</td>
+        <td style="padding:4px 0;color:#333">${s.question}</td>
+      </tr>`).join("")}
+    </table>
+  </div>
+</div>
+<div data-stats-pending="1"
+     data-pie="${pieId}" data-vol="${volId}"
+     data-rt="${rtId}" data-tok="${tokId}"
+     data-line="${lineId}"
+     data-ts-labels='${JSON.stringify(tsLabels)}'
+     data-ts-calls='${JSON.stringify(tsCalls)}'
+     data-pie-labels='${JSON.stringify(pieLabels)}'
+     data-pie-data='${JSON.stringify(pieData)}'
+     data-rt-nodes='${JSON.stringify(rtNodes)}'
+     data-rt-avg='${JSON.stringify(rtAvg)}'
+     data-rt-min='${JSON.stringify(rtMin)}'
+     data-rt-max='${JSON.stringify(rtMax)}'
+     data-tok-nodes='${JSON.stringify(tokNodes)}'
+     data-tok-prompt='${JSON.stringify(tokPrompt)}'
+     data-tok-completion='${JSON.stringify(tokCompletion)}'
+     data-vol-data='${JSON.stringify(pieData)}'
+     data-labels='${JSON.stringify(nodeNames.map(n => n.replace("_reasoning", "").replace("_reflection", " \u21a9").replace(/_/g, " ")))}'     style="display:none"></div>`;
+    return html;
+  }
+
+  function initStatsCharts() {
+    const sentinel = document.querySelector("[data-stats-pending='1']");
+    if (!sentinel) return;
+    if (typeof Chart === "undefined") {
+      setTimeout(initStatsCharts, 100);
+      return;
+    }
+    sentinel.removeAttribute("data-stats-pending");
+
+    const colors = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f",
+      "#edc948", "#b07aa1", "#ff9da7", "#9c755f"];
+    const shortLabels = JSON.parse(sentinel.dataset.labels);
+    const pieData = JSON.parse(sentinel.dataset.pieData);
+    const volData = JSON.parse(sentinel.dataset.volData);
+    const rtNodes = JSON.parse(sentinel.dataset.rtNodes).map(
+      n => n.replace("_reasoning", "").replace("_reflection", " \u21a9").replace(/_/g, " "));
+    const rtAvg = JSON.parse(sentinel.dataset.rtAvg);
+    const rtMin = JSON.parse(sentinel.dataset.rtMin);
+    const rtMax = JSON.parse(sentinel.dataset.rtMax);
+    const tokNodes = JSON.parse(sentinel.dataset.tokNodes).map(
+      n => n.replace("_reasoning", "").replace("_reflection", " \u21a9").replace(/_/g, " "));
+    const tokPrompt = JSON.parse(sentinel.dataset.tokPrompt);
+    const tokCompletion = JSON.parse(sentinel.dataset.tokCompletion);
+
+    const opts = (extra) => Object.assign({
+      responsive: true,
+      plugins: { legend: { labels: { font: { size: 10 } } } },
+      scales: {
+        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+        x: { ticks: { font: { size: 9 } } }
+      }
+    }, extra || {});
+
+    // Doughnut
+    new Chart(document.getElementById(sentinel.dataset.pie), {
+      type: "doughnut",
+      data: { labels: shortLabels, datasets: [{ data: pieData, backgroundColor: colors }] },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: "right", labels: { font: { size: 10 } } } }
+      }
+    });
+
+    // Call volume
+    new Chart(document.getElementById(sentinel.dataset.vol), {
+      type: "bar",
+      data: {
+        labels: shortLabels,
+        datasets: [{ label: "calls", data: volData, backgroundColor: "#4e79a7" }]
+      },
+      options: opts({ plugins: { legend: { display: false } } })
+    });
+
+    // Response time
+    new Chart(document.getElementById(sentinel.dataset.rt), {
+      type: "bar",
+      data: {
+        labels: rtNodes, datasets: [
+          { label: "avg ms", data: rtAvg, backgroundColor: "#4e79a7" },
+          { label: "min ms", data: rtMin, backgroundColor: "#59a14f" },
+          { label: "max ms", data: rtMax, backgroundColor: "#e15759" },
+        ]
+      },
+      options: opts()
+    });
+
+    // Token counts
+    new Chart(document.getElementById(sentinel.dataset.tok), {
+      type: "bar",
+      data: {
+        labels: tokNodes, datasets: [
+          { label: "prompt", data: tokPrompt, backgroundColor: "#4e79a7" },
+          { label: "completion", data: tokCompletion, backgroundColor: "#f28e2b" },
+        ]
+      },
+      options: opts()
+    });
+
+    // Call volume over time
+    const tsLabels2 = JSON.parse(sentinel.dataset.tsLabels);
+    const tsCalls2 = JSON.parse(sentinel.dataset.tsCalls);
+    if (tsLabels2.length > 0) {
+      new Chart(document.getElementById(sentinel.dataset.line), {
+        type: "line",
+        data: {
+          labels: tsLabels2,
+          datasets: [{
+            label: "calls",
+            data: tsCalls2,
+            borderColor: "#4e79a7",
+            backgroundColor: "rgba(78,121,167,0.1)",
+            tension: 0.3,
+            fill: true,
+            pointRadius: 4,
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+            x: { ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+  }
+
   function formatAiResponse(envelope) {
+    if (envelope?.data?.status === "stats") {
+      const sd = envelope?.data?.stats_data;
+      // Fallback: plain text answer (no records case)
+      if (!sd || typeof sd !== "object") {
+        const answer = envelope?.data?.answer || "No stats available.";
+        return `<div class="ai-section"><pre style="white-space:pre-wrap;font-family:inherit;font-size:0.92em;line-height:1.6">${answer}</pre></div>`;
+      }
+      return buildStatsHtml(sd);
+    }
+
     // Guard: envelope missing entirely
     if (!envelope) return '<em>No response received.</em>';
 
@@ -1757,6 +2030,7 @@ document.addEventListener("DOMContentLoaded", () => {
       appendAiExchange(question, activeCaseId, output, false, suggestions, nodeType);
       // Initialise any bar-chart canvases appended above
       initPendingKpiCharts();
+      initStatsCharts();
     } catch (err) {
       console.error("[AI] fetch error:", err);
       appendAiExchange(question, activeCaseId,
