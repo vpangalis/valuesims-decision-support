@@ -146,6 +146,12 @@ Retrieved cases for context:
 {formatted_cases}\
 """
 
+    _ANCHOR_QUERIES: list[str] = [
+        "recurring failures maintenance",
+        "component failure root cause",
+    ]
+    _ANCHOR_QUERY_MIN_CASES: int = 5
+
     def __init__(
         self,
         hybrid_retriever: HybridRetriever,
@@ -176,30 +182,11 @@ Retrieved cases for context:
             strategy_fail_reason = ""
             strategy_response = ""
 
-        # --- Pass 1 (broad): two fixed anchor queries against case index
-        _ANCHOR_QUERIES = [
-            "recurring failures maintenance",
-            "component failure root cause",
-        ]
         anchor_cases: list = []
         case_index = self._settings.CASE_INDEX_NAME
         knowledge_index = self._settings.KNOWLEDGE_INDEX_NAME
-        for anchor_q in _ANCHOR_QUERIES:
-            results = self._hybrid_retriever.retrieve_cases_for_pattern_analysis(
-                query=anchor_q,
-                country=country,
-                top_k=5,
-            )
-            _logger.info(
-                "[strategy_node] broad retrieval '%s' → %d results from %s",
-                anchor_q,
-                len(results),
-                case_index,
-            )
-            anchor_cases.extend(results)
-        _logger.info("[STRATEGY_DEBUG] broad_cases count: %d", len(anchor_cases))
 
-        # --- Pass 2 (semantic): user's question against case index + knowledge index
+        # --- Pass 1 (semantic): user's question against case index
         semantic_cases = self._hybrid_retriever.retrieve_cases_for_pattern_analysis(
             query=question,
             country=country,
@@ -212,6 +199,26 @@ Retrieved cases for context:
             case_index,
         )
         _logger.info("[STRATEGY_DEBUG] semantic_cases count: %d", len(semantic_cases))
+
+        # --- Pass 2 (broad): two fixed anchor queries against case index
+        # Skip broad anchor pass when semantic results suggest a small
+        # portfolio — anchor queries return the same cases as semantic
+        # when fewer than _ANCHOR_QUERY_MIN_CASES cases exist.
+        if len(semantic_cases) >= StrategyNode._ANCHOR_QUERY_MIN_CASES:
+            for anchor_q in StrategyNode._ANCHOR_QUERIES:
+                results = self._hybrid_retriever.retrieve_cases_for_pattern_analysis(
+                    query=anchor_q,
+                    country=country,
+                    top_k=5,
+                )
+                _logger.info(
+                    "[strategy_node] broad retrieval '%s' → %d results from %s",
+                    anchor_q,
+                    len(results),
+                    case_index,
+                )
+                anchor_cases.extend(results)
+            _logger.info("[STRATEGY_DEBUG] broad_cases count: %d", len(anchor_cases))
         knowledge_docs = self._hybrid_retriever.retrieve_knowledge(
             query=question,
             top_k=4,
