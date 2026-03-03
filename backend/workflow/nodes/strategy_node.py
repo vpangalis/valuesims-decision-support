@@ -109,12 +109,8 @@ CRITICAL RULES:
 - [GENERAL ADVICE] MUST always be present — it is a mandatory section. A response
   that omits [GENERAL ADVICE] entirely is INVALID. If you realise you have not
   written it, you MUST add it before returning your response.
-- The [GENERAL ADVICE] section MUST start with the exact characters ⚠️ (warning emoji)
-  immediately after the section marker — this signals to the reader that the advice is
-  generic and not grounded in the retrieved case data. The ⚠ character (Unicode U+26A0)
-  is a REQUIRED LITERAL in your output — the very first character of your [GENERAL ADVICE]
-  content must be ⚠️. Any response where this character is missing is INVALID and
-  will be rejected by the quality auditor. Do not paraphrase or replace it with words.
+- The [GENERAL ADVICE] section must always start with the ⚠️ warning emoji
+  immediately after the section marker.
 - Return plain text only. No JSON. No markdown beyond the section labels.
 - [WHAT TO EXPLORE NEXT] must be the final section. Nothing may appear after it.
 - RESPONSE CHECKLIST — before returning, verify ALL FIVE sections are present:
@@ -285,6 +281,7 @@ Retrieved cases for context:
             user_question=question,
             model_name=model_name,
         )
+        response_text = self._ensure_general_advice_prefix(response_text)
         if knowledge_docs:
             refs = self._formatter.build_refs_block(knowledge_docs)
             knowledge_section = "\n\n[KNOWLEDGE REFERENCES]\n" + refs
@@ -314,6 +311,21 @@ Retrieved cases for context:
                 suggestions=suggestions,
             )
         )
+
+    def _ensure_general_advice_prefix(self, text: str) -> str:
+        """Insert ⚠️ prefix into [GENERAL ADVICE] content if the LLM omitted it.
+
+        Prevents spurious strategy reflection failures caused by the LLM
+        occasionally dropping the warning emoji despite prompt instructions.
+        """
+        marker = "[GENERAL ADVICE]"
+        if marker not in text:
+            return text
+        parts = text.split(marker, 1)
+        after = parts[1].lstrip("\n").lstrip()
+        if not after.startswith("\u26a0"):
+            parts[1] = "\n\u26a0\ufe0f " + after
+        return marker.join(parts)
 
     def _extract_suggestions(self, response_text: str) -> list[dict]:
         """Extract [WHAT TO EXPLORE NEXT] TEAM:/COSOLVE: items as structured chips."""
