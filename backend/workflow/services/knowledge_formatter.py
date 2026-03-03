@@ -10,11 +10,9 @@ class KnowledgeFormatter:
         Builds the [KNOWLEDGE REFERENCES] block content as pipe-delimited
         KNOWLEDGEREF lines, one per knowledge doc.
         Format: KNOWLEDGEREF|filename|section_title|page|excerpt|score_pct
+        Score is expressed as an absolute percentage of 1.0 (e.g. 0.73 → 75%).
         """
         items = knowledge_docs
-        max_score = max((item.score or 0.0) for item in items) if items else 1.0
-        if max_score == 0.0:
-            max_score = 1.0
         entries = []
         for item in items:
             filename = item.source or item.doc_id or ""
@@ -41,8 +39,9 @@ class KnowledgeFormatter:
                 truncated = raw
 
             score_pct = ""
-            if hasattr(item, "score") and item.score is not None and max_score > 0:
-                pct = round((item.score / max_score) * 100 / 5) * 5  # nearest 5%
+            if hasattr(item, "score") and item.score is not None:
+                # Absolute score: 0.73 → 75% (rounded to nearest 5%)
+                pct = round(item.score * 100 / 5) * 5
                 score_pct = f"{min(pct, 100)}%"
             entries.append(
                 f"KNOWLEDGEREF|{filename}|{section}|{page}|{truncated}|{score_pct}"

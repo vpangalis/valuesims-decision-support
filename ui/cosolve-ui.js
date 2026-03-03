@@ -1719,6 +1719,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 '</li>';
             });
             innerHtml += '</ul>';
+          } else {
+            // No relevant knowledge documents passed the relevance threshold
+            innerHtml += '<div class="knowledge-empty">No relevant knowledge found for this problem.</div>';
           }
 
           // Fallback: render any non-KNOWLEDGEREF lines as plain text

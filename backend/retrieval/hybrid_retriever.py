@@ -4,6 +4,12 @@ import logging
 from typing import Optional
 
 from backend.config import Settings
+
+# Minimum @search.score for a knowledge document to be returned.
+# Results below this threshold are discarded before reaching any reasoning node.
+# Azure hybrid search scores (BM25 + vector) typically range 0–4; 0.5 filters out
+# low-confidence matches while allowing moderately relevant content through.
+KNOWLEDGE_MIN_SCORE = 0.5
 from backend.infra.case_search_client import CaseSearchClient
 from backend.infra.evidence_search_client import EvidenceSearchClient
 from backend.infra.knowledge_search_client import KnowledgeSearchClient
@@ -266,10 +272,9 @@ class HybridRetriever:
                     score=item.get("@search.score"),
                 )
             )
-        if mapped:
-            max_score = max((k.score or 0.0) for k in mapped)
-            threshold = max_score * 0.55
-            mapped = [k for k in mapped if (k.score or 0.0) >= threshold]
+        # Drop results below the absolute minimum relevance threshold.
+        # Do NOT fall back to low-scoring results; return an empty list instead.
+        mapped = [k for k in mapped if (k.score or 0.0) >= KNOWLEDGE_MIN_SCORE]
         return mapped
 
     def retrieve_evidence_for_case(
