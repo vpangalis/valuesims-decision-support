@@ -176,15 +176,12 @@ CRITICAL RULES:
   4. [GENERAL ADVICE]
   5. [WHAT TO EXPLORE NEXT]
   [WHAT TO EXPLORE NEXT] must always be the final section. Nothing may appear after it.
-- LENGTH RULE: Be concise. Target 300-400 words maximum. IMPORTANT: all five
+- LENGTH RULE: Be concise. Target 450-550 words maximum. IMPORTANT: all five
   sections are REQUIRED regardless of word count — write one sentence per
   section if necessary; never skip a section to meet the word target.
-- RESPONSE CHECKLIST (active case mode) — before finishing, verify ALL FIVE are present:
-  ☑ [CURRENT STATE]
-  ☑ [GAPS IN PREVIOUS STATES] — REQUIRED even when gaps are minimal
-  ☑ [NEXT STATE PREVIEW]
-  ☑ [GENERAL ADVICE] — MUST start with the ⚠️ warning prefix
-  ☑ [WHAT TO EXPLORE NEXT] — MUST contain both subsections
+- RESPONSE CHECKLIST — verify ALL FIVE are present before returning:
+  ☑ [CURRENT STATE]  ☑ [GAPS IN PREVIOUS STATES]  ☑ [NEXT STATE PREVIEW]
+  ☑ [GENERAL ADVICE] — must start with ⚠️  ☑ [WHAT TO EXPLORE NEXT]
   If any section is absent, add it before returning your response.
 """
 
