@@ -102,19 +102,21 @@ Every AI response ends with **clickable suggestion chips** that guide users betw
 
 ---
 
-## Commit Workflow — AUTOMATIC, after every code change
+## Commit Workflow — Standard Procedure
 
-**After every code change, commit immediately without waiting to be asked.** Do not batch changes across multiple tasks before committing.
+Every change follows a two-stage process. **Never skip the audit stage.**
 
-Steps before every commit:
+### Stage 1 — Audit (read and report only, no edits)
+1. Read all files relevant to the requested change
+2. Report findings: what exists, what would need to change, and any risks
+3. Wait for explicit user confirmation before making any edits
 
-1. Read `docs/architecture.mmd`
-2. Compare the diagram against the actual code
-3. Update only the parts that have changed — new/removed classes, renamed methods, new routes, new LangGraph nodes, changed connections
-4. Save back to `docs/architecture.mmd`
-5. Remove any diagnostic / debug print statements added during investigation
-6. Stage all changed files (never use `git add -A`; always name files explicitly)
-7. Commit with a precise message: `type(scope): summary` + bullet points per file changed
+### Stage 2 — Change (only after user approves)
+1. Make the minimum targeted edits agreed in Stage 1
+2. Remove any diagnostic / debug print statements
+3. Update `docs/architecture.mmd` if new classes, routes, or LangGraph nodes were added/removed
+4. Stage files explicitly by name (never `git add -A`)
+5. Commit with a precise message — **then ask the user before pushing to remote**
 
 Commit message format:
 ```
@@ -125,6 +127,8 @@ feat/fix/chore(scope): short summary
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
+
+> **Push policy:** commit locally after every change; only push to GitHub after user says "push" or "ship it".
 
 ---
 
