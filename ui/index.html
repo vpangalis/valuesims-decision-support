@@ -305,25 +305,25 @@
             </div>
             <div class="kpi-llm-body">
                 <div class="kpi-grid">
-                    <div class="kpi-cell">
+                    <div class="kpi-cell" id="llm-tokens-used">
                         <div class="kpi-cell-label">Tokens used</div>
-                        <div class="kpi-cell-val">1.24M</div>
-                        <div class="kpi-cell-sub">of 5M limit</div>
-                        <div class="kpi-cell-bar"><div class="kpi-cell-fill blue" style="width:25%"></div></div>
+                        <div class="kpi-cell-val">—</div>
+                        <div class="kpi-cell-sub">all time</div>
+                        <div class="kpi-cell-bar"><div class="kpi-cell-fill blue" style="width:0%"></div></div>
                     </div>
-                    <div class="kpi-cell">
-                        <div class="kpi-cell-label">Avg / case</div>
-                        <div class="kpi-cell-val">41k</div>
+                    <div class="kpi-cell" id="llm-avg-per-call">
+                        <div class="kpi-cell-label">Avg / call</div>
+                        <div class="kpi-cell-val">—</div>
                         <div class="kpi-cell-sub">tokens</div>
-                        <div class="kpi-cell-bar"><div class="kpi-cell-fill green" style="width:41%"></div></div>
+                        <div class="kpi-cell-bar"><div class="kpi-cell-fill green" style="width:0%"></div></div>
                     </div>
-                    <div class="kpi-cell">
-                        <div class="kpi-cell-label">Est. cost</div>
-                        <div class="kpi-cell-val">€18.60</div>
-                        <div class="kpi-cell-sub">of €75 budget</div>
-                        <div class="kpi-cell-bar"><div class="kpi-cell-fill amber" style="width:25%"></div></div>
+                    <div class="kpi-cell" id="llm-total-calls">
+                        <div class="kpi-cell-label">Total calls</div>
+                        <div class="kpi-cell-val">—</div>
+                        <div class="kpi-cell-sub">all time</div>
+                        <div class="kpi-cell-bar"><div class="kpi-cell-fill amber" style="width:0%"></div></div>
                     </div>
-                    <div class="kpi-cell">
+                    <div class="kpi-cell" id="llm-doc-hit-rate">
                         <div class="kpi-cell-label">Doc hit rate</div>
                         <div class="kpi-cell-val">73%</div>
                         <div class="kpi-cell-sub">refs matched</div>

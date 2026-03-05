@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
 import logging
 import re
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile
@@ -113,6 +116,8 @@ class ApiRoutes:
         router.add_api_route(
             "/knowledge/{filename}", self.delete_knowledge_document, methods=["DELETE"]
         )
+        # LLM stats
+        router.add_api_route("/llm/stats", self.get_llm_stats, methods=["GET"])
         # Temporary diagnostic routes — remove after debugging
         router.add_api_route(
             "/cases/debug/index-count", self.debug_index_count, methods=["GET"]
@@ -630,6 +635,69 @@ class ApiRoutes:
             raise HTTPException(status_code=404, detail=str(exc))
         except Exception:
             raise HTTPException(status_code=500, detail="Internal error")
+
+    async def get_llm_stats(self):
+        log_path = Path(__file__).resolve().parents[2] / "logs" / "llm_calls.jsonl"
+        if not log_path.exists():
+            return {"monthly": [], "totals": {"total_tokens": 0, "total_calls": 0, "avg_tokens_per_call": 0}, "models": []}
+
+        now = datetime.now(timezone.utc)
+        # Build last 6 month boundaries
+        months: list[tuple[int, int]] = []
+        y, m = now.year, now.month
+        for _ in range(6):
+            months.append((y, m))
+            m -= 1
+            if m < 1:
+                m = 12
+                y -= 1
+        months.reverse()
+        valid_months = {f"{yr:04d}-{mo:02d}" for yr, mo in months}
+
+        monthly_agg: dict[tuple[str, str], dict] = {}
+        total_tokens = 0
+        total_calls = 0
+        models_seen: set[str] = set()
+
+        with open(log_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                model = entry.get("model_name", "unknown")
+                ts = entry.get("timestamp", "")
+                month_key = ts[:7]  # "YYYY-MM"
+                pt = entry.get("prompt_tokens", 0) or 0
+                ct = entry.get("completion_tokens", 0) or 0
+                tt = entry.get("total_tokens", 0) or 0
+
+                total_tokens += tt
+                total_calls += 1
+                models_seen.add(model)
+
+                if month_key not in valid_months:
+                    continue
+                key = (model, month_key)
+                if key not in monthly_agg:
+                    monthly_agg[key] = {"model_name": model, "month": month_key, "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "call_count": 0}
+                bucket = monthly_agg[key]
+                bucket["prompt_tokens"] += pt
+                bucket["completion_tokens"] += ct
+                bucket["total_tokens"] += tt
+                bucket["call_count"] += 1
+
+        monthly = sorted(monthly_agg.values(), key=lambda r: (r["month"], r["model_name"]))
+        avg = round(total_tokens / total_calls) if total_calls else 0
+
+        return {
+            "monthly": monthly,
+            "totals": {"total_tokens": total_tokens, "total_calls": total_calls, "avg_tokens_per_call": avg},
+            "models": sorted(models_seen),
+        }
 
     def _dispatch_entry_handler(self, envelope: EntryEnvelope):
         try:
