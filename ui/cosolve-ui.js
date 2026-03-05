@@ -3247,8 +3247,8 @@ function onKPISearch(val) {
   const trimmed = (val || '').trim();
   if (!trimmed) return;
 
-  // INC-YYYYMMDD-NNNN pattern = case ID
-  const isCaseId = /^INC-\d{8}-\d{4}$/i.test(trimmed);
+  // PREFIX-YYYYMMDD-NNN(N) pattern = case ID (INC, TRM, VIE, etc.)
+  const isCaseId = /^[A-Za-z]{2,4}-\d{8}-\d{3,4}$/i.test(trimmed);
 
   const url = isCaseId
     ? `${API_BASE}/cases/kpi?scope=case&case_id=${encodeURIComponent(trimmed)}`
@@ -3265,7 +3265,7 @@ function onKPISearch(val) {
     .then(r => r.json())
     .then(data => {
       currentKpiData = data;
-      renderKpiChips(data);
+      if (data.scope !== 'case') renderKpiChips(data);
       renderCaseKPIs(data);
       renderKpiAssessment(data);
     })
@@ -3277,8 +3277,32 @@ function onKPISearch(val) {
 function setKPIScope(scope, btn) {
   document.querySelectorAll('.kpi-chip').forEach(c => c.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  currentKpiCountry = (scope === 'global') ? null : scope;
-  if (currentKpiData) renderCaseKPIs(currentKpiData);
+
+  if (scope === 'global') {
+    currentKpiCountry = null;
+    if (currentKpiData) {
+      renderCaseKPIs(currentKpiData);
+      renderKpiAssessment(currentKpiData);
+    }
+    return;
+  }
+
+  // Country scope — fetch scoped data from backend
+  currentKpiCountry = scope;
+  const url = `${API_BASE}/cases/kpi?scope=country&country=${encodeURIComponent(scope)}`;
+  const block  = document.getElementById('agent-insight');
+  const textEl = document.getElementById('agent-text');
+  if (block && textEl) { textEl.textContent = 'Calculating\u2026'; block.classList.remove('hidden'); }
+
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      renderCaseKPIs(data);
+      renderKpiAssessment(data);
+    })
+    .catch(() => {
+      if (block && textEl) textEl.textContent = 'Assessment unavailable.';
+    });
 }
 
 // ── KPI STATE ─────────────────────────────────────────────────────────────────
@@ -3299,6 +3323,28 @@ function destroyChart(inst) { try { inst && inst.destroy(); } catch (e) {} }
 
 function renderCaseKPIs(kpiData) {
   if (!kpiData) return;
+
+  // ── Case scope: show single-case metrics, hide bar chart ──────────────────
+  if (kpiData.scope === 'case') {
+    const barCtx = document.getElementById('perf-chart');
+    if (barCtx) { destroyChart(perfChartInst); barCtx.style.display = 'none'; }
+    const lbl = document.getElementById('chart-label');
+    if (lbl) lbl.textContent = '';
+
+    const fmtDays = v => (v != null ? Math.round(v) + 'd' : '—');
+    const sr = document.getElementById('kpi-summary-row');
+    if (sr) sr.innerHTML = `
+      <div class="kpi-stat accent"><div class="kpi-stat-val">${fmtDays(kpiData.days_elapsed)}</div><div class="kpi-stat-lbl">Days elapsed</div></div>
+      <div class="kpi-stat green"><div class="kpi-stat-val">${kpiData.current_stage || '—'}</div><div class="kpi-stat-lbl">Current stage</div></div>
+      <div class="kpi-stat"><div class="kpi-stat-val">${fmtDays(kpiData.category_benchmark_days)}</div><div class="kpi-stat-lbl">Benchmark</div></div>
+    `;
+    return;
+  }
+
+  // Restore bar chart visibility for global/country scope
+  const barCtxRestore = document.getElementById('perf-chart');
+  if (barCtxRestore) barCtxRestore.style.display = '';
+
   const ranking = kpiData.country_ranking || [];
 
   // When a country chip is active, filter stats to that country's ranking entry
