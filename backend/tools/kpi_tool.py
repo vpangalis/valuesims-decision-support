@@ -468,7 +468,7 @@ class KPITool:
                 days: Optional[int] = None
                 if completed and confirmed_raw:
                     try:
-                        cur_dt = datetime.strptime(confirmed_raw, "%Y-%m-%d")
+                        cur_dt = datetime.strptime(confirmed_raw[:10], "%Y-%m-%d")
                         if phase == phase_order[0] and opened_dt is not None:
                             days = (cur_dt - opened_dt).days
                         elif prev_dt is not None:
