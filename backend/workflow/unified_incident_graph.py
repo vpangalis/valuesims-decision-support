@@ -71,6 +71,8 @@ class IncidentGraphState(TypedDict, total=False):
     classification_low_confidence: bool
     question_ready: bool
     clarifying_question: str
+    _last_node: str
+    trace_id: str
 
 
 class UnifiedIncidentGraph:
@@ -215,7 +217,7 @@ class UnifiedIncidentGraph:
         with _tracer.start_as_current_span(f"node.{name}") as span:
             span.set_attribute("cosolve.case_id", state.get("case_id", "") or "")
             span.set_attribute("cosolve.route", state.get("route", "") or "")
-            _prev = state.get("_last_node", "start")
+            _prev = state.get("_last_node") or "entry"
             _t0 = _dt.datetime.utcnow()
             result = fn(state, **kwargs)
             _t1 = _dt.datetime.utcnow()
@@ -236,6 +238,7 @@ class UnifiedIncidentGraph:
                 pass
             if isinstance(result, dict):
                 result["_last_node"] = name
+                result["trace_id"] = state.get("trace_id", "")
             return result
 
     def _start(self, state: IncidentGraphState) -> IncidentGraphState:
