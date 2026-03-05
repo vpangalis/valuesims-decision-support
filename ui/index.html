@@ -216,20 +216,6 @@
                 </div>
             </div>
             <div class="lp-group-body">
-                <div class="lp-sub-row sec-head" onclick="toggleFlowViz()" style="cursor:pointer;">
-                    <span>AI Reasoning Flow</span>
-                    <span class="chevron" id="flow-viz-chevron" style="transition:transform .15s;">›</span>
-                </div>
-                <div id="flow-viz-section" style="display:none; padding: 8px 14px;">
-                    <div style="display:flex; gap:6px; margin-bottom:8px;">
-                        <button class="flow-range-btn active" onclick="setFlowRange(7)" style="font-size:9px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:#eef1f8;cursor:pointer;">7D</button>
-                        <button class="flow-range-btn" onclick="setFlowRange(30)" style="font-size:9px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:transparent;cursor:pointer;">30D</button>
-                        <button class="flow-range-btn" onclick="setFlowRange(0)" style="font-size:9px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:transparent;cursor:pointer;">All</button>
-                    </div>
-                    <div id="flow-viz-container" style="width:100%; height:300px; background:#f8f9fc; border-radius:6px; overflow:hidden;"></div>
-                    <div id="flow-viz-stats" style="font-size:10px; color:#8b93ad; margin-top:4px;"></div>
-                </div>
-
                 <input id="doc_bulk_import_input" type="file" multiple accept=".json,.csv" hidden>
                 <button id="doc_bulk_import_btn" hidden>Import Closed Cases (Bulk)</button>
                 <div class="lp-sub-row">
@@ -857,6 +843,17 @@
                 </div>
             </div>
         </div><!-- /phase-detail-panel -->
+
+        <div id="admin-center" style="display:none; height:100%; padding:20px;">
+            <div style="font-size:13px; font-weight:600; color:var(--text); margin-bottom:16px; letter-spacing:0.05em;">AI REASONING FLOW</div>
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+                <button class="flow-range-btn active" id="flow-btn-7" onclick="setFlowRange(7)" style="font-size:10px;padding:3px 10px;border:1px solid #ccc;border-radius:4px;background:#eef1f8;cursor:pointer;">7D</button>
+                <button class="flow-range-btn" id="flow-btn-30" onclick="setFlowRange(30)" style="font-size:10px;padding:3px 10px;border:1px solid #ccc;border-radius:4px;background:transparent;cursor:pointer;">30D</button>
+                <button class="flow-range-btn" id="flow-btn-0" onclick="setFlowRange(0)" style="font-size:10px;padding:3px 10px;border:1px solid #ccc;border-radius:4px;background:transparent;cursor:pointer;">All</button>
+            </div>
+            <div id="flow-viz-container-main" style="width:100%; height:calc(100% - 80px); background:#f8f9fc; border-radius:8px; border:1px solid var(--border); overflow:hidden;"></div>
+            <div id="flow-viz-stats-main" style="font-size:10px; color:#8b93ad; margin-top:6px;"></div>
+        </div>
 
     </div><!-- /center-body -->
 </div><!-- #center -->

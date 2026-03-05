@@ -3182,6 +3182,15 @@ function clearAllPanels() {
   });
   document.getElementById('center')?.classList.remove('hidden');
   document.getElementById('lp')?.classList.remove('admin-mode', 'case-mode');
+  // Reset admin center view
+  const adminCenter = document.getElementById('admin-center');
+  if (adminCenter) adminCenter.style.display = 'none';
+  const wf = document.getElementById('workflow');
+  if (wf) wf.style.display = '';
+  const pdp = document.getElementById('phase-detail-panel');
+  if (pdp) pdp.style.display = '';
+  const banner = document.getElementById('case-closed-banner');
+  if (banner) banner.style.display = '';
 }
 
 function updateTabRail() {
@@ -3215,6 +3224,16 @@ function setPanelState(newState) {
       const g = document.getElementById(gid);
       if (g) g.classList.toggle('open', gid === 'grp-admin');
     });
+    // Hide case board, show flow viz center
+    const wf = document.getElementById('workflow');
+    if (wf) wf.style.display = 'none';
+    const pdp = document.getElementById('phase-detail-panel');
+    if (pdp) pdp.style.display = 'none';
+    const banner = document.getElementById('case-closed-banner');
+    if (banner) banner.style.display = 'none';
+    const adminCenter = document.getElementById('admin-center');
+    if (adminCenter) adminCenter.style.display = 'block';
+    setTimeout(() => fetchAndRenderFlow(_flowCurrentDays, 'main'), 150);
   }
   updateTabRail();
 }
@@ -3874,12 +3893,15 @@ function setFlowRange(days) {
     btn.classList.toggle('active', isActive);
     btn.style.background = isActive ? '#eef1f8' : 'transparent';
   });
-  fetchAndRenderFlow(days);
+  fetchAndRenderFlow(days, 'main');
 }
 
-function fetchAndRenderFlow(days) {
-  const container = document.getElementById('flow-viz-container');
-  const stats = document.getElementById('flow-viz-stats');
+function fetchAndRenderFlow(days, target) {
+  target = target || 'side';
+  const containerId = target === 'main' ? 'flow-viz-container-main' : 'flow-viz-container';
+  const statsId = target === 'main' ? 'flow-viz-stats-main' : 'flow-viz-stats';
+  const container = document.getElementById(containerId);
+  const stats = document.getElementById(statsId);
   if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#8b93ad;font-size:11px;">Loading flow data...</div>';
 
   const url = days > 0 ? `${API_BASE}/admin/flow?days=${days}` : `${API_BASE}/admin/flow?days=0`;
@@ -3894,7 +3916,7 @@ function fetchAndRenderFlow(days) {
         if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#8b93ad;font-size:11px;">No flow data yet. Run a reasoning query first.</div>';
         return;
       }
-      _ensureD3().then(() => renderFlowGraph(data)).catch(() => {
+      _ensureD3().then(() => renderFlowGraph(data, containerId)).catch(() => {
         if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#e05c5c;font-size:11px;">Failed to load D3 library.</div>';
       });
     })
@@ -3911,8 +3933,8 @@ function _flowNodeColor(name) {
   return '#7298dc';
 }
 
-function renderFlowGraph(data) {
-  const container = document.getElementById('flow-viz-container');
+function renderFlowGraph(data, containerId) {
+  const container = document.getElementById(containerId || 'flow-viz-container');
   if (!container) return;
   container.innerHTML = '';
 
