@@ -112,9 +112,9 @@
                 <div class="create-case-wrap">
                     <div class="case-id-row">
                         <input class="case-id-input" id="lp-case-id-input" placeholder="XXX-YYYYMMDD-XXXX"
-                            onkeydown="if(event.key==='Enter'){document.getElementById('case-id-input').value=this.value;document.getElementById('create-incident-btn').click();}"/>
+                            onkeydown="if(event.key==='Enter'){var t=document.getElementById('case-id-input');t.value=this.value;t.dispatchEvent(new Event('input'));document.getElementById('create-incident-btn').click();}"/>
                         <button class="btn-icon-action" title="Create case"
-                            onclick="document.getElementById('case-id-input').value=document.getElementById('lp-case-id-input').value;document.getElementById('create-incident-btn').click()">
+                            onclick="var t=document.getElementById('case-id-input');t.value=document.getElementById('lp-case-id-input').value;t.dispatchEvent(new Event('input'));document.getElementById('create-incident-btn').click()">
                             <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
                                 <path d="M4.5 1v7M1 4.5h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                             </svg>
@@ -431,7 +431,7 @@
                         <div class="sec-title-row">
                             <div class="sec-title">Problem Definition</div>
                             <button class="btn-confirm-inline unconfirmed confirm-phase-btn" data-phase="D1_2" title="Mark confirmed">
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                             <span class="confirm-label unconfirmed-lbl" data-phase-status>Mark confirmed</span>
                         </div>
@@ -441,43 +441,52 @@
                 <div class="guidance"><strong>How to use this section</strong> &mdash; Assemble the team with clear roles. Define the problem precisely using facts — what IS happening and what IS NOT. Use 5W2H to bound scope. Avoid assumptions or root cause statements at this stage.</div>
                 <div class="phase-body">
                     <div class="phase-form scroll-y">
-                        <div class="section case-details">
-                            <div class="section-title">Case Details</div>
-                            <label>Incident / Case ID</label>
-                            <input id="case-id-input" placeholder="XXX-YYYYMMDD-XXXX" data-json-path="case_id">
-                            <small class="muted">Format: XXX-YYYYMMDD-XXXX (e.g. TRM-20260115-0003)</small>
-                            <button id="create-incident-btn" hidden disabled>Create Incident</button>
+                        <div class="d1-two-col">
+                            <!-- Left: Case Details card -->
+                            <div class="section case-details">
+                                <div class="section-title">Case Details</div>
+                                <label>Case ID</label>
+                                <input id="case-id-input" placeholder="XXX-YYYYMMDD-XXXX" data-json-path="case_id">
+                                <small class="muted">Format: XXX-YYYYMMDD-XXXX (e.g. TRM-20260115-0003)</small>
+                                <button id="create-incident-btn" hidden disabled>Create Incident</button>
 
-                            <label>Status</label>
-                            <input value="Open" data-json-path="case_status" readonly>
+                                <label>Status</label>
+                                <input value="Open" data-json-path="case_status" readonly>
 
-                            <label>Opening Date</label>
-                            <input type="date" data-json-path="opened_at" readonly>
+                                <label>Opening Date</label>
+                                <input type="date" data-json-path="opened_at" readonly>
 
-                            <label>Closure Date</label>
-                            <input type="date" data-json-path="closed_at" readonly>
+                                <label>Closure Date</label>
+                                <input type="date" data-json-path="closed_at" readonly>
 
-                            <div class="three-col">
-                                <div>
-                                    <label>Country</label>
-                                    <input data-json-path="d_states.D1_2.data.country">
+                                <div class="three-col">
+                                    <div>
+                                        <label>Country</label>
+                                        <input data-json-path="d_states.D1_2.data.country">
+                                    </div>
+                                    <div>
+                                        <label>Site</label>
+                                        <input data-json-path="d_states.D1_2.data.site">
+                                    </div>
+                                    <div>
+                                        <label>Unit</label>
+                                        <input data-json-path="d_states.D1_2.data.organization_unit">
+                                    </div>
                                 </div>
-                                <div>
-                                    <label>Site</label>
-                                    <input data-json-path="d_states.D1_2.data.site">
+                            </div>
+
+                            <!-- Right: Problem Description + Team stacked cards -->
+                            <div class="d1-right-col">
+                                <div class="section">
+                                    <div class="section-title">Problem Description</div>
+                                    <textarea data-json-path="d_states.D1_2.data.problem_description"></textarea>
                                 </div>
-                                <div>
-                                    <label>Unit</label>
-                                    <input data-json-path="d_states.D1_2.data.organization_unit">
+                                <div class="section">
+                                    <div class="section-title">Involved People &amp; Teams</div>
+                                    <textarea data-json-path="d_states.D1_2.data.involved_people_teams" data-json-array="true"></textarea>
                                 </div>
                             </div>
                         </div>
-
-                        <label>Problem Description</label>
-                        <textarea data-json-path="d_states.D1_2.data.problem_description"></textarea>
-
-                        <label>Involved People / Teams</label>
-                        <textarea data-json-path="d_states.D1_2.data.involved_people_teams" data-json-array="true"></textarea>
                     </div>
                 </div>
             </div>
@@ -488,7 +497,7 @@
                         <div class="sec-title-row">
                             <div class="sec-title">Containment Actions</div>
                             <button class="btn-confirm-inline unconfirmed confirm-phase-btn" data-phase="D3" title="Mark confirmed">
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                             <span class="confirm-label unconfirmed-lbl" data-phase-status>Mark confirmed</span>
                         </div>
@@ -535,7 +544,7 @@
                         <div class="sec-title-row">
                             <div class="sec-title">Root Cause Analysis</div>
                             <button class="btn-confirm-inline unconfirmed confirm-phase-btn" data-phase="D4" title="Mark confirmed">
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                             <span class="confirm-label unconfirmed-lbl" data-phase-status>Mark confirmed</span>
                         </div>
@@ -585,7 +594,7 @@
                         <div class="sec-title-row">
                             <div class="sec-title">Permanent Corrective Actions</div>
                             <button class="btn-confirm-inline unconfirmed confirm-phase-btn" data-phase="D5" title="Mark confirmed">
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                             <span class="confirm-label unconfirmed-lbl" data-phase-status>Mark confirmed</span>
                         </div>
@@ -737,7 +746,7 @@
                         <div class="sec-title-row">
                             <div class="sec-title">Implementation &amp; Validation</div>
                             <button class="btn-confirm-inline unconfirmed confirm-phase-btn" data-phase="D6" title="Mark confirmed">
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                             <span class="confirm-label unconfirmed-lbl" data-phase-status>Mark confirmed</span>
                         </div>
@@ -787,7 +796,7 @@
                         <div class="sec-title-row">
                             <div class="sec-title">Prevention</div>
                             <button class="btn-confirm-inline unconfirmed confirm-phase-btn" data-phase="D7" title="Mark confirmed">
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                             <span class="confirm-label unconfirmed-lbl" data-phase-status>Mark confirmed</span>
                         </div>
@@ -815,7 +824,7 @@
                         <div class="sec-title-row">
                             <div class="sec-title">Closure &amp; Learnings</div>
                             <button class="btn-confirm-inline unconfirmed confirm-phase-btn" data-phase="D8" title="Mark confirmed">
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l3 3 5-6" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                             <span class="confirm-label unconfirmed-lbl" data-phase-status>Mark confirmed</span>
                         </div>

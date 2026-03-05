@@ -239,11 +239,11 @@ body { font-size: 14px; }
 }
 .lp-sub-row .spacer { flex: 1; }
 .lp-sub-label {
-  font-size: 8.5px;
-  font-weight: 600;
-  letter-spacing: .7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .5px;
   text-transform: uppercase;
-  color: var(--text-3);
+  color: var(--text-2);
 }
 
 /* Icon button — override global button styles */
@@ -284,11 +284,11 @@ body { font-size: 14px; }
 .case-id-row { display: flex; align-items: center; gap: 5px; }
 .case-id-input {
   flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--border);
-  border-radius: 6px; padding: 5px 8px; font-size: 9.5px;
+  border-radius: 6px; padding: 5px 8px; font-size: 11px;
   font-family: 'Geist Mono', monospace; color: var(--text); outline: none;
 }
 .case-id-input:focus { border-color: var(--accent); background: #fff; }
-.case-id-hint { font-size: 8.5px; color: var(--text-3); font-family: 'Geist Mono', monospace; }
+.case-id-hint { font-size: 10px; color: var(--text-2); font-family: 'Geist Mono', monospace; }
 .case-id-hint span {
   background: var(--accent-light); color: var(--accent);
   padding: 0 4px; border-radius: 3px; font-weight: 600;
@@ -318,7 +318,7 @@ body { font-size: 14px; }
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 5px 8px;
-  font-size: 10px;
+  font-size: 11px;
   font-family: 'Geist', sans-serif;
   color: var(--text);
   outline: none;
@@ -691,12 +691,29 @@ body { font-size: 14px; }
 .d-tab.is-active { border-bottom-color: var(--accent); background: var(--accent-light); }
 .d-tab.done      { border-bottom-color: transparent; }
 
-.d-tab-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-.d-tab-id  { font-family: 'Geist Mono', monospace; font-size: 10px; font-weight: 500; color: var(--text-3); }
-.d-tab.is-active .d-tab-id { color: var(--accent); }
-.d-tab.done      .d-tab-id { color: var(--green); }
+.d-tab-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.d-tab-id  { font-size: 8px; font-weight: 600; color: var(--text-3); letter-spacing: .4px; text-transform: uppercase; }
 
-.d-tab-label { font-size: 11px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+/* Status circle in top-right of each card (after D-label) */
+.d-tab-top::after {
+  content: '';
+  display: block;
+  width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0;
+  border: 1.5px solid #cbd5e1;
+  background: transparent;
+  transition: background .2s, border-color .2s;
+}
+.d-tab.is-active:not(.done) .d-tab-top::after { border-color: var(--accent); background: var(--accent-light); }
+/* done always wins — explicit green check circle */
+.d-tab.done .d-tab-top::after,
+.d-tab.is-active.done .d-tab-top::after {
+  background-color: var(--green); border-color: var(--green);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M4 9.5l3.5 3.5 6.5-7.5' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+  box-shadow: 0 1px 4px rgba(22,163,74,.35);
+}
+
+.d-tab-label { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
 .d-tab.is-active .d-tab-label { color: var(--text); }
 
 .d-status-row  { display: flex; align-items: center; gap: 5px; }
@@ -714,11 +731,11 @@ body { font-size: 14px; }
 
 .d-duration {
   font-family: 'Geist Mono', monospace; font-size: 9px;
-  color: var(--text-3); margin-top: 3px; display: flex; align-items: center; gap: 3px;
+  color: var(--text-2); margin-top: 3px; display: flex; align-items: center; gap: 3px;
 }
-.d-duration svg { opacity: .5; }
-.d-tab.is-active .d-duration { color: var(--accent); opacity: .8; }
-.d-tab.done      .d-duration { color: var(--green); opacity: .7; }
+.d-duration svg { opacity: .6; }
+.d-tab.is-active .d-duration { color: var(--accent); opacity: 1; }
+.d-tab.done      .d-duration { color: var(--green); opacity: 1; }
 
 .wf-connector {
   width: 18px; height: 2px; background: var(--border);
@@ -820,6 +837,20 @@ body { font-size: 14px; }
   flex-direction: column;
   gap: 12px;
 }
+/* Problem Definition: case details left, description+team right */
+.d1-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+.d1-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.d1-right-col .section { flex: 1; }
+.d1-right-col .section textarea { min-height: 90px; resize: vertical; }
 
 /* ── Phase card new header — sec-head ── */
 .sec-head {
@@ -834,21 +865,24 @@ body { font-size: 14px; }
 /* Inline round confirm button */
 .btn-confirm-inline {
   width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; min-height: 0; border: none;
+  background-repeat: no-repeat; background-position: center; background-size: 65%;
   transition: all .22s cubic-bezier(.34, 1.56, .64, 1);
 }
+/* hide inline SVG — background-image drives the checkmark */
+.btn-confirm-inline svg { display: none; }
 .btn-confirm-inline.unconfirmed {
-  background: transparent; border: 1.5px solid #c8d5e8; color: #94a3b8;
+  background-color: transparent; border: 1.5px solid #c8d5e8;
 }
 .btn-confirm-inline.unconfirmed:hover {
-  border-color: var(--green); color: var(--green); background: #f0fdf4; transform: scale(1.12);
+  border-color: var(--green); background-color: #f0fdf4; transform: scale(1.12);
 }
 .btn-confirm-inline.confirmed {
-  background: var(--green); border: 1.5px solid var(--green);
-  color: #fff; box-shadow: 0 2px 8px rgba(22, 163, 74, .3);
+  background-color: var(--green); border: 1.5px solid var(--green);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6.5l3 3 5-6' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+  box-shadow: 0 2px 8px rgba(22,163,74,.35);
 }
-.btn-confirm-inline.confirmed:hover { background: #15803d; transform: scale(1.06); }
+.btn-confirm-inline.confirmed:hover { background-color: #15803d; transform: scale(1.06); }
 
 .confirm-label {
   font-size: 10px; font-weight: 500; color: var(--text-3);
@@ -947,8 +981,7 @@ button:hover {
 
 .action-text {
   width: 100%;
-  height: 38px;
-  min-height: 38px;
+  min-height: 60px;
   resize: vertical;
   overflow-y: auto;
   overflow-x: hidden;
@@ -968,10 +1001,10 @@ button:hover {
 .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
 table { width: 100%; border-collapse: collapse; }
-th, td { padding: 6px; vertical-align: middle; }
-.w-action  { width: 65%; }
-.w-owner   { width: 20%; }
-.w-date    { width: 7.5%; }
+th, td { padding: 6px; vertical-align: top; }
+.w-action  { width: 72%; }
+.w-owner   { width: 15%; }
+.w-date    { width: 6.5%; }
 .w-comment { width: 20%; }
 
 .fishbone { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -1033,7 +1066,7 @@ th, td { padding: 6px; vertical-align: middle; }
   50%       { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.22); border-color: rgba(59, 130, 246, 0.7); }
 }
 
-.evidence-link { color: #2563eb; text-decoration: underline; cursor: pointer; }
+.evidence-link { color: #2563eb; text-decoration: underline; cursor: pointer; font-size: 11px; font-weight: 500; }
 .evidence-link:hover { text-decoration: none; }
 .knowledge-cite-link { color: #1a73e8; text-decoration: underline; font-weight: 500; cursor: pointer; }
 .knowledge-cite-link:hover { color: #1558b0; }
@@ -1045,6 +1078,7 @@ th, td { padding: 6px; vertical-align: middle; }
   align-items: center;
   padding: 6px 0;
   border-bottom: 1px solid #e5e7eb;
+  text-align: left;
 }
 .evidence-row:last-child { border-bottom: none; }
 
@@ -1061,6 +1095,14 @@ th, td { padding: 6px; vertical-align: middle; }
 .evidence-download:hover { background: var(--btn-standard-bg-hover); }
 
 .error { color: #b91c1c; }
+
+/* Overdue date — due_date is past today with no actual completion */
+input.date-overdue {
+  border-color: #ef4444 !important;
+  background: #fff5f5 !important;
+  color: #b91c1c !important;
+  box-shadow: 0 0 0 2px rgba(239,68,68,.15);
+}
 
 .kpi-output {
   min-height: 120px;

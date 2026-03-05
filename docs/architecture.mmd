@@ -1,0 +1,142 @@
+flowchart TD
+
+  HTML[index.html 5-panel SPA]
+  JS[cosolve-ui.js caseState hydrateCase sendFullEnvelope submitAiQuestion]
+  HTML --> JS
+
+  FASTAPI[FastAPI backend app.py BackendApp BackendContainer]
+
+  R_CASE[POST entry case]
+  R_REASON[POST entry reasoning]
+  R_KNOW[POST entry knowledge]
+  R_SUGG[POST entry suggestions]
+  R_SEARCH[POST cases search]
+  R_GET[GET cases by id]
+  R_EVIDENCE[GET cases evidence]
+  R_KLIST[GET knowledge]
+  R_KFILE[GET knowledge file]
+  R_KDEL[DELETE knowledge file]
+
+  EH[EntryHandler handle_entry]
+  EH_CASE[handle_case_ingestion CREATE UPDATE CLOSE UPLOAD]
+  EH_AI[handle_ai_reasoning]
+  EH_SUGG[generate_suggestions 6 chips]
+
+  CES[CaseEntryService create load patch save merge]
+  CIS[CaseIngestionService index case]
+  CSI[CaseSearchIndex upload merge_or_upload]
+  EIS[EvidenceIngestionService]
+  KIS[KnowledgeIngestionService chunk 12000 chars PDF extract]
+
+  N_START[StartNode reset escalation flags]
+  N_CTX[ContextNode load case detect D-state]
+  N_CLS[IntentClassificationNode OPERATIONAL or SIMILARITY or STRATEGY or KPI]
+  N_QR[QuestionReadinessNode READY or NOT_READY]
+  N_RT[RouterNode route by intent]
+  N_OP[OperationalNode 3-pass LLM reasoning OperationalPayload]
+  N_OPR[OperationalReflectionNode ESCALATE or CONTINUE]
+  N_OPE[OperationalEscalationNode premium model rerun]
+  N_SIM[SimilarityNode precedent case search SimilarityPayload]
+  N_SIMR[SimilarityReflectionNode validate findings]
+  N_STR[StrategyNode portfolio pattern analysis StrategyPayload]
+  N_STRR[StrategyReflectionNode ESCALATE or CONTINUE]
+  N_STRE[StrategyEscalationNode premium model rerun]
+  N_KPI[KPINode KPITool get_kpis KPIResult]
+  N_KPIR[KPIReflectionNode interpret metrics]
+  N_FMT[ResponseFormatterNode final_response citations chips]
+  N_END[EndNode]
+
+  EC[EscalationController should_escalate]
+  MP[ModelPolicy resolve_model base or premium]
+  LLMC[LoggedLanguageModelClient timing tokens llm_calls.jsonl]
+  LMC[LanguageModelClient complete_json complete_text SDK or REST]
+
+  HR[HybridRetriever retrieve_similar_cases retrieve_knowledge min_score 0.5 retrieve_evidence]
+  CSC[CaseSearchClient hybrid_search BM25 plus vector text_search]
+  ESC[EvidenceSearchClient search_by_case_id]
+  KSC[KnowledgeSearchClient 2-stage small_chunks then parent sections]
+  EMB[EmbeddingClient generate_embedding]
+
+  BSC[BlobStorageClient upload download list delete]
+  CR[CaseRepository create load save add_evidence]
+  CRR[CaseReadRepository list_case_paths load_case]
+
+  AZAI[Azure AI Search 3 indexes cases evidence knowledge]
+  AZOAI[Azure OpenAI Foundry keys chat and embedding deployments]
+  AZBLOB[Azure Blob Storage case.json evidence knowledge blobs]
+
+  JS -->|POST entry case reasoning suggestions| R_CASE
+  JS -->|POST cases search GET cases GET knowledge| R_SEARCH
+
+  FASTAPI --> R_CASE
+  FASTAPI --> R_REASON
+  FASTAPI --> R_KNOW
+  FASTAPI --> R_SUGG
+  FASTAPI --> R_SEARCH
+  FASTAPI --> R_GET
+  FASTAPI --> R_EVIDENCE
+  FASTAPI --> R_KLIST
+  FASTAPI --> R_KFILE
+  FASTAPI --> R_KDEL
+
+  R_CASE --> EH
+  R_REASON --> EH
+  R_KNOW --> EH
+  R_SUGG --> EH_SUGG
+
+  EH --> EH_CASE
+  EH --> EH_AI
+  EH_CASE --> CES
+  EH_CASE --> EIS
+  EH_CASE --> KIS
+  EH_AI --> N_START
+  EH_SUGG --> LLMC
+
+  CES --> CIS
+  CIS --> CSI
+
+  N_START --> N_CTX --> N_CLS --> N_QR
+  N_QR -->|READY| N_RT
+  N_QR -->|NOT READY| N_FMT
+  N_RT -->|OPERATIONAL| N_OP
+  N_RT -->|SIMILARITY| N_SIM
+  N_RT -->|STRATEGY| N_STR
+  N_RT -->|KPI| N_KPI
+  N_OP --> N_OPR
+  N_OPR -->|ESCALATE| N_OPE --> N_OPR
+  N_OPR -->|CONTINUE| N_FMT
+  N_SIM --> N_SIMR --> N_FMT
+  N_STR --> N_STRR
+  N_STRR -->|ESCALATE| N_STRE --> N_STRR
+  N_STRR -->|CONTINUE| N_FMT
+  N_KPI --> N_KPIR --> N_FMT
+  N_FMT --> N_END
+
+  N_OPR --> EC
+  N_STRR --> EC
+  N_SIMR --> EC
+  EC --> MP --> LLMC --> LMC
+
+  N_OP --> HR
+  N_SIM --> HR
+  N_STR --> HR
+
+  HR --> CSC
+  HR --> ESC
+  HR --> KSC
+  HR --> EMB
+
+  CSC --> AZAI
+  ESC --> AZAI
+  KSC --> AZAI
+  CSI --> AZAI
+  EMB --> AZOAI
+  LMC --> AZOAI
+
+  BSC --> CR
+  BSC --> CRR
+  CES --> CR
+  KIS --> BSC
+  EIS --> BSC
+  CR --> AZBLOB
+  BSC --> AZBLOB

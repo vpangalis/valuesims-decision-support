@@ -145,6 +145,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let evidenceMetadata = [];
 
+  // Knowledge docs sort state
+  let kbSortMode = "name-asc"; // cycles: name-asc → name-desc → date-desc → date-asc
+  let kbDocsCache = [];
+
+  const KB_SORT_MODES = ["name-asc", "name-desc", "date-desc", "date-asc"];
+  const KB_SORT_TITLES = {
+    "name-asc":  "Sort: A → Z",
+    "name-desc": "Sort: Z → A",
+    "date-desc": "Sort: Newest first",
+    "date-asc":  "Sort: Oldest first"
+  };
+  // SVG path inner content for each sort mode
+  const KB_SORT_PATHS = {
+    "name-asc":  `<path d="M1 2h7M2 4.5h5M3 7h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>`,
+    "name-desc": `<path d="M1 7h7M2 4.5h5M3 2h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>`,
+    "date-desc": `<path d="M1 2h5M1 4.5h3.5M7 1.5v6M5.5 6l1.5 1.5 1.5-1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>`,
+    "date-asc":  `<path d="M1 2h5M1 4.5h3.5M7 7.5V1.5M5.5 3 7 1.5 8.5 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>`,
+  };
+
+  function sortKbDocs(docs) {
+    const copy = [...docs];
+    switch (kbSortMode) {
+      case "name-asc":  return copy.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+      case "name-desc": return copy.sort((a, b) => (b.title || "").localeCompare(a.title || ""));
+      case "date-desc": return copy.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      case "date-asc":  return copy.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+    }
+    return copy;
+  }
+
   let currentFocus = "workspace";
   let currentExpanded = null; // key of the currently expanded panel, or null
 
@@ -249,6 +279,31 @@ document.addEventListener("DOMContentLoaded", () => {
   caseIdInput.addEventListener("change", () => updateCaseIdAttention());
 
   updateCaseIdAttention();
+
+  // --- Due date overdue indicator
+  function checkDueDateOverdue(input) {
+    if (!input.value) { input.classList.remove("date-overdue"); return; }
+    const today = new Date().toISOString().split("T")[0];
+    // Find actual_date in the same table row (if filled, task is done — still flag if late)
+    const row = input.closest("tr");
+    const actualInput = row ? row.querySelector("input[data-field='actual_date'], input[data-json-path*='actual_date']") : null;
+    const isDone = actualInput && actualInput.value;
+    // Flag overdue: due date is in the past (regardless of completion — shows delay)
+    input.classList.toggle("date-overdue", input.value < today);
+  }
+
+  document.addEventListener("change", (e) => {
+    const el = e.target;
+    if (el.type !== "date") return;
+    const path = el.dataset.jsonPath || el.dataset.field || "";
+    if (path.includes("due_date")) checkDueDateOverdue(el);
+    // Also re-check due_date in same row when actual_date changes
+    if (path.includes("actual_date") || el.dataset.field === "actual_date") {
+      const row = el.closest("tr");
+      const dueInput = row ? row.querySelector("input[data-field='due_date'], input[data-json-path*='due_date']") : null;
+      if (dueInput) checkDueDateOverdue(dueInput);
+    }
+  });
 
   workspaceColumn?.addEventListener("click", () => {
     setColumnFocus("workspace");
@@ -386,23 +441,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // Knowledge document library
   // ------------------------------------------------------------------
 
-  async function refreshKnowledgeList() {
-    console.log("[KB] refreshKnowledgeList called");
+  function renderKbDocs(docs) {
     const listEl = document.getElementById("knowledge_upload_list");
     if (!listEl) return;
-    try {
-      const res = await fetch(`${API_BASE}/knowledge`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const docs = data.documents || [];
 
-      if (!docs.length) {
-        listEl.innerHTML = `<div class="muted empty-state">No knowledge documents uploaded yet.</div>`;
-        return;
-      }
+    if (!docs.length) {
+      listEl.innerHTML = `<div class="muted empty-state">No knowledge documents uploaded yet.</div>`;
+      return;
+    }
 
-      listEl.innerHTML = "";
-      docs.forEach((doc) => {
+    listEl.innerHTML = "";
+    sortKbDocs(docs).forEach((doc) => {
         const row = document.createElement("div");
         row.className = "kb-doc-row";
 
@@ -461,9 +510,40 @@ document.addEventListener("DOMContentLoaded", () => {
         row.appendChild(controlsEl);
         listEl.appendChild(row);
       });
+  }
+
+  async function refreshKnowledgeList() {
+    try {
+      const res = await fetch(`${API_BASE}/knowledge`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      kbDocsCache = Array.isArray(data) ? data : (data.documents || []);
+      renderKbDocs(kbDocsCache);
     } catch (err) {
       console.warn("[KNOWLEDGE] refreshKnowledgeList error", err);
     }
+  }
+
+  const docSortBtn = document.getElementById("doc-sort-btn");
+  if (docSortBtn) {
+    docSortBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const modes = ["name-asc", "name-desc", "date-desc", "date-asc"];
+      kbSortMode = modes[(modes.indexOf(kbSortMode) + 1) % modes.length];
+      const icons = {
+        "name-asc":  `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M7 12h10M11 18h2"/></svg>`,
+        "name-desc": `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h2M7 12h10M11 18h6"/></svg>`,
+        "date-desc": `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12l3 3 3-3M9 15V9"/></svg>`,
+        "date-asc":  `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12l3-3 3 3M9 9v6"/></svg>`,
+      };
+      const titles = {
+        "name-asc": "Sort: A→Z", "name-desc": "Sort: Z→A",
+        "date-desc": "Sort: Newest first", "date-asc": "Sort: Oldest first",
+      };
+      docSortBtn.innerHTML = icons[kbSortMode];
+      docSortBtn.title = titles[kbSortMode];
+      renderKbDocs(kbDocsCache);
+    });
   }
 
   // Show an "Uploading..." placeholder while files are in flight.
@@ -749,7 +829,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const dState = ensureDState(phase);
       dState.status = "completed";
+      dState.confirmed_at = dState.confirmed_at || nowIsoDate();
       setPhaseStatus(phase, dState.status);
+      updateWfDurations();
 
       if (phase === "D8") {
         const closureDate = caseState?.d_states?.D8?.closure_date || null;
@@ -1821,7 +1903,8 @@ document.addEventListener("DOMContentLoaded", () => {
       normalized[phase] = {
         status: dState.status || "not_started",
         data: dState.data || {},
-        closure_date: dState.closure_date ?? null
+        closure_date: dState.closure_date ?? null,
+        confirmed_at: dState.confirmed_at ?? null
       };
     });
     return {
@@ -2078,13 +2161,13 @@ document.addEventListener("DOMContentLoaded", () => {
       opened_at: nowIsoDate(),
       closed_at: null,
       d_states: {
-        D1_2: { status: "not_started", closure_date: null, data: {} },
-        D3: { status: "not_started", closure_date: null, data: {} },
-        D4: { status: "not_started", closure_date: null, data: {} },
-        D5: { status: "not_started", closure_date: null, data: {} },
-        D6: { status: "not_started", closure_date: null, data: {} },
-        D7: { status: "not_started", closure_date: null, data: {} },
-        D8: { status: "not_started", closure_date: null, data: {} }
+        D1_2: { status: "not_started", closure_date: null, confirmed_at: null, data: {} },
+        D3:   { status: "not_started", closure_date: null, confirmed_at: null, data: {} },
+        D4:   { status: "not_started", closure_date: null, confirmed_at: null, data: {} },
+        D5:   { status: "not_started", closure_date: null, confirmed_at: null, data: {} },
+        D6:   { status: "not_started", closure_date: null, confirmed_at: null, data: {} },
+        D7:   { status: "not_started", closure_date: null, confirmed_at: null, data: {} },
+        D8:   { status: "not_started", closure_date: null, confirmed_at: null, data: {} }
       }
     };
   }
@@ -2392,8 +2475,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll("[data-json-path]").forEach((el) => {
       const value = getByPath(caseState, parsePath(el.dataset.jsonPath));
-      if (value === undefined) return;
-      setElementValue(el, value);
+      // Always call setElementValue — pass "" when field absent so stale values are cleared
+      setElementValue(el, value !== undefined ? value : "");
     });
 
     Object.keys(PHASE_META).forEach((phase) => {
@@ -2403,6 +2486,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     setActivePhaseFromCase();
     applyClosedState(Boolean(caseState?.case_status === "closed"));
+    // Re-check overdue dates after case data is loaded
+    document.querySelectorAll("input[type='date'][data-json-path*='due_date'], input[type='date'][data-field='due_date']")
+      .forEach(checkDueDateOverdue);
+    updateWfDurations();
   }
 
   function setElementValue(el, value) {
@@ -2491,6 +2578,16 @@ document.addEventListener("DOMContentLoaded", () => {
     targets.forEach((dState) => {
       const btn = document.querySelector(`.d-state-btn[data-d-state="${dState}"]`);
       if (!btn) return;
+      // Drive green-check circle via .done class
+      btn.classList.toggle("done", status === "completed");
+      // Sync the status dot
+      const dotEl = btn.querySelector(".d-dot");
+      if (dotEl) {
+        dotEl.classList.remove("dot-done", "dot-active", "dot-pending");
+        if (status === "completed")        dotEl.classList.add("dot-done");
+        else if (status === "in_progress") dotEl.classList.add("dot-active");
+        else                               dotEl.classList.add("dot-pending");
+      }
       const statusEl = btn.querySelector(".d-status");
       if (!statusEl) return;
       statusEl.textContent = label;
@@ -2517,7 +2614,66 @@ document.addEventListener("DOMContentLoaded", () => {
     if (caseState.d_states[phase].closure_date === undefined) {
       caseState.d_states[phase].closure_date = null;
     }
+    if (caseState.d_states[phase].confirmed_at === undefined) {
+      caseState.d_states[phase].confirmed_at = null;
+    }
     return caseState.d_states[phase];
+  }
+
+  // Phase order for duration calculation
+  const PHASE_ORDER = ["D1_2", "D3", "D4", "D5", "D6", "D7", "D8"];
+
+  function daysBetween(isoStart, isoEnd) {
+    if (!isoStart) return null;
+    const start = new Date(isoStart);
+    const end = isoEnd ? new Date(isoEnd) : new Date();
+    const diff = Math.round((end - start) / 86400000);
+    return diff >= 0 ? diff : null;
+  }
+
+  function updateWfDurations() {
+    if (!caseState) return;
+    const openedAt = caseState.opened_at || null;
+    const ds = caseState.d_states || {};
+
+    PHASE_ORDER.forEach((phase, i) => {
+      const phaseData = ds[phase];
+      const status = phaseData?.status || "not_started";
+      if (status === "not_started") return; // leave as "—"
+
+      // start = previous phase confirmed_at, or opened_at for D1_2
+      const prevPhase = i > 0 ? PHASE_ORDER[i - 1] : null;
+      const startAt = prevPhase ? (ds[prevPhase]?.confirmed_at || openedAt) : openedAt;
+      const endAt = phaseData?.confirmed_at || null; // null = in progress → use today
+
+      const days = daysBetween(startAt, endAt);
+      const label = days !== null ? `${days}d` : "—";
+
+      // Update nav card(s)
+      const navKeys = phase === "D1_2" ? ["D1", "D2"] : [phase];
+      navKeys.forEach((navKey) => {
+        const tab = document.querySelector(`.d-state-btn[data-d-state="${navKey}"]`);
+        if (!tab) return;
+        const durEl = tab.querySelector(".d-duration");
+        if (durEl) {
+          durEl.innerHTML = `<svg width="9" height="9" viewBox="0 0 9 9" fill="none"><circle cx="4.5" cy="4.5" r="3.5" stroke="currentColor" stroke-width="1"/><path d="M4.5 2.5v2.2l1.3.8" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg> ${label}`;
+        }
+      });
+    });
+
+    // Total elapsed
+    const totalEl = document.getElementById("wf-total-val");
+    const subEl   = document.getElementById("wf-total-sub");
+    if (totalEl && openedAt) {
+      const endAt = caseState.closed_at || null;
+      const totalDays = daysBetween(openedAt, endAt);
+      totalEl.textContent = totalDays !== null ? `${totalDays}d` : "—";
+      if (subEl) {
+        const d = new Date(openedAt);
+        const formatted = d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+        subEl.textContent = `since ${formatted}`;
+      }
+    }
   }
 
   function getPhaseFromPath(path) {
@@ -2684,6 +2840,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function ensureRows(arrayPath, templateId, desiredCount) {
     const tbody = document.querySelector(`tbody[data-array-path="${arrayPath}"]`);
     if (!tbody) return;
+    // Trim extra rows from previous case first
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    while (rows.length > desiredCount) {
+      tbody.removeChild(rows.pop());
+    }
     const current = tbody.querySelectorAll("tr").length;
     for (let i = current; i < desiredCount; i += 1) {
       addRowByConfig(templateId, arrayPath, false);
@@ -3105,10 +3266,10 @@ function setKPIScope(scope, btn) {
   if (btn) btn.classList.add('active');
   if (scope === 'global') {
     currentScope = 'global';
+    currentCountry = 'all';
   } else {
     currentScope = 'country';
-    const sel = document.getElementById('country-sel');
-    if (sel) sel.value = scope;
+    currentCountry = scope;
   }
   renderCaseKPIs();
 }
@@ -3154,6 +3315,7 @@ const PERF_DATA = {
 
 let perfChartInst = null, trendChartInst = null, tokenChartInst = null;
 let currentScope = 'global';
+let currentCountry = 'all';
 
 const CHART_DEFAULTS = {
   plugins: {
@@ -3167,7 +3329,7 @@ function destroyChart(inst) { try { inst && inst.destroy(); } catch (e) {} }
 
 function renderCaseKPIs() {
   const scope = currentScope;
-  const country = document.getElementById('country-sel')?.value || 'all';
+  const country = currentCountry || 'all';
   const d = scope === 'global' ? PERF_DATA.global : (PERF_DATA.country[country] || PERF_DATA.country.all);
 
   const sr = document.getElementById('kpi-summary-row');
