@@ -3489,9 +3489,14 @@ function renderStageTimeline(timeline) {
   const el = document.getElementById('kpi-stage-timeline');
   if (!el) return;
   const rows = timeline.map(entry => {
-    const daysLbl = entry.days != null ? `${entry.days}d` : 'pending';
-    const icon = entry.completed ? '✓' : '○';
-    const cls = entry.completed ? 'stage-tl-row completed' : 'stage-tl-row pending';
+    const isCompleted = entry.completed === true;
+    const daysLbl = (isCompleted && entry.days != null)
+      ? `${entry.days}d`
+      : isCompleted
+        ? '—'
+        : 'pending';
+    const icon = isCompleted ? '✓' : '○';
+    const cls = isCompleted ? 'stage-tl-row completed' : 'stage-tl-row pending';
     return `<div class="${cls}"><span class="stage-tl-key">${entry.stage}</span><span class="stage-tl-days">${daysLbl}</span><span class="stage-tl-icon">${icon}</span></div>`;
   }).join('');
   el.innerHTML = rows;
