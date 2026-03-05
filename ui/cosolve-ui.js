@@ -3224,16 +3224,7 @@ function setPanelState(newState) {
       const g = document.getElementById(gid);
       if (g) g.classList.toggle('open', gid === 'grp-admin');
     });
-    // Hide case board, show flow viz center
-    const wf = document.getElementById('workflow');
-    if (wf) wf.style.display = 'none';
-    const pdp = document.getElementById('phase-detail-panel');
-    if (pdp) pdp.style.display = 'none';
-    const banner = document.getElementById('case-closed-banner');
-    if (banner) banner.style.display = 'none';
-    const adminCenter = document.getElementById('admin-center');
-    if (adminCenter) adminCenter.style.display = 'block';
-    setTimeout(() => fetchAndRenderFlow(_flowCurrentDays, 'main'), 150);
+    window._adminFlowOpen = false;
   }
   updateTabRail();
 }
@@ -3255,11 +3246,7 @@ function focusLP(groupId) {
     if (g) g.classList.toggle('open', gid === groupId);
   });
   if (groupId === 'grp-admin') {
-    document.getElementById('workflow')?.style.setProperty('display', 'none');
-    document.getElementById('phase-detail-panel')?.style.setProperty('display', 'none');
-    document.getElementById('case-closed-banner')?.style.setProperty('display', 'none');
-    document.getElementById('admin-center')?.style.setProperty('display', 'block');
-    setTimeout(() => fetchAndRenderFlow(_flowCurrentDays, 'main'), 150);
+    window._adminFlowOpen = false;
   }
   updateTabRail();
 }
@@ -3892,6 +3879,25 @@ function toggleFlowViz() {
   }
 }
 
+function toggleAdminFlow() {
+  const adminCenter = document.getElementById('admin-center');
+  if (!adminCenter) return;
+  if (!window._adminFlowOpen) {
+    document.getElementById('workflow')?.style.setProperty('display', 'none');
+    document.getElementById('phase-detail-panel')?.style.setProperty('display', 'none');
+    document.getElementById('case-closed-banner')?.style.setProperty('display', 'none');
+    adminCenter.style.display = 'block';
+    window._adminFlowOpen = true;
+    setTimeout(() => fetchAndRenderFlow(_flowCurrentDays, 'main'), 150);
+  } else {
+    adminCenter.style.display = 'none';
+    document.getElementById('workflow').style.display = '';
+    document.getElementById('phase-detail-panel').style.display = '';
+    document.getElementById('case-closed-banner').style.display = '';
+    window._adminFlowOpen = false;
+  }
+}
+
 function setFlowRange(days) {
   _flowCurrentDays = days;
   document.querySelectorAll('.flow-range-btn').forEach(btn => {
@@ -3973,7 +3979,10 @@ function renderFlowGraph(data, containerId) {
     .attr('height', height)
     .attr('viewBox', `0 0 ${width} ${height}`);
 
-  svg.append('defs').append('marker')
+  const g = svg.append('g');
+  svg.call(d3.zoom().scaleExtent([0.3, 3]).on('zoom', e => g.attr('transform', e.transform)));
+
+  g.append('defs').append('marker')
     .attr('id', 'flow-arrow')
     .attr('viewBox', '0 -5 10 10')
     .attr('refX', 20)
@@ -3991,7 +4000,7 @@ function renderFlowGraph(data, containerId) {
     .force('center', d3.forceCenter(width / 2, height / 2))
     .force('collision', d3.forceCollide().radius(d => d.r + 8));
 
-  const linkGroup = svg.append('g');
+  const linkGroup = g.append('g');
   const link = linkGroup.selectAll('line')
     .data(links)
     .join('line')
@@ -4008,7 +4017,7 @@ function renderFlowGraph(data, containerId) {
     .attr('text-anchor', 'middle')
     .text(d => d.count);
 
-  const nodeGroup = svg.append('g');
+  const nodeGroup = g.append('g');
   const node = nodeGroup.selectAll('g')
     .data(nodes)
     .join('g')
