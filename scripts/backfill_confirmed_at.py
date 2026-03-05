@@ -40,7 +40,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-PHASE_ORDER = ["D1_2", "D3", "D4", "D5", "D6", "D7", "D8"]
+PHASE_ORDER = ["D1_D2", "D3", "D4", "D5", "D6", "D7", "D8"]
 
 
 def parse_iso(s: str | None) -> datetime | None:
@@ -61,21 +61,22 @@ def iso_date(dt: datetime) -> str:
 
 def backfill_case(case: dict) -> tuple[dict, bool]:
     """Return (updated_case, was_changed)."""
-    opened_at = parse_iso(case.get("opened_at"))
-    closed_at  = parse_iso(case.get("closed_at"))
+    case_meta = case.get("case", {})
+    opened_at = parse_iso(case_meta.get("opening_date") or case.get("opened_at"))
+    closed_at  = parse_iso(case_meta.get("closure_date") or case.get("closed_at"))
     end_dt     = closed_at or datetime.now(tz=timezone.utc)
 
     if not opened_at:
         logger.warning("  Skipping — no opened_at")
         return case, False
 
-    d_states = case.get("d_states", {})
+    d_states = case.get("phases", {})
 
     # Collect completed phases that need a confirmed_at, in order
     needs_stamp = [
         p for p in PHASE_ORDER
-        if d_states.get(p, {}).get("status") == "completed"
-        and not d_states.get(p, {}).get("confirmed_at")
+        if d_states.get(p, {}).get("header", {}).get("completed", False)
+        and not d_states.get(p, {}).get("header", {}).get("confirmed_at")
     ]
 
     if not needs_stamp:
@@ -91,11 +92,11 @@ def backfill_case(case: dict) -> tuple[dict, bool]:
         fraction = (i + 1) / (n + 1)
         confirmed_dt = opened_at + timedelta(seconds=total_span * fraction)
         stamp = iso_date(confirmed_dt)
-        d_states.setdefault(phase, {})["confirmed_at"] = stamp
+        d_states.setdefault(phase, {}).setdefault("header", {})["confirmed_at"] = stamp
         logger.info("    %-6s  confirmed_at = %s", phase, stamp)
         changed = True
 
-    case["d_states"] = d_states
+    case["phases"] = d_states
     return case, changed
 
 

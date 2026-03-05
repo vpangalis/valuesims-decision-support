@@ -3250,18 +3250,15 @@ function onKPISearch(val) {
   // PREFIX-YYYYMMDD-NNN(N) pattern = case ID (INC, TRM, VIE, etc.)
   const isCaseId = /^[A-Za-z]{2,4}-\d{8}-\d{3,4}$/i.test(trimmed);
 
-  const url = isCaseId
-    ? `${API_BASE}/cases/kpi?scope=case&case_id=${encodeURIComponent(trimmed)}`
-    : `${API_BASE}/cases/kpi?scope=country&country=${encodeURIComponent(trimmed)}`;
+  const scopeParam = isCaseId
+    ? `scope=case&case_id=${encodeURIComponent(trimmed)}`
+    : `scope=country&country=${encodeURIComponent(trimmed)}`;
 
-  const block  = document.getElementById('agent-insight');
-  const textEl = document.getElementById('agent-text');
-  if (block && textEl) {
-    textEl.textContent = 'Calculating\u2026';
-    block.classList.remove('hidden');
-  }
+  const metricsUrl = `${API_BASE}/cases/kpi?${scopeParam}`;
+  const assessUrl  = `${API_BASE}/cases/kpi/assessment?${scopeParam}`;
 
-  fetch(url)
+  // Phase 1 — metrics
+  fetch(metricsUrl)
     .then(r => r.json())
     .then(data => {
       currentKpiData = data;
@@ -3270,11 +3267,11 @@ function onKPISearch(val) {
         renderKpiChips(data);
       }
       renderCaseKPIs(data);
-      renderKpiAssessment(data);
     })
-    .catch(() => {
-      if (block && textEl) textEl.textContent = 'Assessment unavailable.';
-    });
+    .catch(() => {});
+
+  // Phase 2 — assessment
+  fetchKpiAssessment(assessUrl);
 }
 
 function setKPIScope(scope, btn) {
@@ -3285,46 +3282,38 @@ function setKPIScope(scope, btn) {
     currentKpiCountry = null;
     document.getElementById('kpi-search').value = '';
 
-    const block = document.getElementById('agent-insight');
-    const textEl = document.getElementById('agent-text');
-    if (block && textEl) {
-      textEl.textContent = 'Calculating\u2026';
-      block.classList.remove('hidden');
-    }
+    const metricsUrl = `${API_BASE}/cases/kpi?scope=global`;
+    const assessUrl  = `${API_BASE}/cases/kpi/assessment?scope=global`;
 
-    fetch(`${API_BASE}/cases/kpi?scope=global`)
+    fetch(metricsUrl)
       .then(r => r.json())
       .then(data => {
         currentKpiData = data;
         renderKpiChips(data);
         renderCaseKPIs(data);
-        renderKpiAssessment(data);
       })
-      .catch(() => {
-        if (block && textEl) {
-          textEl.textContent = 'Assessment unavailable.';
-        }
-      });
+      .catch(() => {});
+
+    fetchKpiAssessment(assessUrl);
     return;
   }
 
   // Country scope — fetch scoped data from backend
   currentKpiCountry = scope;
   document.getElementById('kpi-search').value = '';
-  const url = `${API_BASE}/cases/kpi?scope=country&country=${encodeURIComponent(scope)}`;
-  const block  = document.getElementById('agent-insight');
-  const textEl = document.getElementById('agent-text');
-  if (block && textEl) { textEl.textContent = 'Calculating\u2026'; block.classList.remove('hidden'); }
 
-  fetch(url)
+  const base = `${API_BASE}/cases/kpi?scope=country&country=${encodeURIComponent(scope)}`;
+  const assessBase = `${API_BASE}/cases/kpi/assessment?scope=country&country=${encodeURIComponent(scope)}`;
+
+  fetch(base)
     .then(r => r.json())
     .then(data => {
+      currentKpiData = data;
       renderCaseKPIs(data);
-      renderKpiAssessment(data);
     })
-    .catch(() => {
-      if (block && textEl) textEl.textContent = 'Assessment unavailable.';
-    });
+    .catch(() => {});
+
+  fetchKpiAssessment(assessBase);
 }
 
 // ── KPI STATE ─────────────────────────────────────────────────────────────────
@@ -3521,6 +3510,23 @@ function renderKpiAssessment(data) {
   }
 }
 
+function fetchKpiAssessment(url) {
+  const block = document.getElementById('agent-insight');
+  const textEl = document.getElementById('agent-text');
+  if (block && textEl) {
+    textEl.textContent = 'Calculating\u2026';
+    block.classList.remove('hidden');
+  }
+  fetch(url)
+    .then(r => r.json())
+    .then(data => renderKpiAssessment(data))
+    .catch(() => {
+      if (block && textEl) {
+        textEl.textContent = 'Assessment unavailable.';
+      }
+    });
+}
+
 function renderKpiChips(kpiData) {
   const container = document.getElementById('kpi-country-chips');
   if (!container) return;
@@ -3544,32 +3550,36 @@ async function onPerfOpen() {
 
   const dot    = document.getElementById('agent-dot');
   const lbl    = document.getElementById('agent-lbl');
-  const insight = document.getElementById('agent-insight');
   const sr     = document.getElementById('kpi-summary-row');
 
   if (dot) dot.classList.add('active');
-  if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — loading…';
-  if (sr)  sr.innerHTML  = '<span style="color:var(--text-3);font-size:11px;padding:8px 0;display:block">Loading…</span>';
-  // Hide assessment until fetch resolves with a summary
-  if (insight) insight.classList.add('hidden');
+  if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — loading\u2026';
+  if (sr)  sr.innerHTML  = '<span style="color:var(--text-3);font-size:11px;padding:8px 0;display:block">Loading\u2026</span>';
 
-  try {
-    const res = await fetch(`${API_BASE}/cases/kpi?scope=global`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    currentKpiData = await res.json();
-    currentKpiCountry = null;
-    renderKpiChips(currentKpiData);
-    renderCaseKPIs(currentKpiData);
-    renderTokenChart();
-    renderKpiAssessment(currentKpiData);
-    if (dot) dot.classList.remove('active');
-    if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — data loaded';
-  } catch (err) {
-    console.error('[KPI] fetch error', err);
-    if (sr)  sr.innerHTML = '<span style="color:var(--text-3);font-size:11px;padding:8px 0;display:block">Data unavailable</span>';
-    if (dot) dot.classList.remove('active');
-    if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — unavailable';
-  }
+  const metricsUrl = `${API_BASE}/cases/kpi?scope=global`;
+  const assessUrl  = `${API_BASE}/cases/kpi/assessment?scope=global`;
+
+  // Phase 1 — metrics (fast, renders immediately)
+  fetch(metricsUrl)
+    .then(r => r.json())
+    .then(data => {
+      currentKpiData = data;
+      currentKpiCountry = null;
+      renderKpiChips(data);
+      renderCaseKPIs(data);
+      renderTokenChart();
+      if (dot) dot.classList.remove('active');
+      if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — data loaded';
+    })
+    .catch(err => {
+      console.error('[KPI] fetch error', err);
+      if (sr)  sr.innerHTML = '<span style="color:var(--text-3);font-size:11px;padding:8px 0;display:block">Data unavailable</span>';
+      if (dot) dot.classList.remove('active');
+      if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — unavailable';
+    });
+
+  // Phase 2 — assessment (slow, non-blocking)
+  fetchKpiAssessment(assessUrl);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────

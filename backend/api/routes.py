@@ -92,6 +92,7 @@ class ApiRoutes:
         )
         # Case read/search routes
         router.add_api_route("/cases/kpi", self.get_kpi, methods=["GET"])
+        router.add_api_route("/cases/kpi/assessment", self.get_kpi_assessment, methods=["GET"])
         router.add_api_route("/cases/search", self.search_cases, methods=["POST"])
         router.add_api_route("/cases/{case_id}", self.get_case, methods=["GET"])
         router.add_api_route(
@@ -155,7 +156,7 @@ class ApiRoutes:
         country: Optional[str] = None,
         case_id: Optional[str] = None,
     ):
-        """Return KPI metrics + AI narrative for global, country, or case scope."""
+        """Return KPI metrics only (no LLM reflection)."""
         try:
             kpi_result = self._kpi_tool.get_kpis(
                 scope=scope,  # type: ignore[arg-type]
@@ -164,6 +165,25 @@ class ApiRoutes:
             )
         except Exception as exc:
             logger.exception("[KPI] Error computing KPI metrics")
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+        return kpi_result.model_dump(exclude_none=True)
+
+    def get_kpi_assessment(
+        self,
+        scope: str = "global",
+        country: Optional[str] = None,
+        case_id: Optional[str] = None,
+    ):
+        """Return AI narrative (summary + insights) for KPI scope."""
+        try:
+            kpi_result = self._kpi_tool.get_kpis(
+                scope=scope,  # type: ignore[arg-type]
+                country=country if scope == "country" else None,
+                case_id=case_id if scope == "case" else None,
+            )
+        except Exception as exc:
+            logger.exception("[KPI] Error computing KPI metrics for assessment")
             raise HTTPException(status_code=500, detail=str(exc)) from exc
 
         if scope == "country":
@@ -178,18 +198,13 @@ class ApiRoutes:
                 question=question,
                 metrics=kpi_result,
             )
-            summary = reflection.kpi_interpretation.summary
-            insights = reflection.kpi_interpretation.insights
+            return {
+                "summary": reflection.kpi_interpretation.summary,
+                "insights": reflection.kpi_interpretation.insights,
+            }
         except Exception:
-            logger.exception("[KPI] Reflection node failed — returning metrics only")
-            summary = None
-            insights = []
-
-        return {
-            **kpi_result.model_dump(exclude_none=True),
-            "summary": summary,
-            "insights": insights,
-        }
+            logger.exception("[KPI] Reflection node failed")
+            return {"summary": None, "insights": []}
 
     # ------------------------------------------------------------------ #
     # Case read / search                                                   #
