@@ -102,17 +102,29 @@ Every AI response ends with **clickable suggestion chips** that guide users betw
 
 ---
 
-## Commit Workflow (end of every session)
+## Commit Workflow — AUTOMATIC, after every code change
 
-Before every commit, run these steps in order:
+**After every code change, commit immediately without waiting to be asked.** Do not batch changes across multiple tasks before committing.
+
+Steps before every commit:
 
 1. Read `docs/architecture.mmd`
-2. Read all Python files in `backend/` and all JavaScript files in `ui/`
-3. Compare the diagram against the actual code
-4. Update only the parts that have changed — new/removed classes, renamed methods, new routes, new LangGraph nodes, changed connections
-5. Keep existing structure and styling intact
-6. Save back to `docs/architecture.mmd`
-7. Then commit everything together with a precise commit message
+2. Compare the diagram against the actual code
+3. Update only the parts that have changed — new/removed classes, renamed methods, new routes, new LangGraph nodes, changed connections
+4. Save back to `docs/architecture.mmd`
+5. Remove any diagnostic / debug print statements added during investigation
+6. Stage all changed files (never use `git add -A`; always name files explicitly)
+7. Commit with a precise message: `type(scope): summary` + bullet points per file changed
+
+Commit message format:
+```
+feat/fix/chore(scope): short summary
+
+- file.py: what changed and why
+- file.js: what changed and why
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+```
 
 ---
 
