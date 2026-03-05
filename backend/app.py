@@ -319,6 +319,7 @@ class BackendApp:
             knowledge_search_client=container.knowledge_search_client,
             blob_client=container.blob_client,
             kpi_tool=container.kpi_tool,
+            kpi_reflection_node=container.kpi_reflection_node,
         )
         app.include_router(routes.router())
         self.app = app

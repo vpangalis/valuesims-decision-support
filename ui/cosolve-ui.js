@@ -3244,16 +3244,34 @@ function toggleKPISection(id) {
 }
 
 function onKPISearch(val) {
-  const v = (val || '').toLowerCase().trim();
-  if (!v) { setKPIScope('global', document.querySelector('.kpi-chip')); return; }
-  if (!currentKpiData) return;
-  const ranking = currentKpiData.country_ranking || [];
-  const match = ranking.find(r => r.country.toLowerCase().includes(v));
-  if (match) {
-    document.querySelectorAll('.kpi-chip').forEach(c =>
-      c.classList.toggle('active', c.textContent.toLowerCase() === match.country.toLowerCase()));
-    setKPIScope(match.country, null);
+  const trimmed = (val || '').trim();
+  if (!trimmed) return;
+
+  // INC-YYYYMMDD-NNNN pattern = case ID
+  const isCaseId = /^INC-\d{8}-\d{4}$/i.test(trimmed);
+
+  const url = isCaseId
+    ? `${API_BASE}/cases/kpi?scope=case&case_id=${encodeURIComponent(trimmed)}`
+    : `${API_BASE}/cases/kpi?scope=country&country=${encodeURIComponent(trimmed)}`;
+
+  const block  = document.getElementById('agent-insight');
+  const textEl = document.getElementById('agent-text');
+  if (block && textEl) {
+    textEl.textContent = 'Calculating\u2026';
+    block.classList.remove('hidden');
   }
+
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      currentKpiData = data;
+      renderKpiChips(data);
+      renderCaseKPIs(data);
+      renderKpiAssessment(data);
+    })
+    .catch(() => {
+      if (block && textEl) textEl.textContent = 'Assessment unavailable.';
+    });
 }
 
 function setKPIScope(scope, btn) {
@@ -3338,6 +3356,24 @@ function renderCaseKPIs(kpiData) {
   if (trendCtx) destroyChart(trendChartInst);
 }
 
+function renderKpiAssessment(data) {
+  const block  = document.getElementById('agent-insight');
+  const textEl = document.getElementById('agent-text');
+  if (!block || !textEl) return;
+
+  if (data.summary) {
+    let html = `<p>${data.summary}</p>`;
+    if (data.insights && data.insights.length) {
+      html += '<ul>' + data.insights.map(i => `<li>${i}</li>`).join('') + '</ul>';
+    }
+    textEl.innerHTML = html;
+    block.classList.remove('hidden');
+  } else {
+    textEl.innerHTML = '';
+    block.classList.add('hidden');
+  }
+}
+
 function renderKpiChips(kpiData) {
   const container = document.getElementById('kpi-country-chips');
   if (!container) return;
@@ -3367,17 +3403,18 @@ async function onPerfOpen() {
   if (dot) dot.classList.add('active');
   if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — loading…';
   if (sr)  sr.innerHTML  = '<span style="color:var(--text-3);font-size:11px;padding:8px 0;display:block">Loading…</span>';
-  // No reflection_summary field on KPIResult — keep block hidden
+  // Hide assessment until fetch resolves with a summary
   if (insight) insight.classList.add('hidden');
 
   try {
-    const res = await fetch(`${API_BASE}/cases/kpi`);
+    const res = await fetch(`${API_BASE}/cases/kpi?scope=global`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     currentKpiData = await res.json();
     currentKpiCountry = null;
     renderKpiChips(currentKpiData);
     renderCaseKPIs(currentKpiData);
     renderTokenChart();
+    renderKpiAssessment(currentKpiData);
     if (dot) dot.classList.remove('active');
     if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — data loaded';
   } catch (err) {

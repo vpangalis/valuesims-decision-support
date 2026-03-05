@@ -13,6 +13,7 @@ from backend.infra.blob_storage import BlobStorageClient, CaseRepository
 from backend.infra.case_search_client import CaseSearchClient
 from backend.infra.knowledge_search_client import KnowledgeSearchClient
 from backend.tools.kpi_tool import KPITool
+from backend.workflow.nodes.kpi_reflection_node import KPIReflectionNode
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,7 @@ class ApiRoutes:
         knowledge_search_client: KnowledgeSearchClient,
         blob_client: BlobStorageClient,
         kpi_tool: KPITool,
+        kpi_reflection_node: KPIReflectionNode,
     ) -> None:
         self._entry_handler = entry_handler
         self._case_repository = case_repository
@@ -63,6 +65,7 @@ class ApiRoutes:
         self._knowledge_search_client = knowledge_search_client
         self._blob_client = blob_client
         self._kpi_tool = kpi_tool
+        self._kpi_reflection_node = kpi_reflection_node
         self._allowed_case_actions = {
             "CREATE_CASE",
             "UPDATE_CASE",
@@ -146,14 +149,47 @@ class ApiRoutes:
     # ------------------------------------------------------------------ #
     # KPI                                                                  #
     # ------------------------------------------------------------------ #
-    def get_kpi(self):
-        """Return global KPI metrics computed from real case data."""
+    def get_kpi(
+        self,
+        scope: str = "global",
+        country: Optional[str] = None,
+        case_id: Optional[str] = None,
+    ):
+        """Return KPI metrics + AI narrative for global, country, or case scope."""
         try:
-            result = self._kpi_tool.get_kpis(scope="global", country=None, case_id=None)
-            return result.model_dump(exclude_none=True)
+            kpi_result = self._kpi_tool.get_kpis(
+                scope=scope,  # type: ignore[arg-type]
+                country=country if scope == "country" else None,
+                case_id=case_id if scope == "case" else None,
+            )
         except Exception as exc:
-            logger.exception("[KPI] Unexpected error computing KPIs")
+            logger.exception("[KPI] Error computing KPI metrics")
             raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+        if scope == "country":
+            question = f"Provide a performance overview for {country}."
+        elif scope == "case":
+            question = f"What is the current status of case {case_id}?"
+        else:
+            question = "Provide a current global fleet performance overview."
+
+        try:
+            reflection = self._kpi_reflection_node.run(
+                question=question,
+                metrics=kpi_result,
+            )
+            summary = reflection.kpi_interpretation.summary
+            insights = reflection.kpi_interpretation.insights
+        except Exception:
+            logger.exception("[KPI] Reflection node failed — returning metrics only")
+            summary = None
+            insights = []
+
+        return {
+            **kpi_result.model_dump(exclude_none=True),
+            "summary": summary,
+            "insights": insights,
+        }
 
     # ------------------------------------------------------------------ #
     # Case read / search                                                   #
