@@ -3208,7 +3208,7 @@ function setPanelState(newState) {
   } else if (newState === 'kpi') {
     document.getElementById('kpi-panel')?.classList.add('open', 'fullscreen');
     document.getElementById('center')?.classList.add('hidden');
-    setTimeout(() => { renderCaseKPIs(); renderTokenChart(); onPerfOpen(); }, 150);
+    setTimeout(() => { renderTokenChart(); showKpiIdleState(); }, 150);
   } else if (newState === 'admin') {
     document.getElementById('lp')?.classList.add('open', 'admin-mode');
     LP_GROUPS.forEach(gid => {
@@ -3288,6 +3288,14 @@ function setKPIScope(scope, btn) {
   document.querySelectorAll('.kpi-chip').forEach(c => c.classList.remove('active'));
   if (btn) btn.classList.add('active');
 
+  // Show loading state
+  const dot = document.getElementById('agent-dot');
+  const lbl = document.getElementById('agent-lbl');
+  const sr  = document.getElementById('kpi-summary-row');
+  if (dot) dot.classList.add('active');
+  if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — loading\u2026';
+  if (sr)  sr.innerHTML  = '<span style="color:var(--text-3);font-size:11px;padding:8px 0;display:block">Loading\u2026</span>';
+
   if (scope === 'global') {
     currentKpiCountry = null;
     document.getElementById('kpi-search').value = '';
@@ -3301,8 +3309,13 @@ function setKPIScope(scope, btn) {
         currentKpiData = data;
         renderKpiChips(data);
         renderCaseKPIs(data);
+        if (dot) dot.classList.remove('active');
+        if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — data loaded';
       })
-      .catch(() => {});
+      .catch(() => {
+        if (dot) dot.classList.remove('active');
+        if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — unavailable';
+      });
 
     fetchKpiAssessment(assessUrl);
     return;
@@ -3320,8 +3333,13 @@ function setKPIScope(scope, btn) {
     .then(data => {
       currentKpiData = data;
       renderCaseKPIs(data);
+      if (dot) dot.classList.remove('active');
+      if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — data loaded';
     })
-    .catch(() => {});
+    .catch(() => {
+      if (dot) dot.classList.remove('active');
+      if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — unavailable';
+    });
 
   fetchKpiAssessment(assessBase);
 }
@@ -3635,6 +3653,39 @@ function renderTokenChart() {
   // Token chart requires time-series data not yet exposed via REST endpoint.
   const ctx = document.getElementById('token-chart');
   if (ctx) destroyChart(tokenChartInst);
+}
+
+function showKpiIdleState() {
+  const sr  = document.getElementById('kpi-summary-row');
+  const dot = document.getElementById('agent-dot');
+  const lbl = document.getElementById('agent-lbl');
+  const ins = document.getElementById('agent-insight');
+
+  if (sr)  sr.innerHTML = '<span style="color:var(--text-3);font-size:11px;padding:8px 0;display:block">Enter a case ID or select a scope below</span>';
+  if (dot) dot.classList.remove('active');
+  if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — idle';
+  if (ins) ins.classList.add('hidden');
+
+  // Hide chart blocks — match what renderCaseKPIs restores
+  const perfCanvas = document.getElementById('perf-chart');
+  if (perfCanvas) perfCanvas.style.display = 'none';
+  const stageBlock = document.getElementById('stage-chart-block');
+  if (stageBlock) stageBlock.style.display = 'none';
+  const trendBlock = document.querySelector('#trend-chart')?.closest('.kpi-chart-block');
+  if (trendBlock) trendBlock.style.display = 'none';
+  const timeline = document.getElementById('kpi-stage-timeline');
+  if (timeline) timeline.classList.add('hidden');
+
+  // TODO: fetch country list dynamically from a lightweight endpoint later
+  const countries = ['Unknown','vienna','France','Vienna','Belgium','Greece'];
+  const container = document.getElementById('kpi-country-chips');
+  if (container) {
+    let html = `<button class="kpi-chip" onclick="setKPIScope('global',this)">Global</button>`;
+    countries.forEach(c => {
+      html += `<button class="kpi-chip" onclick="setKPIScope('${c.replace(/'/g, "\\'")}',this)">${c}</button>`;
+    });
+    container.innerHTML = html;
+  }
 }
 
 async function onPerfOpen() {
