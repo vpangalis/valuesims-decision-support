@@ -300,6 +300,18 @@ class BackendContainer:
 
 class BackendApp:
     def __init__(self) -> None:
+        import os
+        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+        from opentelemetry import trace as otel_trace
+
+        _otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+        if _otlp_endpoint:
+            _otlp_exporter = OTLPSpanExporter(endpoint=_otlp_endpoint, insecure=True)
+            _provider = otel_trace.get_tracer_provider()
+            if hasattr(_provider, "add_span_processor"):
+                _provider.add_span_processor(BatchSpanProcessor(_otlp_exporter))
+
         container = BackendContainer()
         app = FastAPI(title="ValueSims Decision Support API", debug=True)
         app.add_middleware(
