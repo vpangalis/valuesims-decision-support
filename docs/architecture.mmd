@@ -11,6 +11,7 @@ flowchart TD
   R_KNOW[POST entry knowledge]
   R_SUGG[POST entry suggestions]
   R_SEARCH[POST cases search]
+  R_KPI[GET cases kpi KPITool global scope]
   R_GET[GET cases by id]
   R_EVIDENCE[GET cases evidence]
   R_KLIST[GET knowledge]
@@ -66,13 +67,14 @@ flowchart TD
   AZBLOB[Azure Blob Storage case.json evidence knowledge blobs]
 
   JS -->|POST entry case reasoning suggestions| R_CASE
-  JS -->|POST cases search GET cases GET knowledge| R_SEARCH
+  JS -->|POST cases search GET cases GET knowledge GET cases kpi| R_SEARCH
 
   FASTAPI --> R_CASE
   FASTAPI --> R_REASON
   FASTAPI --> R_KNOW
   FASTAPI --> R_SUGG
   FASTAPI --> R_SEARCH
+  FASTAPI --> R_KPI
   FASTAPI --> R_GET
   FASTAPI --> R_EVIDENCE
   FASTAPI --> R_KLIST

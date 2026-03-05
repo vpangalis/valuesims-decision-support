@@ -12,6 +12,7 @@ from backend.entry.entry_handler import EntryEnvelope, EntryHandler
 from backend.infra.blob_storage import BlobStorageClient, CaseRepository
 from backend.infra.case_search_client import CaseSearchClient
 from backend.infra.knowledge_search_client import KnowledgeSearchClient
+from backend.tools.kpi_tool import KPITool
 
 logger = logging.getLogger(__name__)
 
@@ -54,12 +55,14 @@ class ApiRoutes:
         case_search_client: CaseSearchClient,
         knowledge_search_client: KnowledgeSearchClient,
         blob_client: BlobStorageClient,
+        kpi_tool: KPITool,
     ) -> None:
         self._entry_handler = entry_handler
         self._case_repository = case_repository
         self._case_search_client = case_search_client
         self._knowledge_search_client = knowledge_search_client
         self._blob_client = blob_client
+        self._kpi_tool = kpi_tool
         self._allowed_case_actions = {
             "CREATE_CASE",
             "UPDATE_CASE",
@@ -85,6 +88,7 @@ class ApiRoutes:
             "/entry/reasoning/debug", self.debug_reasoning, methods=["POST"]
         )
         # Case read/search routes
+        router.add_api_route("/cases/kpi", self.get_kpi, methods=["GET"])
         router.add_api_route("/cases/search", self.search_cases, methods=["POST"])
         router.add_api_route("/cases/{case_id}", self.get_case, methods=["GET"])
         router.add_api_route(
@@ -137,6 +141,18 @@ class ApiRoutes:
             return {"suggestions": suggestions}
         except Exception as exc:
             logger.exception("[SUGGESTIONS] Unexpected error")
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    # ------------------------------------------------------------------ #
+    # KPI                                                                  #
+    # ------------------------------------------------------------------ #
+    def get_kpi(self):
+        """Return global KPI metrics computed from real case data."""
+        try:
+            result = self._kpi_tool.get_kpis(scope="global", country=None, case_id=None)
+            return result.model_dump(exclude_none=True)
+        except Exception as exc:
+            logger.exception("[KPI] Unexpected error computing KPIs")
             raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     # ------------------------------------------------------------------ #

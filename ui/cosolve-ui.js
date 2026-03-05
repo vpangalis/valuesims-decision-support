@@ -3246,76 +3246,28 @@ function toggleKPISection(id) {
 function onKPISearch(val) {
   const v = (val || '').toLowerCase().trim();
   if (!v) { setKPIScope('global', document.querySelector('.kpi-chip')); return; }
-  const scopeMap = {
-    'belgium': 'be', 'belgique': 'be', 'brussels': 'be',
-    'france': 'fr', 'paris': 'fr', 'lyon': 'fr',
-    'germany': 'de', 'deutschland': 'de', 'berlin': 'de',
-    'greece': 'gr', 'athens': 'gr',
-    'global': 'global', 'all': 'global', 'worldwide': 'global'
-  };
-  const match = Object.keys(scopeMap).find(k => k.startsWith(v));
+  if (!currentKpiData) return;
+  const ranking = currentKpiData.country_ranking || [];
+  const match = ranking.find(r => r.country.toLowerCase().includes(v));
   if (match) {
     document.querySelectorAll('.kpi-chip').forEach(c =>
-      c.classList.toggle('active', c.textContent.toLowerCase().startsWith(v)));
-    setKPIScope(scopeMap[match], null);
+      c.classList.toggle('active', c.textContent.toLowerCase() === match.country.toLowerCase()));
+    setKPIScope(match.country, null);
   }
 }
 
 function setKPIScope(scope, btn) {
   document.querySelectorAll('.kpi-chip').forEach(c => c.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  if (scope === 'global') {
-    currentScope = 'global';
-    currentCountry = 'all';
-  } else {
-    currentScope = 'country';
-    currentCountry = scope;
-  }
-  renderCaseKPIs();
+  currentKpiCountry = (scope === 'global') ? null : scope;
+  if (currentKpiData) renderCaseKPIs(currentKpiData);
 }
 
-// ── PERFORMANCE DATA ──────────────────────────────────────────────────────────
-
-const PERF_DATA = {
-  global: {
-    open: 3, closed30d: 7, avgDays: 18,
-    byCountry: {
-      labels: ['Belgium', 'France', 'Germany', 'Greece'],
-      avgDays: [22, 31, 19, 78],
-      colors: ['#3b82f6', '#3b82f6', '#3b82f6', '#ef4444']
-    },
-    trend: {
-      labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-      opened: [4, 6, 3, 5, 7, 3],
-      closed:  [3, 5, 4, 4, 6, 7]
-    }
-  },
-  country: {
-    be: { open: 1, closed30d: 2, avgDays: 22,
-      bySite: { labels: ['Brussels', 'Ghent', 'Liège'], avgDays: [18, 28, 22], colors: ['#3b82f6', '#3b82f6', '#3b82f6'] },
-      trend: { labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'], opened: [1, 2, 1, 2, 1, 1], closed: [1, 1, 2, 1, 2, 2] } },
-    fr: { open: 1, closed30d: 3, avgDays: 31,
-      bySite: { labels: ['Paris', 'Lyon', 'Marseille'], avgDays: [25, 38, 30], colors: ['#3b82f6', '#f59e0b', '#3b82f6'] },
-      trend: { labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'], opened: [1, 2, 0, 2, 3, 1], closed: [1, 1, 1, 2, 2, 3] } },
-    de: { open: 0, closed30d: 1, avgDays: 19,
-      bySite: { labels: ['Berlin', 'Munich', 'Hamburg'], avgDays: [14, 22, 21], colors: ['#3b82f6', '#3b82f6', '#3b82f6'] },
-      trend: { labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'], opened: [1, 1, 1, 0, 1, 0], closed: [1, 0, 1, 1, 0, 1] } },
-    gr: { open: 1, closed30d: 1, avgDays: 78,
-      bySite: { labels: ['Athens', 'Thessaloniki'], avgDays: [82, 74], colors: ['#ef4444', '#ef4444'] },
-      trend: { labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'], opened: [1, 1, 1, 1, 2, 1], closed: [0, 1, 0, 0, 2, 1] } },
-    all: { open: 3, closed30d: 7, avgDays: 18,
-      bySite: { labels: ['Belgium', 'France', 'Germany', 'Greece'], avgDays: [22, 31, 19, 78], colors: ['#3b82f6', '#3b82f6', '#3b82f6', '#ef4444'] },
-      trend: { labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'], opened: [4, 6, 3, 5, 7, 3], closed: [3, 5, 4, 4, 6, 7] } }
-  },
-  tokens: {
-    labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-    values: [680, 820, 940, 1050, 1180, 1240]
-  }
-};
+// ── KPI STATE ─────────────────────────────────────────────────────────────────
 
 let perfChartInst = null, trendChartInst = null, tokenChartInst = null;
-let currentScope = 'global';
-let currentCountry = 'all';
+let currentKpiData = null;    // last fetched KPIResult from /cases/kpi
+let currentKpiCountry = null; // null = global view, else country name string
 
 const CHART_DEFAULTS = {
   plugins: {
@@ -3327,102 +3279,113 @@ const CHART_DEFAULTS = {
 
 function destroyChart(inst) { try { inst && inst.destroy(); } catch (e) {} }
 
-function renderCaseKPIs() {
-  const scope = currentScope;
-  const country = currentCountry || 'all';
-  const d = scope === 'global' ? PERF_DATA.global : (PERF_DATA.country[country] || PERF_DATA.country.all);
+function renderCaseKPIs(kpiData) {
+  if (!kpiData) return;
+  const ranking = kpiData.country_ranking || [];
+
+  // When a country chip is active, filter stats to that country's ranking entry
+  let statsAvg = kpiData.avg_closure_days_ytd;
+  let statsClosed = kpiData.total_cases_closed_ytd;
+  let statsOverdue = kpiData.overdue_count;
+  let displayRanking = ranking;
+
+  if (currentKpiCountry) {
+    const entry = ranking.find(r => r.country === currentKpiCountry);
+    displayRanking = entry ? [entry] : [];
+    statsAvg = entry ? entry.avg_closure_days : null;
+    statsClosed = entry ? entry.total_closed : null;
+    statsOverdue = null; // not available per-country from global fetch
+  }
+
+  const fmtDays = v => (v != null ? Math.round(v) + 'd' : '—');
+  const fmtNum  = v => (v != null ? v : '—');
 
   const sr = document.getElementById('kpi-summary-row');
   if (sr) sr.innerHTML = `
-    <div class="kpi-stat accent"><div class="kpi-stat-val">${d.open}</div><div class="kpi-stat-lbl">Open</div></div>
-    <div class="kpi-stat green"><div class="kpi-stat-val">${d.closed30d}</div><div class="kpi-stat-lbl">Closed 30d</div></div>
-    <div class="kpi-stat ${d.avgDays > 40 ? 'amber' : ''}"><div class="kpi-stat-val">${d.avgDays}d</div><div class="kpi-stat-lbl">Avg close</div></div>
+    <div class="kpi-stat accent"><div class="kpi-stat-val">${fmtNum(statsOverdue)}</div><div class="kpi-stat-lbl">Overdue</div></div>
+    <div class="kpi-stat green"><div class="kpi-stat-val">${fmtNum(statsClosed)}</div><div class="kpi-stat-lbl">Closed YTD</div></div>
+    <div class="kpi-stat ${(statsAvg ?? 0) > 40 ? 'amber' : ''}"><div class="kpi-stat-val">${fmtDays(statsAvg)}</div><div class="kpi-stat-lbl">Avg close</div></div>
   `;
 
   const barCtx = document.getElementById('perf-chart');
   if (!barCtx) return;
   destroyChart(perfChartInst);
-  const barData = scope === 'global' ? d.byCountry : d.bySite;
   const lbl = document.getElementById('chart-label');
-  if (lbl) lbl.textContent = scope === 'global' ? 'Avg. days to close · by country' : 'Avg. days to close · by site';
-  perfChartInst = new Chart(barCtx, {
-    type: 'bar',
-    data: {
-      labels: barData.labels,
-      datasets: [{ data: barData.avgDays, backgroundColor: barData.colors.map(c => c + '99'), borderColor: barData.colors, borderWidth: 1.5, borderRadius: 4 }]
-    },
-    options: {
-      ...CHART_DEFAULTS,
-      scales: {
-        x: { ticks: { font: { family: 'Geist', size: 8 }, color: '#8b93ad' }, grid: { display: false } },
-        y: { ticks: { font: { family: 'Geist Mono', size: 8 }, color: '#8b93ad' }, grid: { color: '#eef0f7' }, beginAtZero: true }
-      }
-    }
-  });
+  if (lbl) lbl.textContent = 'Avg. days to close · by country';
 
-  const trendCtx = document.getElementById('trend-chart');
-  if (!trendCtx) return;
-  destroyChart(trendChartInst);
-  trendChartInst = new Chart(trendCtx, {
-    type: 'line',
-    data: {
-      labels: d.trend.labels,
-      datasets: [
-        { label: 'Opened', data: d.trend.opened, borderColor: '#f59e0b', backgroundColor: '#fef3c720', borderWidth: 1.5, pointRadius: 2, fill: true, tension: 0.4 },
-        { label: 'Closed',  data: d.trend.closed,  borderColor: '#16a34a', backgroundColor: '#dcfce720', borderWidth: 1.5, pointRadius: 2, fill: true, tension: 0.4 }
-      ]
-    },
-    options: {
-      ...CHART_DEFAULTS,
-      plugins: { ...CHART_DEFAULTS.plugins, legend: { display: true, position: 'top', labels: { font: { family: 'Geist', size: 8 }, boxWidth: 8, padding: 6, color: '#4a5068' } } },
-      scales: {
-        x: { ticks: { font: { family: 'Geist', size: 8 }, color: '#8b93ad' }, grid: { display: false } },
-        y: { ticks: { font: { family: 'Geist Mono', size: 8 }, color: '#8b93ad', stepSize: 2 }, grid: { color: '#eef0f7' }, beginAtZero: true }
+  if (displayRanking.length > 0) {
+    const barLabels = displayRanking.map(r => r.country);
+    const barValues = displayRanking.map(r => r.avg_closure_days);
+    const barColors = displayRanking.map(r => r.avg_closure_days > 60 ? '#ef4444' : '#3b82f6');
+    perfChartInst = new Chart(barCtx, {
+      type: 'bar',
+      data: {
+        labels: barLabels,
+        datasets: [{ data: barValues, backgroundColor: barColors.map(c => c + '99'), borderColor: barColors, borderWidth: 1.5, borderRadius: 4 }]
+      },
+      options: {
+        ...CHART_DEFAULTS,
+        scales: {
+          x: { ticks: { font: { family: 'Geist', size: 8 }, color: '#8b93ad' }, grid: { display: false } },
+          y: { ticks: { font: { family: 'Geist Mono', size: 8 }, color: '#8b93ad' }, grid: { color: '#eef0f7' }, beginAtZero: true }
+        }
       }
-    }
+    });
+  }
+
+  // Trend chart — no time-series data in KPIResult; leave empty
+  const trendCtx = document.getElementById('trend-chart');
+  if (trendCtx) destroyChart(trendChartInst);
+}
+
+function renderKpiChips(kpiData) {
+  const container = document.getElementById('kpi-country-chips');
+  if (!container) return;
+  const countries = (kpiData.country_ranking || []).map(r => r.country);
+  let html = `<button class="kpi-chip active" onclick="setKPIScope('global',this)">Global</button>`;
+  countries.forEach(country => {
+    html += `<button class="kpi-chip" onclick="setKPIScope('${country.replace(/'/g, "\\'")}',this)">${country}</button>`;
   });
+  container.innerHTML = html;
 }
 
 function renderTokenChart() {
+  // Token chart requires time-series data not yet exposed via REST endpoint.
   const ctx = document.getElementById('token-chart');
-  if (!ctx) return;
-  destroyChart(tokenChartInst);
-  tokenChartInst = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: PERF_DATA.tokens.labels,
-      datasets: [{ data: PERF_DATA.tokens.values, borderColor: '#2563eb', backgroundColor: '#eff4ff80', borderWidth: 2, pointRadius: 2, fill: true, tension: 0.4 }]
-    },
-    options: {
-      ...CHART_DEFAULTS,
-      scales: {
-        x: { ticks: { font: { family: 'Geist', size: 8 }, color: '#8b93ad' }, grid: { display: false } },
-        y: { ticks: { font: { family: 'Geist Mono', size: 8 }, color: '#8b93ad', callback: v => v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v }, grid: { color: '#eef0f7' }, beginAtZero: false }
-      }
-    }
-  });
+  if (ctx) destroyChart(tokenChartInst);
 }
 
-function onPerfOpen() {
+async function onPerfOpen() {
   const kpiPanel = document.getElementById('kpi-panel');
   if (!kpiPanel || !kpiPanel.classList.contains('open')) return;
 
-  const dot     = document.getElementById('agent-dot');
-  const lbl     = document.getElementById('agent-lbl');
-  const insight  = document.getElementById('agent-insight');
-  const text    = document.getElementById('agent-text');
+  const dot    = document.getElementById('agent-dot');
+  const lbl    = document.getElementById('agent-lbl');
+  const insight = document.getElementById('agent-insight');
+  const sr     = document.getElementById('kpi-summary-row');
 
-  setTimeout(() => {
-    if (dot) dot.classList.add('active');
-    if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — analysing…';
-  }, 250);
+  if (dot) dot.classList.add('active');
+  if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — loading…';
+  if (sr)  sr.innerHTML  = '<span style="color:var(--text-3);font-size:11px;padding:8px 0;display:block">Loading…</span>';
+  // No reflection_summary field on KPIResult — keep block hidden
+  if (insight) insight.classList.add('hidden');
 
-  setTimeout(() => {
-    if (text) text.textContent = 'D4 is the current bottleneck — wire hardness evidence pending. D5 and D6 are blocked. Projected resolution ~8 days. Greece shows the highest avg. closure time (78d) — flag for regional review. Doc hit rate 73%: consider adding catenary spec documents.';
-    if (insight) insight.classList.remove('hidden');
-    if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — assessment ready';
-    setTimeout(() => { renderCaseKPIs(); renderTokenChart(); }, 100);
-  }, 1400);
+  try {
+    const res = await fetch(`${API_BASE}/cases/kpi`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    currentKpiData = await res.json();
+    currentKpiCountry = null;
+    renderKpiChips(currentKpiData);
+    renderCaseKPIs(currentKpiData);
+    renderTokenChart();
+    if (dot) dot.classList.remove('active');
+    if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — data loaded';
+  } catch (err) {
+    console.error('[KPI] fetch error', err);
+    if (sr)  sr.innerHTML = '<span style="color:var(--text-3);font-size:11px;padding:8px 0;display:block">Data unavailable</span>';
+    if (dot) dot.classList.remove('active');
+    if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — unavailable';
+  }
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
