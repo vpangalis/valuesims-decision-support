@@ -3347,6 +3347,8 @@ function renderCaseKPIs(kpiData) {
 
   // ── Case scope: show single-case metrics, hide bar/stage charts ───────────
   if (kpiData.scope === 'case') {
+    const trendBlock = document.querySelector('#trend-chart')?.closest('.kpi-chart-block');
+    if (trendBlock) trendBlock.style.display = 'none';
     const barCtx = document.getElementById('perf-chart');
     if (barCtx) { destroyChart(perfChartInst); barCtx.style.display = 'none'; }
     const lbl = document.getElementById('chart-label');
@@ -3423,7 +3425,9 @@ function renderCaseKPIs(kpiData) {
   // ── Hide stage timeline for global/country scope ───────────────────────────
   document.getElementById('kpi-stage-timeline')?.classList.add('hidden');
 
-  // Restore bar chart visibility for global/country scope
+  // Restore bar chart and trend chart visibility for global/country scope
+  const trendBlockRestore = document.querySelector('#trend-chart')?.closest('.kpi-chart-block');
+  if (trendBlockRestore) trendBlockRestore.style.display = '';
   const barCtxRestore = document.getElementById('perf-chart');
   if (barCtxRestore) barCtxRestore.style.display = '';
 
