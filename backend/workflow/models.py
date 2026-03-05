@@ -72,7 +72,12 @@ class KPIResult(BaseModel):
     ytd_closed_count: Optional[int] = None
     global_avg_closure_days: Optional[float] = None
 
+    # ── Global + country scope: status counts ─────────────────────────────
+    open_count: Optional[int] = None
+    in_progress_count: Optional[int] = None
+
     # ── Case-scope additions ───────────────────────────────────────────────
+    stage_timeline: Optional[list[dict]] = None
     days_elapsed: Optional[int] = None
     gauge_label: Optional[str] = None
     category_benchmark_days: Optional[float] = None

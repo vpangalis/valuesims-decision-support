@@ -3307,7 +3307,7 @@ function setKPIScope(scope, btn) {
 
 // ── KPI STATE ─────────────────────────────────────────────────────────────────
 
-let perfChartInst = null, trendChartInst = null, tokenChartInst = null;
+let perfChartInst = null, trendChartInst = null, tokenChartInst = null, stageChartInst = null;
 let currentKpiData = null;    // last fetched KPIResult from /cases/kpi
 let currentKpiCountry = null; // null = global view, else country name string
 
@@ -3324,12 +3324,14 @@ function destroyChart(inst) { try { inst && inst.destroy(); } catch (e) {} }
 function renderCaseKPIs(kpiData) {
   if (!kpiData) return;
 
-  // ── Case scope: show single-case metrics, hide bar chart ──────────────────
+  // ── Case scope: show single-case metrics, hide bar/stage charts ───────────
   if (kpiData.scope === 'case') {
     const barCtx = document.getElementById('perf-chart');
     if (barCtx) { destroyChart(perfChartInst); barCtx.style.display = 'none'; }
     const lbl = document.getElementById('chart-label');
     if (lbl) lbl.textContent = '';
+    const stageBlock = document.getElementById('stage-chart-block');
+    if (stageBlock) { destroyChart(stageChartInst); stageChartInst = null; stageBlock.style.display = 'none'; }
 
     const fmtDays = v => (v != null ? Math.round(v) + 'd' : '—');
     const sr = document.getElementById('kpi-summary-row');
@@ -3338,8 +3340,16 @@ function renderCaseKPIs(kpiData) {
       <div class="kpi-stat green"><div class="kpi-stat-val">${kpiData.current_stage || '—'}</div><div class="kpi-stat-lbl">Current stage</div></div>
       <div class="kpi-stat"><div class="kpi-stat-val">${fmtDays(kpiData.category_benchmark_days)}</div><div class="kpi-stat-lbl">Benchmark</div></div>
     `;
+    if (kpiData.stage_timeline && kpiData.stage_timeline.length) {
+      renderStageTimeline(kpiData.stage_timeline);
+    } else {
+      document.getElementById('kpi-stage-timeline')?.classList.add('hidden');
+    }
     return;
   }
+
+  // ── Hide stage timeline for global/country scope ───────────────────────────
+  document.getElementById('kpi-stage-timeline')?.classList.add('hidden');
 
   // Restore bar chart visibility for global/country scope
   const barCtxRestore = document.getElementById('perf-chart');
@@ -3351,6 +3361,8 @@ function renderCaseKPIs(kpiData) {
   let statsAvg = kpiData.avg_closure_days_ytd;
   let statsClosed = kpiData.total_cases_closed_ytd;
   let statsOverdue = kpiData.overdue_count;
+  let statsOpen = kpiData.open_count;
+  let statsInProgress = kpiData.in_progress_count;
   let displayRanking = ranking;
 
   if (currentKpiCountry) {
@@ -3358,7 +3370,9 @@ function renderCaseKPIs(kpiData) {
     displayRanking = entry ? [entry] : [];
     statsAvg = entry ? entry.avg_closure_days : null;
     statsClosed = entry ? entry.total_closed : null;
-    statsOverdue = null; // not available per-country from global fetch
+    statsOverdue = kpiData.overdue_count ?? null;
+    statsOpen = kpiData.open_count ?? null;
+    statsInProgress = kpiData.in_progress_count ?? null;
   }
 
   const fmtDays = v => (v != null ? Math.round(v) + 'd' : '—');
@@ -3366,9 +3380,10 @@ function renderCaseKPIs(kpiData) {
 
   const sr = document.getElementById('kpi-summary-row');
   if (sr) sr.innerHTML = `
+    <div class="kpi-stat"><div class="kpi-stat-val">${fmtNum(statsOpen)}</div><div class="kpi-stat-lbl">Open</div></div>
+    <div class="kpi-stat green"><div class="kpi-stat-val">${fmtNum(statsInProgress)}</div><div class="kpi-stat-lbl">In Progress</div></div>
     <div class="kpi-stat accent"><div class="kpi-stat-val">${fmtNum(statsOverdue)}</div><div class="kpi-stat-lbl">Overdue</div></div>
-    <div class="kpi-stat green"><div class="kpi-stat-val">${fmtNum(statsClosed)}</div><div class="kpi-stat-lbl">Closed YTD</div></div>
-    <div class="kpi-stat ${(statsAvg ?? 0) > 40 ? 'amber' : ''}"><div class="kpi-stat-val">${fmtDays(statsAvg)}</div><div class="kpi-stat-lbl">Avg close</div></div>
+    <div class="kpi-stat"><div class="kpi-stat-val">${fmtNum(statsClosed)}</div><div class="kpi-stat-lbl">Closed YTD</div></div>
   `;
 
   const barCtx = document.getElementById('perf-chart');
@@ -3397,9 +3412,58 @@ function renderCaseKPIs(kpiData) {
     });
   }
 
+  // Stage duration chart
+  if (kpiData.avg_days_per_stage && Object.keys(kpiData.avg_days_per_stage).length > 0) {
+    renderStageDurationChart(kpiData.avg_days_per_stage);
+  } else {
+    const stageBlock = document.getElementById('stage-chart-block');
+    if (stageBlock) { destroyChart(stageChartInst); stageChartInst = null; stageBlock.style.display = 'none'; }
+  }
+
   // Trend chart — no time-series data in KPIResult; leave empty
   const trendCtx = document.getElementById('trend-chart');
   if (trendCtx) destroyChart(trendChartInst);
+}
+
+function renderStageDurationChart(stageData) {
+  const PHASE_ORDER = ['D1_2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8'];
+  const stageBlock = document.getElementById('stage-chart-block');
+  const stageCtx = document.getElementById('stage-chart');
+  if (!stageBlock || !stageCtx) return;
+  destroyChart(stageChartInst);
+  stageChartInst = null;
+  const labels = PHASE_ORDER.filter(p => stageData[p] != null);
+  const values = labels.map(p => stageData[p]);
+  if (!labels.length) { stageBlock.style.display = 'none'; return; }
+  stageBlock.style.display = '';
+  const blue = '#3b82f6';
+  stageChartInst = new Chart(stageCtx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data: values, backgroundColor: blue + '99', borderColor: blue, borderWidth: 1.5, borderRadius: 4 }]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      scales: {
+        x: { ticks: { font: { family: 'Geist Mono', size: 8 }, color: '#8b93ad' }, grid: { display: false } },
+        y: { ticks: { font: { family: 'Geist Mono', size: 8 }, color: '#8b93ad' }, grid: { color: '#eef0f7' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function renderStageTimeline(timeline) {
+  const el = document.getElementById('kpi-stage-timeline');
+  if (!el) return;
+  const rows = timeline.map(entry => {
+    const daysLbl = entry.days != null ? `${entry.days}d` : 'pending';
+    const icon = entry.completed ? '✓' : '○';
+    const cls = entry.completed ? 'stage-tl-row completed' : 'stage-tl-row pending';
+    return `<div class="${cls}"><span class="stage-tl-key">${entry.stage}</span><span class="stage-tl-days">${daysLbl}</span><span class="stage-tl-icon">${icon}</span></div>`;
+  }).join('');
+  el.innerHTML = rows;
+  el.classList.remove('hidden');
 }
 
 function renderKpiAssessment(data) {

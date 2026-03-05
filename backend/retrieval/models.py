@@ -21,6 +21,7 @@ class CaseSummary(BaseModel):
     current_stage: Optional[str] = None
     responsible_leader: Optional[str] = None
     department: Optional[str] = None
+    discipline_completed: Optional[list] = None
 
 
 class KnowledgeSummary(BaseModel):

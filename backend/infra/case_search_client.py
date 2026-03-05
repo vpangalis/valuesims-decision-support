@@ -34,6 +34,8 @@ class CaseSearchClient:
             "organization_unit",
             "ai_summary",
             "team_members",
+            "current_stage",
+            "discipline_completed",
         ]
 
     def hybrid_search(

@@ -226,6 +226,7 @@ class HybridRetriever:
             current_stage=item.get("current_stage"),
             responsible_leader=responsible_leader,
             department=item.get("organization_unit"),
+            discipline_completed=item.get("discipline_completed"),
         )
 
     def retrieve_knowledge(

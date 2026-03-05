@@ -189,6 +189,7 @@ class BackendContainer:
         self.kpi_tool = KPITool(
             hybrid_retriever=self.hybrid_retriever,
             settings=settings,
+            case_repo=self.case_read_repository,
         )
 
         self.intent_classification_node = IntentClassificationNode(

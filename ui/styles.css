@@ -497,7 +497,7 @@ body { font-size: 14px; }
 /* KPI stat strip */
 .kpi-summary-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
   gap: 4px;
   padding: 2px 14px 6px;
 }
@@ -515,6 +515,16 @@ body { font-size: 14px; }
 .kpi-stat.accent .kpi-stat-val { color: var(--accent); }
 .kpi-stat.green  .kpi-stat-val { color: var(--green); }
 .kpi-stat.amber  .kpi-stat-val { color: var(--amber); }
+
+/* Stage timeline (case scope) */
+#kpi-stage-timeline { padding: 4px 14px 8px; display: flex; flex-direction: column; gap: 3px; }
+.stage-tl-row { display: flex; align-items: center; gap: 8px; font-size: 10px; padding: 3px 6px; border-radius: 4px; }
+.stage-tl-row.completed { background: var(--bg); color: var(--text); }
+.stage-tl-row.pending { background: transparent; color: var(--text-3); }
+.stage-tl-key { font-family: 'Geist Mono', monospace; font-size: 9px; font-weight: 600; min-width: 32px; }
+.stage-tl-days { flex: 1; font-family: 'Geist Mono', monospace; }
+.stage-tl-icon { font-size: 10px; }
+.stage-tl-row.completed .stage-tl-icon { color: var(--green); }
 
 /* KPI 2-col cell grid (LLM section) */
 .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 0 14px 8px; }

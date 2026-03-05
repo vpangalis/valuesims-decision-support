@@ -18,6 +18,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, List, Literal, Optional
 
 from backend.config import Settings
+from backend.infra.blob_storage import CaseReadRepository
 from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.retrieval.models import CaseSummary
 from backend.workflow.models import KPIResult
@@ -74,9 +75,15 @@ class KPITool:
             return None
         return KPITool._D_STAGE_LABELS.get(raw, raw)
 
-    def __init__(self, hybrid_retriever: HybridRetriever, settings: Settings) -> None:
+    def __init__(
+        self,
+        hybrid_retriever: HybridRetriever,
+        settings: Settings,
+        case_repo: Optional[CaseReadRepository] = None,
+    ) -> None:
         self._hybrid_retriever = hybrid_retriever
         self._settings = settings
+        self._case_repo = case_repo
 
     # ──────────────────────────────────────────────────────────────────────
     # Public API
@@ -130,6 +137,8 @@ class KPITool:
         overdue = self._count_overdue(active, sla_days=KPITool._DEFAULT_SLA_DAYS)
         d_stage_dist = self._d_stage_distribution(active)
         country_ranking = self._build_country_ranking(closed)
+        status_counts = self._compute_status_counts(active, len(closed))
+        stage_avgs = self._compute_stage_avg_durations(country=None)
 
         suggestions = [
             f"Which country has the longest average resolution time in {year}?",
@@ -156,6 +165,9 @@ class KPITool:
             avg_closure_days=avg_ytd,
             min_closure_days=self._min_duration(closed_ytd),
             max_closure_days=self._max_duration(closed_ytd),
+            open_count=status_counts["open"],
+            in_progress_count=status_counts["in_progress"],
+            avg_days_per_stage=stage_avgs or None,
         )
 
     def _country_scope(self, country: str | None, year: int) -> KPIResult:
@@ -170,6 +182,8 @@ class KPITool:
         closed_ytd = [c for c in closed if self._opened_after(c, ytd_start)]
         avg_ytd = self._avg_duration(closed_ytd)
         overdue = self._count_overdue(active, sla_days=KPITool._DEFAULT_SLA_DAYS)
+        status_counts = self._compute_status_counts(active, len(closed))
+        stage_avgs = self._compute_stage_avg_durations(country=country)
 
         suggestions = [
             f"Which cases in {country} are currently overdue?",
@@ -199,6 +213,9 @@ class KPITool:
             avg_closure_days=avg_ytd,
             min_closure_days=self._min_duration(closed_ytd),
             max_closure_days=self._max_duration(closed_ytd),
+            open_count=status_counts["open"],
+            in_progress_count=status_counts["in_progress"],
+            avg_days_per_stage=stage_avgs or None,
         )
 
     def _case_scope(self, case_id: str | None, year: int) -> KPIResult:
@@ -254,6 +271,8 @@ class KPITool:
                 "Show me the global average resolution time as a benchmark.",
             ]
 
+        stage_timeline = self._compute_stage_timeline(case_id)
+
         return KPIResult(
             scope="case",
             scope_label=f"Case: {case_id}",
@@ -269,6 +288,7 @@ class KPITool:
             similar_cases_avg_resolution_days=benchmark,
             total_closed_cases=len(similar),
             avg_closure_days=benchmark,
+            stage_timeline=stage_timeline or None,
         )
 
     # ──────────────────────────────────────────────────────────────────────
@@ -359,6 +379,113 @@ class KPITool:
 
         ranking.sort(key=lambda r: r["avg_closure_days"])
         return ranking
+
+    # ── Blob-side computation helpers ──────────────────────────────────────
+
+    _PHASE_ORDER: list[str] = ["D1_2", "D3", "D4", "D5", "D6", "D7", "D8"]
+
+    def _compute_stage_avg_durations(
+        self, country: Optional[str] = None
+    ) -> dict[str, float]:
+        """Return avg days per stage using confirmed_at timestamps from blob."""
+        if self._case_repo is None:
+            return {}
+        stage_durations: dict[str, list[int]] = {}
+        try:
+            paths = self._case_repo.list_case_paths()
+        except Exception:
+            logger.exception("[KPI] _compute_stage_avg_durations: list_case_paths failed")
+            return {}
+        for path in paths:
+            try:
+                case = self._case_repo.load_case(path)
+                if country and (case.get("organization_country") or "").lower() != country.lower():
+                    continue
+                d_states = case.get("d_states") or {}
+                prev_dt: Optional[datetime] = None
+                for phase in self._PHASE_ORDER:
+                    st = d_states.get(phase) or {}
+                    if st.get("status") != "completed":
+                        prev_dt = None
+                        continue
+                    raw = st.get("confirmed_at")
+                    if not raw:
+                        prev_dt = None
+                        continue
+                    try:
+                        cur_dt = datetime.strptime(raw, "%Y-%m-%d")
+                    except ValueError:
+                        prev_dt = None
+                        continue
+                    if prev_dt is not None:
+                        days = (cur_dt - prev_dt).days
+                        if days >= 0:
+                            stage_durations.setdefault(phase, []).append(days)
+                    prev_dt = cur_dt
+            except Exception:
+                continue
+        return {
+            phase: round(sum(vals) / len(vals), 1)
+            for phase, vals in stage_durations.items()
+            if vals
+        }
+
+    def _compute_status_counts(
+        self,
+        active_cases: list,
+        closed_count: int,
+    ) -> dict[str, int]:
+        """Classify active cases as open/in-progress using discipline_completed."""
+        in_progress = sum(
+            1 for c in active_cases
+            if getattr(c, "discipline_completed", None)
+        )
+        open_count = len(active_cases) - in_progress
+        return {"open": open_count, "in_progress": in_progress, "closed": closed_count}
+
+    def _compute_stage_timeline(self, case_id: str) -> list[dict]:
+        """Return per-stage timeline list from blob for one case."""
+        if self._case_repo is None:
+            return []
+        try:
+            case = self._case_repo.load_case(f"{case_id}/case.json")
+            d_states = case.get("d_states") or {}
+            opened_raw = case.get("opened_at") or case.get("opening_date")
+            opened_dt: Optional[datetime] = None
+            if opened_raw:
+                try:
+                    opened_dt = datetime.strptime(str(opened_raw)[:10], "%Y-%m-%d")
+                except ValueError:
+                    pass
+            timeline: list[dict] = []
+            prev_dt: Optional[datetime] = None
+            for phase in self._PHASE_ORDER:
+                st = d_states.get(phase) or {}
+                completed = st.get("status") == "completed"
+                confirmed_raw = st.get("confirmed_at")
+                days: Optional[int] = None
+                if completed and confirmed_raw:
+                    try:
+                        cur_dt = datetime.strptime(confirmed_raw, "%Y-%m-%d")
+                        if phase == self._PHASE_ORDER[0] and opened_dt is not None:
+                            days = (cur_dt - opened_dt).days
+                        elif prev_dt is not None:
+                            days = (cur_dt - prev_dt).days
+                        prev_dt = cur_dt
+                    except ValueError:
+                        prev_dt = None
+                else:
+                    prev_dt = None
+                timeline.append({
+                    "stage": phase,
+                    "completed": completed,
+                    "confirmed_at": confirmed_raw,
+                    "days": days,
+                })
+            return timeline
+        except Exception:
+            logger.exception("[KPI] _compute_stage_timeline failed for %s", case_id)
+            return []
 
     def _build_active_case_load(
         self,
