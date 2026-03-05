@@ -450,7 +450,7 @@ class KPITool:
         try:
             case = self._case_repo.load_case(f"{case_id}/case.json")
             d_states = case.get("phases") or {}
-            opened_raw = case.get("opened_at") or case.get("opening_date")
+            opened_raw = case.get("case", {}).get("opening_date") or case.get("opened_at")
             opened_dt: Optional[datetime] = None
             if opened_raw:
                 try:
