@@ -3265,7 +3265,10 @@ function onKPISearch(val) {
     .then(r => r.json())
     .then(data => {
       currentKpiData = data;
-      if (data.scope !== 'case') renderKpiChips(data);
+      if (data.scope !== 'case') {
+        currentKpiCountry = null;
+        renderKpiChips(data);
+      }
       renderCaseKPIs(data);
       renderKpiAssessment(data);
     })
@@ -3280,15 +3283,34 @@ function setKPIScope(scope, btn) {
 
   if (scope === 'global') {
     currentKpiCountry = null;
-    if (currentKpiData) {
-      renderCaseKPIs(currentKpiData);
-      renderKpiAssessment(currentKpiData);
+    document.getElementById('kpi-search').value = '';
+
+    const block = document.getElementById('agent-insight');
+    const textEl = document.getElementById('agent-text');
+    if (block && textEl) {
+      textEl.textContent = 'Calculating\u2026';
+      block.classList.remove('hidden');
     }
+
+    fetch(`${API_BASE}/cases/kpi?scope=global`)
+      .then(r => r.json())
+      .then(data => {
+        currentKpiData = data;
+        renderKpiChips(data);
+        renderCaseKPIs(data);
+        renderKpiAssessment(data);
+      })
+      .catch(() => {
+        if (block && textEl) {
+          textEl.textContent = 'Assessment unavailable.';
+        }
+      });
     return;
   }
 
   // Country scope — fetch scoped data from backend
   currentKpiCountry = scope;
+  document.getElementById('kpi-search').value = '';
   const url = `${API_BASE}/cases/kpi?scope=country&country=${encodeURIComponent(scope)}`;
   const block  = document.getElementById('agent-insight');
   const textEl = document.getElementById('agent-text');
@@ -3367,7 +3389,9 @@ function renderCaseKPIs(kpiData) {
 
   if (currentKpiCountry) {
     const entry = ranking.find(r => r.country === currentKpiCountry);
-    displayRanking = entry ? [entry] : [];
+    // All countries shown for comparison.
+    // Selected country highlighted via bar colour.
+    displayRanking = ranking;
     statsAvg = entry ? entry.avg_closure_days : null;
     statsClosed = entry ? entry.total_closed : null;
     statsOverdue = kpiData.overdue_count ?? null;
@@ -3395,12 +3419,20 @@ function renderCaseKPIs(kpiData) {
   if (displayRanking.length > 0) {
     const barLabels = displayRanking.map(r => r.country);
     const barValues = displayRanking.map(r => r.avg_closure_days);
-    const barColors = displayRanking.map(r => r.avg_closure_days > 60 ? '#ef4444' : '#3b82f6');
+    const barBg = displayRanking.map(r =>
+      currentKpiCountry && r.country === currentKpiCountry
+        ? 'rgba(239, 100, 97, 0.8)'   // highlight colour (red)
+        : 'rgba(114, 158, 220, 0.8)'  // default blue
+    );
+    const barBorder = displayRanking.map(r =>
+      currentKpiCountry && r.country === currentKpiCountry
+        ? '#ef6461' : '#7298dc'
+    );
     perfChartInst = new Chart(barCtx, {
       type: 'bar',
       data: {
         labels: barLabels,
-        datasets: [{ data: barValues, backgroundColor: barColors.map(c => c + '99'), borderColor: barColors, borderWidth: 1.5, borderRadius: 4 }]
+        datasets: [{ data: barValues, backgroundColor: barBg, borderColor: barBorder, borderWidth: 1.5, borderRadius: 4 }]
       },
       options: {
         ...CHART_DEFAULTS,

@@ -518,6 +518,7 @@ body { font-size: 14px; }
 
 /* Stage timeline (case scope) */
 #kpi-stage-timeline { padding: 4px 14px 8px; display: flex; flex-direction: column; gap: 3px; }
+#kpi-stage-timeline.hidden { display: none !important; }
 .stage-tl-row { display: flex; align-items: center; gap: 8px; font-size: 10px; padding: 3px 6px; border-radius: 4px; }
 .stage-tl-row.completed { background: var(--bg); color: var(--text); }
 .stage-tl-row.pending { background: transparent; color: var(--text-3); }
