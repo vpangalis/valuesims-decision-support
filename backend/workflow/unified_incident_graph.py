@@ -200,13 +200,19 @@ class UnifiedIncidentGraph:
         graph.add_edge("response_formatter_node", "end_node")
         self._graph = graph.compile()
 
-    @observe(name="cosolve-agent")
     def invoke(self, initial_state: IncidentGraphState) -> IncidentGraphState:
+        from backend.tracing import flush_langfuse
+
+        result = self._observe_invoke(initial_state)
+        flush_langfuse()  # called AFTER @observe has closed and queued the span
+        return result
+
+    @observe(name="cosolve-agent")
+    def _observe_invoke(self, initial_state: IncidentGraphState) -> IncidentGraphState:
         import uuid as _uuid_mod
         from backend.tracing import (
             get_langfuse_handler,
             apply_trace_metadata,
-            flush_langfuse,
         )
 
         initial_state["_last_node"] = "entry"
@@ -234,7 +240,6 @@ class UnifiedIncidentGraph:
                 )
             finally:
                 apply_trace_metadata(handler)
-                flush_langfuse()
             return result
 
     def _traced_node(
