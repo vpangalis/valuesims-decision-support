@@ -7,6 +7,9 @@ from langfuse import observe
 from langgraph.graph import StateGraph
 from opentelemetry import trace
 
+# Eagerly initialise Langfuse SDK so @observe has credentials at decoration time
+from backend.tracing import get_langfuse as _init_langfuse_sdk; _init_langfuse_sdk()
+
 _graph_logger = logging.getLogger("unified_incident_graph")
 _tracer = trace.get_tracer("cosolve.langgraph")
 
