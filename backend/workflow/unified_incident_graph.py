@@ -201,18 +201,6 @@ class UnifiedIncidentGraph:
         self._graph = graph.compile()
 
     def invoke(self, initial_state: IncidentGraphState) -> IncidentGraphState:
-        import os, sys
-        _sk = os.getenv("LANGFUSE_SECRET_KEY", "")
-        _pk = os.getenv("LANGFUSE_PUBLIC_KEY", "")
-        print(f"[TRACING] sk={bool(_sk)} pk={bool(_pk)} sk_prefix={_sk[:10] if _sk else 'MISSING'}", flush=True)
-        try:
-            from langfuse import Langfuse
-            _lf = Langfuse()
-            _t = _lf.trace(name="cosolve-agent-direct-test")
-            _lf.flush()
-            print(f"[TRACING] direct trace OK id={_t.id}", flush=True)
-        except Exception as _e:
-            print(f"[TRACING] direct trace FAILED: {_e}", flush=True)
         from backend.tracing import flush_langfuse
         result = self._observe_invoke(initial_state)
         flush_langfuse()
