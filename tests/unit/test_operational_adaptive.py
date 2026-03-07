@@ -31,6 +31,11 @@ class MockRetriever:
     def retrieve_evidence_for_case(self, case_id: str) -> list[Any]:
         return []
 
+    def retrieve_knowledge(
+        self, query: str, top_k: int | None = None, cosolve_phase: str | None = None
+    ) -> list[Any]:
+        return []
+
 
 class _MockAIMessage:
     """Mimics langchain_core AIMessage with a .content attribute."""
@@ -69,6 +74,7 @@ class MockLLMClient:
         self._default_model_name = default_model_name
         self.last_model_used: str | None = default_model_name
         self.call_count: int = 0
+        self.temperature: float = 0.3
 
     def invoke(self, messages: list) -> _MockAIMessage:
         self.call_count += 1
@@ -145,10 +151,18 @@ def test_operational_node_uses_default_model() -> None:
     assert llm.last_model_used == settings.MODEL_OPERATIONAL
 
 
-def test_operational_node_override_uses_given_model() -> None:
+def test_operational_node_override_uses_given_model(monkeypatch) -> None:
     settings = MockSettings()
     llm = MockLLMClient(settings.MODEL_OPERATIONAL)
     node = OperationalNode(MockRetriever(), llm, settings)
+
+    def _fake_get_llm(deployment, temperature=0.3):
+        llm.last_model_used = deployment
+        return llm
+
+    monkeypatch.setattr(
+        "backend.workflow.nodes.operational_node.get_llm", _fake_get_llm
+    )
 
     node.run(
         question="What next?",
@@ -253,12 +267,20 @@ def test_escalation_node_sets_escalated_flag() -> None:
     assert state["operational_escalated"] is True
 
 
-def test_escalation_node_uses_premium_model() -> None:
+def test_escalation_node_uses_premium_model(monkeypatch) -> None:
     settings = MockSettings()
     llm = MockLLMClient(settings.MODEL_OPERATIONAL)
     node = OperationalNode(MockRetriever(), llm, settings)
     policy = ModelPolicy(settings)
     escalation_node = OperationalEscalationNode(node, policy)
+
+    def _fake_get_llm(deployment, temperature=0.3):
+        llm.last_model_used = deployment
+        return llm
+
+    monkeypatch.setattr(
+        "backend.workflow.nodes.operational_node.get_llm", _fake_get_llm
+    )
 
     state: dict[str, Any] = {
         "operational_reflection": {"needs_escalation": True},
@@ -276,7 +298,7 @@ def test_escalation_node_uses_premium_model() -> None:
     assert llm.last_model_used == settings.MODEL_OPERATIONAL_PREMIUM
 
 
-def test_full_escalation_flow() -> None:
+def test_full_escalation_flow(monkeypatch) -> None:
     settings = MockSettings()
     llm = MockLLMClientLowQuality(settings.MODEL_OPERATIONAL)
     node = OperationalNode(MockRetriever(), llm, settings)
@@ -284,6 +306,14 @@ def test_full_escalation_flow() -> None:
     escalation_node = OperationalEscalationNode(node, policy)
     reflection_node = OperationalReflectionNode(llm, llm)
     controller = EscalationController()
+
+    def _fake_get_llm(deployment, temperature=0.3):
+        llm.last_model_used = deployment
+        return llm
+
+    monkeypatch.setattr(
+        "backend.workflow.nodes.operational_node.get_llm", _fake_get_llm
+    )
 
     draft_output = node.run(
         question="Surface defect on batch A-112",
