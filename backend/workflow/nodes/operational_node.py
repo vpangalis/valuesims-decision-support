@@ -165,9 +165,6 @@ CRITICAL RULES:
   actually present in the case data. Do not invent details.
 - If a D-state field is empty or missing, say so explicitly — do not fill it in.
 - The [GENERAL ADVICE] section must always carry the warning prefix.
-- The [WHAT TO EXPLORE NEXT] section must always be present with both subsections:
-  "Questions to ask your team right now" (two bullet points) and
-  "Questions to ask CoSolve" (four icon-prefixed questions).
 - When an active case is loaded (ACTIVE CASE is present in the user prompt), you MUST
   reference the active case ID by name at least once in either [CURRENT STATE] or
   [GAPS IN PREVIOUS STATES] — for example: 'In case TRM-20250310-0001, ...' or

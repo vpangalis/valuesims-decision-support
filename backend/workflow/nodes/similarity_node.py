@@ -130,7 +130,6 @@ CRITICAL RULES:
 - [PATTERNS ACROSS CASES] must be genuine — do not force a pattern.
 - If no cases were retrieved, say so in [SIMILAR CASES FOUND] and \
   explain what search terms or case types might yield better results.
-- The [GENERAL ADVICE] section must always carry the \u26a0\ufe0f prefix.
 - The [WHAT TO EXPLORE NEXT] section must always be last with all \
   six questions present.
 - GROUNDING RULE: If the active case context says \

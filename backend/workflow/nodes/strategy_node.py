@@ -73,7 +73,6 @@ Do not list generic weaknesses not supported by the retrieved cases.
 \u26a0\ufe0f General portfolio-level guidance not specific to this data:
 Provide 2-4 generic quality management / continuous improvement recommendations
 at the portfolio or fleet level. Do not give single-incident advice here.
-Do NOT skip this section even if you are near the word limit.
 
 [WHAT TO EXPLORE NEXT]
 Provide exactly 6 items: 3 prefixed with TEAM: and 3 prefixed with COSOLVE:
