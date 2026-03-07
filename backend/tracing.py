@@ -108,10 +108,14 @@ def get_langfuse_handler(
             or public_key == "pk-lf-..."):
         return None
 
+    # Ensure the Langfuse singleton is initialised before creating the
+    # callback handler — in v3 the handler looks up the client by public_key.
+    get_langfuse()
+
     try:
         from langfuse.langchain import CallbackHandler
 
-        handler = CallbackHandler()
+        handler = CallbackHandler(public_key=public_key)
 
         handler._cosolve_session_id = session_id
         handler._cosolve_user_id = user_id
