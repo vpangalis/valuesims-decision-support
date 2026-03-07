@@ -284,11 +284,6 @@ class BackendApp:
         )
         app.include_router(routes.router())
 
-        @app.on_event("shutdown")
-        async def _flush_langfuse():
-            from backend.tracing import flush_langfuse
-            flush_langfuse()
-
         self.app = app
 
 

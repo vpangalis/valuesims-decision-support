@@ -3,12 +3,8 @@ from __future__ import annotations
 import logging
 from typing import Any, Callable, TypedDict, cast
 
-from langfuse import observe
 from langgraph.graph import StateGraph
 from opentelemetry import trace
-
-# Eagerly initialise Langfuse SDK so @observe has credentials at decoration time
-from backend.tracing import get_langfuse as _init_langfuse_sdk; _init_langfuse_sdk()
 
 _graph_logger = logging.getLogger("unified_incident_graph")
 _tracer = trace.get_tracer("cosolve.langgraph")
@@ -75,7 +71,6 @@ class IncidentGraphState(TypedDict, total=False):
     question_ready: bool
     clarifying_question: str
     _last_node: str
-    trace_id: str
 
 
 class UnifiedIncidentGraph:
@@ -200,50 +195,9 @@ class UnifiedIncidentGraph:
         graph.add_edge("response_formatter_node", "end_node")
         self._graph = graph.compile()
 
-        # Ensure Langfuse SDK singleton is alive in this worker process
-        from backend.tracing import get_langfuse
-        self._langfuse = get_langfuse()
 
     def invoke(self, initial_state: IncidentGraphState) -> IncidentGraphState:
-        from backend.tracing import flush_langfuse
-        result = self._observe_invoke(initial_state)
-        flush_langfuse()
-        return result
-
-    @observe(name="cosolve-agent")
-    def _observe_invoke(self, initial_state: IncidentGraphState) -> IncidentGraphState:
-        import uuid as _uuid_mod
-        from backend.tracing import (
-            get_langfuse_handler,
-            apply_trace_metadata,
-        )
-
-        initial_state["_last_node"] = "entry"
-        initial_state["trace_id"] = str(_uuid_mod.uuid4())
-
-        case_id = initial_state.get("case_id") or None
-        handler = get_langfuse_handler(
-            session_id=str(case_id) if case_id else None,
-            trace_name="cosolve-agent",
-            metadata={
-                "trace_id": initial_state["trace_id"],
-                "case_id": initial_state.get("case_id", ""),
-                "question": initial_state.get("question", ""),
-            },
-        )
-        config = {"callbacks": [handler]} if handler else {}
-
-        with _tracer.start_as_current_span("cosolve.reasoning") as span:
-            span.set_attribute("cosolve.case_id", initial_state.get("case_id", "") or "")
-            span.set_attribute("cosolve.question", initial_state.get("question", "") or "")
-            try:
-                result = cast(
-                    IncidentGraphState,
-                    self._graph.invoke(initial_state, config=config),
-                )
-            finally:
-                apply_trace_metadata(handler)
-            return result
+        return self._graph.invoke(initial_state)
 
     def _traced_node(
         self,
@@ -277,61 +231,7 @@ class UnifiedIncidentGraph:
                 pass
             if isinstance(result, dict):
                 result["_last_node"] = name
-                result["trace_id"] = state.get("trace_id", "")
-                # Log reflection scores to Langfuse
-                if name.endswith("_reflection"):
-                    self._log_reflection_to_langfuse(name, result, state)
             return result
-
-    def _log_reflection_to_langfuse(
-        self, node_name: str, result: dict, state: IncidentGraphState
-    ) -> None:
-        """Extract quality scores from reflection output and log to Langfuse."""
-        try:
-            from backend.tracing import get_langfuse
-
-            lf = get_langfuse()
-            if lf is None:
-                return
-
-            scores: dict[str, float] = {}
-
-            # operational_reflection -> ReflectionResult with quality_score
-            ref = result.get("operational_reflection")
-            if isinstance(ref, dict) and "quality_score" in ref:
-                scores["quality_score"] = float(ref["quality_score"])
-
-            # similarity_reflection -> SimilarityReflectionAssessment (no single score)
-            ref = result.get("similarity_reflection")
-            if isinstance(ref, dict):
-                _sim_map = {
-                    "case_specificity": {"GROUNDED": 1.0, "GENERIC": 0.5, "MISSING": 0.0},
-                    "relevance_honesty": {"HONEST": 1.0, "INFLATED": 0.3, "MISSING": 0.0},
-                    "pattern_quality": {"GENUINE": 1.0, "FORCED": 0.3, "MISSING": 0.0},
-                }
-                for field, mapping in _sim_map.items():
-                    val = ref.get(field)
-                    if val in mapping:
-                        scores[field] = mapping[val]
-
-            # strategy_reflection -> ReflectionResult with quality_score
-            ref = result.get("strategy_reflection")
-            if isinstance(ref, dict) and "quality_score" in ref:
-                scores["quality_score"] = float(ref["quality_score"])
-
-            # kpi_reflection -> ReflectionVerdict with completeness_score
-            ref = result.get("kpi_reflection")
-            if isinstance(ref, dict) and "completeness_score" in ref:
-                scores["completeness_score"] = float(ref["completeness_score"])
-
-            for criterion, value in scores.items():
-                score_name = f"{node_name}.{criterion}" if node_name else criterion
-                try:
-                    lf.score_current_trace(name=score_name, value=value)
-                except Exception:
-                    pass
-        except Exception:
-            pass  # never break the pipeline for logging
 
     def _start(self, state: IncidentGraphState) -> IncidentGraphState:
         return self._traced_node("start", lambda s: cast(IncidentGraphState, self._start_node.run()), state)

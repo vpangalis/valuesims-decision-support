@@ -121,7 +121,6 @@ class ApiRoutes:
         )
         # LLM stats — DEPRECATED: reads from llm_calls.jsonl which is no longer
         # written to (old custom client removed). UI still calls this endpoint.
-        # TODO: replace with Langfuse API queries or remove.
         router.add_api_route("/llm/stats", self.get_llm_stats, methods=["GET"])
         # Admin flow visualizer
         router.add_api_route("/admin/flow", self.get_flow_graph, methods=["GET"])
