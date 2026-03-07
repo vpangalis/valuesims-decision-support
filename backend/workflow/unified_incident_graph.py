@@ -229,11 +229,6 @@ class UnifiedIncidentGraph:
                 )
             finally:
                 apply_trace_metadata(handler)
-                if handler is not None:
-                    try:
-                        handler.flush()
-                    except Exception:
-                        pass
                 flush_langfuse()
             return result
 
