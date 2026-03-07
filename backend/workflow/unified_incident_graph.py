@@ -201,10 +201,14 @@ class UnifiedIncidentGraph:
         self._graph = graph.compile()
 
     def invoke(self, initial_state: IncidentGraphState) -> IncidentGraphState:
-        from backend.tracing import flush_langfuse
-
+        import logging as _logging
+        from backend.tracing import flush_langfuse, _is_configured
+        _dbg = _logging.getLogger("cosolve.tracing_debug")
+        _dbg.warning("TRACING_DEBUG invoke called, _is_configured=%s", _is_configured())
         result = self._observe_invoke(initial_state)
-        flush_langfuse()  # called AFTER @observe has closed and queued the span
+        _dbg.warning("TRACING_DEBUG about to flush")
+        flush_langfuse()
+        _dbg.warning("TRACING_DEBUG flush done")
         return result
 
     @observe(name="cosolve-agent")
