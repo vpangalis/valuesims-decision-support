@@ -32,50 +32,54 @@ class MockRetriever:
         return []
 
 
+class _MockAIMessage:
+    """Mimics langchain_core AIMessage with a .content attribute."""
+
+    def __init__(self, content: str) -> None:
+        self.content = content
+
+
+class _MockStructuredLLM:
+    """Mimics llm.with_structured_output(Model) — returns object with .invoke()."""
+
+    def __init__(self, response_model: type, fixed_result: Any = None) -> None:
+        self._response_model = response_model
+        self._fixed_result = fixed_result
+
+    def invoke(self, messages: list) -> Any:
+        if self._fixed_result is not None:
+            return self._fixed_result
+        return self._response_model.model_validate({})
+
+
 class MockLLMClient:
+    """Mock AzureChatOpenAI that returns canned text and structured responses."""
+
+    _DEFAULT_TEXT = (
+        "Based on the findings in D4, the priority is to isolate and contain "
+        "the affected units immediately. Conduct a geometry check on all catenary "
+        "wire heights at the flagged kilometre points before returning vehicles to "
+        "normal service.\n\n"
+        "[NEXT STATE PREVIEW]\n"
+        "Once containment is confirmed and geometry deviations are documented, "
+        "proceed to D5 for permanent corrective action definition."
+    )
+
     def __init__(self, default_model_name: str):
         self._default_model_name = default_model_name
-        self.last_model_used: str | None = None
+        self.last_model_used: str | None = default_model_name
         self.call_count: int = 0
 
-    def complete_text(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        temperature: float = 0.2,
-        user_question: str | None = None,
-        model_name: str | None = None,
-    ) -> str:
-        self.last_model_used = model_name or self._default_model_name
+    def invoke(self, messages: list) -> _MockAIMessage:
         self.call_count += 1
-        return (
-            "Based on the findings in D4, the priority is to isolate and contain "
-            "the affected units immediately. Conduct a geometry check on all catenary "
-            "wire heights at the flagged kilometre points before returning vehicles to "
-            "normal service.\n\n"
-            "[NEXT STATE PREVIEW]\n"
-            "Once containment is confirmed and geometry deviations are documented, "
-            "proceed to D5 for permanent corrective action definition."
-        )
+        return _MockAIMessage(self._DEFAULT_TEXT)
 
-    def complete_json(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        response_model: type,
-        temperature: float = 0.1,
-        user_question: str | None = None,
-        model_name: str | None = None,
-        model_name_override: str | None = None,
-    ) -> Any:
-        self.last_model_used = (
-            model_name or model_name_override or self._default_model_name
-        )
+    def with_structured_output(self, response_model: type) -> _MockStructuredLLM:
         self.call_count += 1
         name = response_model.__name__
 
         if name == "OperationalReflectionAssessment":
-            return response_model(
+            result = response_model(
                 case_grounding="GROUNDED",
                 gap_detection="SPECIFIC",
                 next_state_relevance="CONNECTED",
@@ -84,18 +88,18 @@ class MockLLMClient:
                 should_regenerate=False,
                 issues=[],
             )
+            return _MockStructuredLLM(response_model, fixed_result=result)
 
-        raise ValueError(f"MockLLMClient: unexpected response_model {name}")
+        return _MockStructuredLLM(response_model)
 
 
 class MockLLMClientLowQuality(MockLLMClient):
-    def complete_json(self, *args, **kwargs) -> Any:
-        response_model = kwargs.get("response_model") or args[2]
+    def with_structured_output(self, response_model: type) -> _MockStructuredLLM:
         self.call_count += 1
         name = response_model.__name__
 
         if name == "OperationalReflectionAssessment":
-            return response_model(
+            result = response_model(
                 case_grounding="GENERIC",
                 gap_detection="MISSING",
                 next_state_relevance="MISSING",
@@ -104,6 +108,7 @@ class MockLLMClientLowQuality(MockLLMClient):
                 should_regenerate=True,
                 issues=["Incomplete recommendations", "Missing next state"],
             )
+            return _MockStructuredLLM(response_model, fixed_result=result)
 
         raise ValueError(f"MockLLMClientLowQuality: unexpected {name}")
 

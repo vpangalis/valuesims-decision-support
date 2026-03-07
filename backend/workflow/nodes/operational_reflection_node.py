@@ -1,6 +1,6 @@
 ﻿from __future__ import annotations
 
-from backend.infra.llm_logging_client import LoggedLanguageModelClient
+from langchain_openai import AzureChatOpenAI
 from backend.workflow.nodes.base_reflection_node import BaseReflectionNode
 from backend.workflow.nodes.node_parsing_utils import (
     extract_suggestions,
@@ -125,8 +125,8 @@ Return plain text only. No JSON.\
 
     def __init__(
         self,
-        llm_client: LoggedLanguageModelClient,
-        regeneration_llm_client: LoggedLanguageModelClient,
+        llm_client: AzureChatOpenAI,
+        regeneration_llm_client: AzureChatOpenAI,
     ) -> None:
         super().__init__(
             llm_client=llm_client,

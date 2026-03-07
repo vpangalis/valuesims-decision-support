@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 import logging
 
-from backend.infra.llm_logging_client import LoggedLanguageModelClient
-from backend.workflow.nodes.base_reflection_node import BaseReflectionNode
+from langchain_openai import AzureChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 from backend.workflow.models import (
     ReflectionResult,
     StrategyPayload,
@@ -15,7 +15,7 @@ from backend.workflow.models import (
 _debug_logger = logging.getLogger(__name__)
 
 
-class StrategyReflectionNode(BaseReflectionNode):
+class StrategyReflectionNode:
     _REFLECTION_SYSTEM_PROMPT = """\
 You are a quality auditor reviewing a strategic portfolio analysis response.
 Your job is to catch reasoning failures, not check JSON schema.
@@ -81,18 +81,12 @@ fail_reason: one sentence, or NONE.\
 
     def __init__(
         self,
-        llm_client: LoggedLanguageModelClient,
-        regeneration_llm_client: LoggedLanguageModelClient,
+        llm_client: AzureChatOpenAI,
+        regeneration_llm_client: AzureChatOpenAI,
     ) -> None:
-        super().__init__(
-            llm_client=llm_client,
-            regeneration_llm_client=regeneration_llm_client,
-            reflection_prompt=self._REFLECTION_SYSTEM_PROMPT,
-            regeneration_prompt=self._REGENERATION_SYSTEM_PROMPT,
-            assessment_model=StrategyReflectionAssessment,
-            score_fn=self._score,
-            output_builder=self._build_output,
-        )
+        self._llm_client = llm_client
+        self._assessment_model = StrategyReflectionAssessment
+        self._reflection_prompt = self._REFLECTION_SYSTEM_PROMPT
         self._current_draft: StrategyPayload | None = None
 
     def _score(self, assessment: StrategyReflectionAssessment) -> float:
@@ -165,18 +159,15 @@ fail_reason: one sentence, or NONE.\
         )
         self._current_draft = draft
         try:
-            assessment = self._llm_client.complete_json(
-                system_prompt=self._reflection_prompt,
-                user_prompt=(
+            assessment = self._llm_client.with_structured_output(self._assessment_model).invoke([
+                SystemMessage(content=self._reflection_prompt),
+                HumanMessage(content=(
                     f"question: {question}\n\n"
                     f"retrieved_cases: {cases_summary}\n\n"
                     f"retrieved_knowledge: {knowledge_summary}\n\n"
                     f"draft_response:\n{draft.summary}"
-                ),
-                response_model=self._assessment_model,
-                temperature=0.0,
-                user_question=question,
-            )
+                )),
+            ])
             _debug_logger.info("STRATEGY_REFLECTION: %s", assessment.model_dump())
             result_dict = self._build_output(draft.summary, assessment)
             return StrategyReflectionOutput.model_validate(result_dict)

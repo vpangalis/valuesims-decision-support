@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import logging
 
-from backend.infra.llm_logging_client import LoggedLanguageModelClient
+from langchain_openai import AzureChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 from backend.workflow.models import QuestionReadinessNodeOutput, QuestionReadinessResult
 
 _logger = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ class QuestionReadinessNode:
         {"KPI_ANALYSIS", "STRATEGY_ANALYSIS"}
     )
 
-    def __init__(self, llm_client: LoggedLanguageModelClient) -> None:
+    def __init__(self, llm_client: AzureChatOpenAI) -> None:
         self._llm_client = llm_client
 
     def _deterministic_ready_check(
@@ -97,13 +98,10 @@ class QuestionReadinessNode:
             question=(question or "").strip(),
         )
         try:
-            result = self._llm_client.complete_json(
-                system_prompt=QuestionReadinessNode._SYSTEM_PROMPT,
-                user_prompt=user_prompt,
-                response_model=QuestionReadinessResult,
-                temperature=0.0,
-                user_question=question,
-            )
+            result = self._llm_client.with_structured_output(QuestionReadinessResult).invoke([
+                SystemMessage(content=QuestionReadinessNode._SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ])
             return QuestionReadinessNodeOutput(
                 question_ready=result.ready,
                 clarifying_question=result.clarifying_question or "",

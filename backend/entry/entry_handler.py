@@ -10,8 +10,11 @@ from pathlib import Path
 from typing import Any, Optional, Literal
 
 from pydantic import BaseModel
+from langchain_openai import AzureChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from backend.ingestion.case_ingestion import CaseEntryService, CaseIngestionService
+from backend.utils.text import normalize_action
 from backend.ingestion.evidence_ingestion import EvidenceIngestionService
 from backend.ingestion.knowledge_ingestion import KnowledgeIngestionService
 from backend.workflow.unified_incident_graph import (
@@ -63,7 +66,7 @@ class EntryHandler:
         case_ingestion: CaseIngestionService,
         knowledge_ingestion: KnowledgeIngestionService,
         unified_graph: UnifiedIncidentGraph,
-        llm_client: Any | None = None,
+        llm_client: AzureChatOpenAI | None = None,
     ) -> None:
         self._case_entry = case_entry
         self._evidence_ingestion = evidence_ingestion
@@ -473,16 +476,6 @@ class EntryHandler:
             "results": imported + failed,
         }
 
-    def reindex_case(self, case_id: str) -> dict[str, Any]:
-        """Force-index a single case by case_id (used by diagnostic endpoint)."""
-        _logger.info("[REINDEX] force-reindex requested for %s", case_id)
-        try:
-            self._case_ingestion.index_open_case(case_id)
-            return {"status": "indexed", "case_id": case_id}
-        except Exception as exc:
-            _logger.exception("[REINDEX] failed for %s: %s", case_id, exc)
-            return {"status": "error", "case_id": case_id, "error": str(exc)}
-
     def _close_case(self, envelope: EntryEnvelope) -> dict[str, Any]:
         case_id = envelope.case_id or (envelope.payload or {}).get("case_id")
         if not case_id:
@@ -584,9 +577,7 @@ class EntryHandler:
             }
 
     def _normalize_action(self, action: Optional[str]) -> str:
-        value = (action or "").strip().upper()
-        value = value.replace("-", "_").replace(" ", "_")
-        return value
+        return normalize_action(action)
 
     def _decode_base64(self, data_base64: str) -> bytes:
         if not data_base64:
@@ -685,12 +676,12 @@ class EntryHandler:
                 f"Status: {status}"
             )
 
-            result: SuggestionsLLMResponse = self._llm_client.complete_json(
-                system_prompt=self._SUGGESTIONS_SYSTEM,
-                user_prompt=user_prompt,
-                response_model=SuggestionsLLMResponse,
-                temperature=0.4,
-            )
+            result: SuggestionsLLMResponse = self._llm_client.with_structured_output(
+                SuggestionsLLMResponse
+            ).invoke([
+                SystemMessage(content=self._SUGGESTIONS_SYSTEM),
+                HumanMessage(content=user_prompt),
+            ])
             suggestions = [
                 {
                     "label": self._DSTEP_RE.sub("", s.label).strip(" -:"),

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from backend.infra.llm_logging_client import LoggedLanguageModelClient
+from langchain_openai import AzureChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 from backend.workflow.models import IntentNodeOutput
 from backend.workflow.nodes.intent_coercion import _RawClassification, coerce_raw
 
@@ -13,7 +14,7 @@ class IntentClassificationNode:
         "Return strict JSON only \u2014 no explanation, no markdown."
     )
 
-    def __init__(self, llm_client: LoggedLanguageModelClient) -> None:
+    def __init__(self, llm_client: AzureChatOpenAI) -> None:
         self._llm_client = llm_client
 
     def run(
@@ -131,13 +132,10 @@ class IntentClassificationNode:
             f"question: {clean_question}"
         )
 
-        raw = self._llm_client.complete_json(
-            system_prompt=IntentClassificationNode._SYSTEM_PROMPT,
-            user_prompt=user_prompt,
-            response_model=_RawClassification,
-            temperature=0.0,
-            user_question=clean_question,
-        )
+        raw = self._llm_client.with_structured_output(_RawClassification).invoke([
+            SystemMessage(content=IntentClassificationNode._SYSTEM_PROMPT),
+            HumanMessage(content=user_prompt),
+        ])
         classification = coerce_raw(raw)
 
         return IntentNodeOutput(classification=classification)

@@ -4,14 +4,15 @@ import json
 from typing import Any
 
 from backend.config import Settings
-from backend.infra.llm_logging_client import LoggedLanguageModelClient
+from langchain_openai import AzureChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.workflow.models import SimilarityPayload, SimilarityNodeOutput
 from backend.workflow.nodes.node_parsing_utils import (
     extract_similarity_suggestions,
     format_d_states,
 )
-from backend.workflow.services.knowledge_formatter import KnowledgeFormatter
+from backend.workflow.services.knowledge_formatter import knowledge_formatter
 
 
 class SimilarityNode:
@@ -170,13 +171,12 @@ references must appear only in the [KNOWLEDGE REFERENCES] block at the end.
     def __init__(
         self,
         hybrid_retriever: HybridRetriever,
-        llm_client: LoggedLanguageModelClient,
+        llm_client: AzureChatOpenAI,
         settings: Settings,
     ) -> None:
         self._hybrid_retriever = hybrid_retriever
         self._llm_client = llm_client
         self._settings = settings
-        self._formatter = KnowledgeFormatter()
 
     def run(
         self,
@@ -234,14 +234,12 @@ references must appear only in the [KNOWLEDGE REFERENCES] block at the end.
             f"{knowledge_block}"
         )
 
-        response_text = self._llm_client.complete_text(
-            system_prompt=SimilarityNode._SIMILARITY_SYSTEM_PROMPT,
-            user_prompt=user_prompt,
-            temperature=0.1,
-            user_question=question,
-        )
+        response_text = self._llm_client.invoke([
+            SystemMessage(content=SimilarityNode._SIMILARITY_SYSTEM_PROMPT),
+            HumanMessage(content=user_prompt),
+        ]).content
         if knowledge_docs:
-            refs = self._formatter.build_refs_block(knowledge_docs)
+            refs = knowledge_formatter.build_refs_block(knowledge_docs)
             knowledge_section = "\n\n[KNOWLEDGE REFERENCES]\n" + refs
             explore_marker = "[WHAT TO EXPLORE NEXT]"
             if explore_marker in response_text:

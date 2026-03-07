@@ -22,7 +22,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from backend.infra.llm_logging_client import LoggedLanguageModelClient
+from langchain_openai import AzureChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 from backend.workflow.models import (
     KPIInterpretation,
     KPIResult,
@@ -57,8 +58,8 @@ class KPIReflectionNode:
 
     def __init__(
         self,
-        llm_client: LoggedLanguageModelClient,
-        regeneration_llm_client: LoggedLanguageModelClient,
+        llm_client: AzureChatOpenAI,
+        regeneration_llm_client: AzureChatOpenAI,
     ) -> None:
         self._llm_client = llm_client
         self._regeneration_llm_client = regeneration_llm_client
@@ -134,8 +135,8 @@ class KPIReflectionNode:
         issues_text = (
             f"\nYou must address these quality issues: {issues}" if issues else ""
         )
-        return client.complete_json(
-            system_prompt=(
+        return client.with_structured_output(KPIInterpretationDraft).invoke([
+            SystemMessage(content=(
                 "You are a performance analytics advisor for operations leadership. "
                 "Your audience is plant managers and quality directors — never expose "
                 "technical system names, database terms, or internal codes.\n\n"
@@ -151,16 +152,13 @@ class KPIReflectionNode:
                 '  "summary": "<concise KPI summary>",\n'
                 '  "insights": ["insight 1", "insight 2"]\n'
                 "}" + issues_text
-            ),
-            user_prompt=(
+            )),
+            HumanMessage(content=(
                 f"Scope: {metrics.scope_label}\n"
                 f"Question: {question}\n"
                 f"Metrics: {metrics.model_dump(exclude_none=True)}"
-            ),
-            response_model=KPIInterpretationDraft,
-            temperature=0.1,
-            user_question=question,
-        )
+            )),
+        ])
 
     def _semantic_audit(
         self,
@@ -173,8 +171,8 @@ class KPIReflectionNode:
             f"  {i+1}. {s}" for i, s in enumerate(metrics.suggestions)
         )
 
-        return self._llm_client.complete_json(
-            system_prompt=(
+        return self._llm_client.with_structured_output(KPISemanticAudit).invoke([
+            SystemMessage(content=(
                 "You are a strict quality auditor for KPI analysis outputs. "
                 "Respond with ONLY this JSON — no other keys:\n"
                 "{\n"
@@ -209,8 +207,8 @@ class KPIReflectionNode:
                 "'index', 'node'.\n"
                 "should_regenerate: true only if banned_terms_found is non-empty OR "
                 "completeness_score < 0.5."
-            ),
-            user_prompt=(
+            )),
+            HumanMessage(content=(
                 f"User question: {question}\n"
                 f"Scope used: {metrics.scope}\n"
                 f"render_hint used: {metrics.render_hint}\n"
@@ -219,11 +217,8 @@ class KPIReflectionNode:
                 f"department: {metrics.department!r}\n"
                 f"Summary produced: {interpretation.summary}\n"
                 f"Insights produced: {interpretation.insights}"
-            ),
-            response_model=KPISemanticAudit,
-            temperature=0.0,
-            user_question=question,
-        )
+            )),
+        ])
 
     def _compute_completeness(
         self, metrics: KPIResult, audit: KPISemanticAudit

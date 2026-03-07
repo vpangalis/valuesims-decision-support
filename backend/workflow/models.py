@@ -95,9 +95,6 @@ class KPIResult(BaseModel):
     max_closure_days: Optional[int] = None
 
 
-# Backward-compatibility alias so callers that still import KPIMetrics keep working.
-KPIMetrics = KPIResult
-
 
 class ReflectionVerdict(BaseModel):
     schema_valid: bool
@@ -122,10 +119,6 @@ class IntentNodeOutput(BaseModel):
     classification: IntentClassificationResult
     classification_low_confidence: bool = False
 
-
-class IntentReflectionOutput(BaseModel):
-    classification: IntentClassificationResult
-    intent_reflection: ReflectionVerdict
 
 
 class RouterNodeOutput(BaseModel):
@@ -255,12 +248,10 @@ __all__ = [
     "OperationalPayload",
     "ScopeContext",
     "KPIResult",
-    "KPIMetrics",
     "ReflectionVerdict",
     "ReflectionResult",
     "ContextNodeOutput",
     "IntentNodeOutput",
-    "IntentReflectionOutput",
     "RouterNodeOutput",
     "OperationalNodeOutput",
     "OperationalReflectionAssessment",

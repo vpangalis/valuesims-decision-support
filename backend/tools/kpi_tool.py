@@ -7,8 +7,6 @@ computations.  Three scopes are supported:
   country — same metrics filtered to one country, plus country-level breakdown.
   case    — metrics specific to one loaded case.
 
-``KPIAnalyticsTool`` is kept as a backward-compatibility alias so existing
-wiring in app.py compiles without changes.
 """
 
 from __future__ import annotations
@@ -547,7 +545,5 @@ class KPITool:
         return rows
 
 
-# Backward-compatibility alias — keeps app.py wiring intact.
-KPIAnalyticsTool = KPITool
 
-__all__ = ["KPITool", "KPIAnalyticsTool"]
+__all__ = ["KPITool"]

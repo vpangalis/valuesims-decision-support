@@ -48,3 +48,6 @@ class KnowledgeFormatter:
             )
 
         return "\n".join(entries)
+
+
+knowledge_formatter = KnowledgeFormatter()

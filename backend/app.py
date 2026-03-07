@@ -23,8 +23,7 @@ from backend.infra.blob_storage import (
 from backend.infra.embeddings import EmbeddingClient
 from backend.infra.case_search_client import CaseSearchClient
 from backend.infra.evidence_search_client import EvidenceSearchClient
-from backend.infra.language_model_client import LanguageModelClient
-from backend.infra.llm_logging_client import LoggedLanguageModelClient
+from backend.llm import get_llm
 from backend.infra.knowledge_search_client import KnowledgeSearchClient
 from backend.ingestion.case_ingestion import (
     CaseEntryService,
@@ -40,7 +39,7 @@ from backend.ingestion.knowledge_ingestion import (
     KnowledgeSearchIndex,
 )
 from backend.retrieval.hybrid_retriever import HybridRetriever
-from backend.tools.kpi_tool import KPITool, KPIAnalyticsTool
+from backend.tools.kpi_tool import KPITool
 from backend.workflow.nodes.context_node import ContextNode
 from backend.workflow.nodes.end_node import EndNode
 from backend.workflow.nodes.intent_classification_node import IntentClassificationNode
@@ -128,63 +127,17 @@ class BackendContainer:
             embedding_client=self.embedding_client,
             settings=settings,
         )
-        self.language_model_client = LanguageModelClient(settings_module=settings)
         self.model_policy = ModelPolicy(settings=settings)
         self.escalation_controller = EscalationController()
-        self.classifier_llm = LoggedLanguageModelClient(
-            base_client=self.language_model_client,
-            settings=settings,
-            node_name="intent_classification",
-            model_name=settings.LLM_MODEL_CLASSIFIER,
-        )
-        self.intent_reflection_llm = LoggedLanguageModelClient(
-            base_client=self.language_model_client,
-            settings=settings,
-            node_name="intent_reflection",
-            model_name=settings.LLM_MODEL_CLASSIFIER,
-        )
-        self.operational_llm = LoggedLanguageModelClient(
-            base_client=self.language_model_client,
-            settings=settings,
-            node_name="operational_reasoning",
-            model_name=settings.LLM_MODEL_OPERATIONAL,
-        )
-        self.operational_reflection_llm = LoggedLanguageModelClient(
-            base_client=self.language_model_client,
-            settings=settings,
-            node_name="operational_reflection",
-            model_name=settings.LLM_MODEL_OPERATIONAL,
-        )
-        self.similarity_llm = LoggedLanguageModelClient(
-            base_client=self.language_model_client,
-            settings=settings,
-            node_name="similarity_reasoning",
-            model_name=settings.LLM_MODEL_SIMILARITY,
-        )
-        self.similarity_reflection_llm = LoggedLanguageModelClient(
-            base_client=self.language_model_client,
-            settings=settings,
-            node_name="similarity_reflection",
-            model_name=settings.LLM_MODEL_SIMILARITY,
-        )
-        self.strategy_llm = LoggedLanguageModelClient(
-            base_client=self.language_model_client,
-            settings=settings,
-            node_name="strategy_reasoning",
-            model_name=settings.LLM_MODEL_STRATEGY,
-        )
-        self.strategy_reflection_llm = LoggedLanguageModelClient(
-            base_client=self.language_model_client,
-            settings=settings,
-            node_name="strategy_reflection",
-            model_name=settings.LLM_MODEL_STRATEGY,
-        )
-        self.kpi_reflection_llm = LoggedLanguageModelClient(
-            base_client=self.language_model_client,
-            settings=settings,
-            node_name="kpi_reflection",
-            model_name=settings.LLM_MODEL_KPI_REFLECTION,
-        )
+        self.classifier_llm = get_llm(deployment=settings.LLM_MODEL_CLASSIFIER, temperature=0.0)
+
+        self.operational_llm = get_llm(deployment=settings.LLM_MODEL_OPERATIONAL, temperature=0.2)
+        self.operational_reflection_llm = get_llm(deployment=settings.LLM_MODEL_OPERATIONAL, temperature=0.0)
+        self.similarity_llm = get_llm(deployment=settings.LLM_MODEL_SIMILARITY, temperature=0.1)
+        self.similarity_reflection_llm = get_llm(deployment=settings.LLM_MODEL_SIMILARITY, temperature=0.0)
+        self.strategy_llm = get_llm(deployment=settings.LLM_MODEL_STRATEGY, temperature=0.2)
+        self.strategy_reflection_llm = get_llm(deployment=settings.LLM_MODEL_STRATEGY, temperature=0.0)
+        self.kpi_reflection_llm = get_llm(deployment=settings.LLM_MODEL_KPI_REFLECTION, temperature=0.1)
 
         self.kpi_tool = KPITool(
             hybrid_retriever=self.hybrid_retriever,
@@ -195,12 +148,7 @@ class BackendContainer:
         self.intent_classification_node = IntentClassificationNode(
             llm_client=self.classifier_llm
         )
-        self.question_readiness_llm = LoggedLanguageModelClient(
-            base_client=self.language_model_client,
-            settings=settings,
-            node_name="question_readiness",
-            model_name=settings.LLM_MODEL_CLASSIFIER,
-        )
+        self.question_readiness_llm = get_llm(deployment=settings.LLM_MODEL_CLASSIFIER, temperature=0.0)
         self.question_readiness_node = QuestionReadinessNode(
             llm_client=self.question_readiness_llm
         )
@@ -278,7 +226,7 @@ class BackendContainer:
             case_ingestion=self.case_ingestion,
             knowledge_ingestion=self.knowledge_ingestion,
             unified_graph=self.unified_graph,
-            llm_client=self.language_model_client,
+            llm_client=get_llm(temperature=0.4),
         )
 
     def _validate_search_indexes_exist(self) -> None:
@@ -335,6 +283,12 @@ class BackendApp:
             kpi_reflection_node=container.kpi_reflection_node,
         )
         app.include_router(routes.router())
+
+        @app.on_event("shutdown")
+        async def _flush_langfuse():
+            from backend.tracing import flush_langfuse
+            flush_langfuse()
+
         self.app = app
 
 

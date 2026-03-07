@@ -5,7 +5,8 @@ from typing import Callable
 
 from pydantic import BaseModel
 
-from backend.infra.llm_logging_client import LoggedLanguageModelClient
+from langchain_openai import AzureChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 
 __all__ = ["BaseReflectionNode"]
 
@@ -27,8 +28,8 @@ class BaseReflectionNode:
 
     def __init__(
         self,
-        llm_client: LoggedLanguageModelClient,
-        regeneration_llm_client: LoggedLanguageModelClient,
+        llm_client: AzureChatOpenAI,
+        regeneration_llm_client: AzureChatOpenAI,
         reflection_prompt: str,
         regeneration_prompt: str,
         assessment_model: type[BaseModel],
@@ -43,22 +44,17 @@ class BaseReflectionNode:
         self._score_fn = score_fn
         self._output_builder = output_builder
 
-    def run(self, draft_text: str, question: str, case_id: str) -> dict:
+    def run(self, draft_text: str, question: str, case_id: str = "") -> dict:
         """Reflect on *draft_text*, optionally regenerate, then return built output.
 
         On any exception the original draft is returned unchanged as
         ``{"draft_text": draft_text}``.
         """
         try:
-            assessment = self._llm_client.complete_json(
-                system_prompt=self._reflection_prompt,
-                user_prompt=(
-                    f"question: {question}\n\n" f"draft_response:\n{draft_text}"
-                ),
-                response_model=self._assessment_model,
-                temperature=0.0,
-                user_question=question,
-            )
+            assessment = self._llm_client.with_structured_output(self._assessment_model).invoke([
+                SystemMessage(content=self._reflection_prompt),
+                HumanMessage(content=f"question: {question}\n\ndraft_response:\n{draft_text}"),
+            ])
 
             score = self._score_fn(assessment)
 
@@ -71,12 +67,10 @@ class BaseReflectionNode:
                     self._REGENERATION_THRESHOLD,
                     case_id,
                 )
-                final_draft = self._regeneration_llm_client.complete_text(
-                    system_prompt=self._regeneration_prompt,
-                    user_prompt=f"Question: {question}",
-                    temperature=0.1,
-                    user_question=question,
-                )
+                final_draft = self._regeneration_llm_client.invoke([
+                    SystemMessage(content=self._regeneration_prompt),
+                    HumanMessage(content=f"Question: {question}"),
+                ]).content
 
             return self._output_builder(final_draft, assessment)
 

@@ -609,138 +609,154 @@
                 <div class="guidance"><strong>How to use this section</strong> &mdash; Use the fishbone diagram to explore all cause categories, then narrow using 5-Why. Every identified cause must be supported by evidence — do not accept assumptions before moving forward.</div>
                 <div class="phase-body">
                     <div class="phase-form scroll-y">
-                        <h3>Fishbone Analysis</h3>
-                        <div class="fishbone">
-                            <div class="fish">People / Organization
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.people_organization[0]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.people_organization[1]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.people_organization[2]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.people_organization[3]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.people_organization[4]"></div>
-                            </div>
-                            <div class="fish">Process / Workflow
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.process_workflow[0]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.process_workflow[1]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.process_workflow[2]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.process_workflow[3]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.process_workflow[4]"></div>
-                            </div>
-                            <div class="fish">Tools / Systems
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.tools_systems[0]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.tools_systems[1]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.tools_systems[2]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.tools_systems[3]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.tools_systems[4]"></div>
-                            </div>
-                            <div class="fish">Environment / Context
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.environment_context[0]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.environment_context[1]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.environment_context[2]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.environment_context[3]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.environment_context[4]"></div>
-                            </div>
-                            <div class="fish">Policy / Management
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.policy_management[0]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.policy_management[1]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.policy_management[2]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.policy_management[3]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.policy_management[4]"></div>
-                            </div>
-                            <div class="fish">Material / Input
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.material_input[0]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.material_input[1]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.material_input[2]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.material_input[3]"></div>
-                                <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.material_input[4]"></div>
-                            </div>
-                        </div>
+                        <div class="pca-quad-wrapper">
 
-                        <h3>Investigation Tasks</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th class="w-action">Task</th>
-                                    <th class="w-owner">Responsible</th>
-                                    <th class="w-date">Due</th>
-                                    <th class="w-date">Actual</th>
-                                </tr>
-                            </thead>
-                            <tbody data-array-path="d_states.D5.data.investigation_tasks">
-                                <tr>
-                                    <td><input data-json-path="d_states.D5.data.investigation_tasks[0].task"></td>
-                                    <td><input data-json-path="d_states.D5.data.investigation_tasks[0].responsible"></td>
-                                    <td><input type="date" data-json-path="d_states.D5.data.investigation_tasks[0].due_date"></td>
-                                    <td><input type="date" data-json-path="d_states.D5.data.investigation_tasks[0].actual_date"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="add-row-wrap">
-                            <button class="add-row-btn btn-add-row" data-template-id="d5-task-row" data-array-path="d_states.D5.data.investigation_tasks"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M4.5 1v7M1 4.5h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
-                            <span class="add-row-lbl">Add task</span>
-                        </div>
+                          <!-- ROW 1: Fishbone (left) · 5-Why (right) -->
+                          <div class="pca-quad-row">
+
+                            <!-- Fishbone Analysis -->
+                            <div class="pca-quad-panel">
+                              <h3>Fishbone Analysis</h3>
+                              <div class="fishbone">
+                                <div class="fish" data-fish-category="people_organization">People / Organization
+                                    <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.people_organization[0]"></div>
+                                    <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.people_organization[1]"></div>
+                                    <button type="button" class="fish-add-btn" onclick="addFishboneRow(this)" data-category="people_organization">+</button>
+                                </div>
+                                <div class="fish" data-fish-category="process_workflow">Process / Workflow
+                                    <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.process_workflow[0]"></div>
+                                    <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.process_workflow[1]"></div>
+                                    <button type="button" class="fish-add-btn" onclick="addFishboneRow(this)" data-category="process_workflow">+</button>
+                                </div>
+                                <div class="fish" data-fish-category="tools_systems">Tools / Systems
+                                    <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.tools_systems[0]"></div>
+                                    <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.tools_systems[1]"></div>
+                                    <button type="button" class="fish-add-btn" onclick="addFishboneRow(this)" data-category="tools_systems">+</button>
+                                </div>
+                                <div class="fish" data-fish-category="environment_context">Environment / Context
+                                    <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.environment_context[0]"></div>
+                                    <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.environment_context[1]"></div>
+                                    <button type="button" class="fish-add-btn" onclick="addFishboneRow(this)" data-category="environment_context">+</button>
+                                </div>
+                                <div class="fish" data-fish-category="policy_management">Policy / Management
+                                    <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.policy_management[0]"></div>
+                                    <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.policy_management[1]"></div>
+                                    <button type="button" class="fish-add-btn" onclick="addFishboneRow(this)" data-category="policy_management">+</button>
+                                </div>
+                                <div class="fish" data-fish-category="material_input">Material / Input
+                                    <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.material_input[0]"></div>
+                                    <div class="fish-row"><input placeholder=" " data-json-path="d_states.D5.data.fishbone.material_input[1]"></div>
+                                    <button type="button" class="fish-add-btn" onclick="addFishboneRow(this)" data-category="material_input">+</button>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- 5-Why Analysis -->
+                            <div class="pca-quad-panel">
+                              <h3>5-Why Analysis</h3>
+                              <div class="two-col-d5">
+                                <div>
+                                    <h3>Chain A</h3>
+                                    <input data-json-path="d_states.D5.data.five_whys.A[0]"><input
+                                        data-json-path="d_states.D5.data.five_whys.A[1]"><input
+                                        data-json-path="d_states.D5.data.five_whys.A[2]"><input
+                                        data-json-path="d_states.D5.data.five_whys.A[3]"><input
+                                        data-json-path="d_states.D5.data.five_whys.A[4]">
+                                </div>
+                                <div>
+                                    <h3>Chain B</h3>
+                                    <input data-json-path="d_states.D5.data.five_whys.B[0]"><input
+                                        data-json-path="d_states.D5.data.five_whys.B[1]"><input
+                                        data-json-path="d_states.D5.data.five_whys.B[2]"><input
+                                        data-json-path="d_states.D5.data.five_whys.B[3]"><input
+                                        data-json-path="d_states.D5.data.five_whys.B[4]">
+                                </div>
+                              </div>
+                            </div>
+
+                          </div>
+
+                          <!-- ROW 2: Investigation Tasks (left) · Factor / Tree (right) -->
+                          <div class="pca-quad-row row-bottom">
+
+                            <!-- Investigation Tasks -->
+                            <div class="pca-quad-panel panel-tasks">
+                              <h3>Investigation Tasks</h3>
+                              <table>
+                                <thead>
+                                    <tr>
+                                        <th class="w-action">Task</th>
+                                        <th class="w-owner">Responsible</th>
+                                        <th class="w-date">Due</th>
+                                        <th class="w-date">Actual</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-array-path="d_states.D5.data.investigation_tasks">
+                                    <tr>
+                                        <td><textarea class="field-textarea" rows="1" data-json-path="d_states.D5.data.investigation_tasks[0].task"></textarea></td>
+                                        <td><input data-json-path="d_states.D5.data.investigation_tasks[0].responsible"></td>
+                                        <td><input type="date" data-json-path="d_states.D5.data.investigation_tasks[0].due_date"></td>
+                                        <td><input type="date" data-json-path="d_states.D5.data.investigation_tasks[0].actual_date"></td>
+                                    </tr>
+                                </tbody>
+                              </table>
+                              <div class="add-row-wrap">
+                                <button class="add-row-btn btn-add-row" data-template-id="d5-task-row" data-array-path="d_states.D5.data.investigation_tasks"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M4.5 1v7M1 4.5h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+                                <span class="add-row-lbl">Add task</span>
+                              </div>
+                            </div>
+
+                            <!-- Factor / Tree Analysis -->
+                            <div class="pca-quad-panel panel-factors">
+                              <h3>Factor / Tree Analysis</h3>
+                              <table>
+                                <thead>
+                                    <tr>
+                                        <th class="w-action">Factor</th>
+                                        <th class="w-owner">Owner</th>
+                                        <th class="w-date">Reviewed</th>
+                                        <th>Status</th>
+                                        <th class="w-comment">Comment</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-array-path="d_states.D5.data.factors">
+                                    <tr>
+                                        <td><textarea class="field-textarea" rows="1" data-json-path="d_states.D5.data.factors[0].factor"></textarea></td>
+                                        <td><input data-json-path="d_states.D5.data.factors[0].owner"></td>
+                                        <td><input type="date" data-json-path="d_states.D5.data.factors[0].reviewed_date"></td>
+                                        <td><input data-json-path="d_states.D5.data.factors[0].status"></td>
+                                        <td><input data-json-path="d_states.D5.data.factors[0].comment"></td>
+                                    </tr>
+                                </tbody>
+                              </table>
+                              <div class="add-row-wrap">
+                                <button class="add-row-btn btn-add-row" data-template-id="d5-factor-row" data-array-path="d_states.D5.data.factors"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M4.5 1v7M1 4.5h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+                                <span class="add-row-lbl">Add factor</span>
+                              </div>
+                            </div>
+
+                          </div>
+
+                        </div><!-- end .pca-quad-wrapper -->
+
+                        <!-- D5 templates (invisible, must stay outside the grid) -->
                         <template id="d5-task-row">
                             <tr>
-                                <td><input data-field="task"></td>
+                                <td><textarea class="field-textarea" rows="1" data-field="task"></textarea></td>
                                 <td><input data-field="responsible"></td>
                                 <td><input type="date" data-field="due_date"></td>
                                 <td><input type="date" data-field="actual_date"></td>
                             </tr>
                         </template>
-
-                        <h3>Factor / Tree Analysis</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th class="w-action">Factor</th>
-                                    <th class="w-owner">Owner</th>
-                                    <th class="w-date">Reviewed</th>
-                                    <th>Status</th>
-                                    <th class="w-comment">Comment</th>
-                                </tr>
-                            </thead>
-                            <tbody data-array-path="d_states.D5.data.factors">
-                                <tr>
-                                    <td><input data-json-path="d_states.D5.data.factors[0].factor"></td>
-                                    <td><input data-json-path="d_states.D5.data.factors[0].owner"></td>
-                                    <td><input type="date" data-json-path="d_states.D5.data.factors[0].reviewed_date"></td>
-                                    <td><input data-json-path="d_states.D5.data.factors[0].status"></td>
-                                    <td><input data-json-path="d_states.D5.data.factors[0].comment"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="add-row-wrap">
-                            <button class="add-row-btn btn-add-row" data-template-id="d5-factor-row" data-array-path="d_states.D5.data.factors"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M4.5 1v7M1 4.5h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
-                            <span class="add-row-lbl">Add factor</span>
-                        </div>
                         <template id="d5-factor-row">
                             <tr>
-                                <td><input data-field="factor"></td>
+                                <td><textarea class="field-textarea" rows="1" data-field="factor"></textarea></td>
                                 <td><input data-field="owner"></td>
                                 <td><input type="date" data-field="reviewed_date"></td>
                                 <td><input data-field="status"></td>
                                 <td><input data-field="comment"></td>
                             </tr>
                         </template>
-
-                        <h3>5-Why Analysis</h3>
-                        <div class="two-col">
-                            <div>
-                                <h3>Chain A</h3>
-                                <input data-json-path="d_states.D5.data.five_whys.A[0]"><input
-                                    data-json-path="d_states.D5.data.five_whys.A[1]"><input
-                                    data-json-path="d_states.D5.data.five_whys.A[2]"><input
-                                    data-json-path="d_states.D5.data.five_whys.A[3]"><input
-                                    data-json-path="d_states.D5.data.five_whys.A[4]">
-                            </div>
-                            <div>
-                                <h3>Chain B</h3>
-                                <input data-json-path="d_states.D5.data.five_whys.B[0]"><input
-                                    data-json-path="d_states.D5.data.five_whys.B[1]"><input
-                                    data-json-path="d_states.D5.data.five_whys.B[2]"><input
-                                    data-json-path="d_states.D5.data.five_whys.B[3]"><input
-                                    data-json-path="d_states.D5.data.five_whys.B[4]">
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

@@ -545,20 +545,14 @@ root causes compared to internally-caused cases, across the full portfolio?
         """
         try:
             from backend.config import settings as _settings
-            from backend.infra.language_model_client import LanguageModelClient
-            from backend.infra.llm_logging_client import LoggedLanguageModelClient
+            from backend.llm import get_llm
             from backend.infra.embeddings import EmbeddingClient
             from backend.infra.case_search_client import CaseSearchClient
             from backend.infra.evidence_search_client import EvidenceSearchClient
             from backend.infra.knowledge_search_client import KnowledgeSearchClient
             from backend.retrieval.hybrid_retriever import HybridRetriever
 
-            base_client = LanguageModelClient(settings_module=_settings)
-            llm_client = LoggedLanguageModelClient(
-                base_client=base_client,
-                settings=_settings,
-                node_name=node_class.__name__.lower(),
-            )
+            llm_client = get_llm()
             embedding_client = EmbeddingClient(settings_module=_settings)
             case_client = CaseSearchClient(
                 endpoint=_settings.AZURE_SEARCH_ENDPOINT,
@@ -672,35 +666,37 @@ class _MockRetriever:
         return None
 
 
+class _MockAIMessage:
+    """Mimics langchain_core AIMessage with a .content attribute."""
+
+    def __init__(self, content: str) -> None:
+        self.content = content
+
+
+class _MockStructuredLLM:
+    """Mimics llm.with_structured_output(Model) — returns a callable with .invoke()."""
+
+    def __init__(self, response_model: type, fixed_result: Any = None) -> None:
+        self._response_model = response_model
+        self._fixed_result = fixed_result
+
+    def invoke(self, messages: list) -> Any:
+        if self._fixed_result is not None:
+            return self._fixed_result
+        return self._response_model.model_validate({})
+
+
 class _MockLLMClient:
-    """Mock LoggedLanguageModelClient that returns the supplied canned response."""
+    """Mock AzureChatOpenAI that returns the supplied canned response."""
 
     def __init__(self, default_response: str) -> None:
         self._default_response = default_response
 
-    def complete_text(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        temperature: float = 0.2,
-        user_question: Optional[str] = None,
-        model_name: Optional[str] = None,
-    ) -> str:
-        return self._default_response
+    def invoke(self, messages: list) -> _MockAIMessage:
+        return _MockAIMessage(self._default_response)
 
-    def complete_json(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        response_model: type,
-        temperature: float = 0.1,
-        user_question: Optional[str] = None,
-        model_name: Optional[str] = None,
-        model_name_override: Optional[str] = None,
-    ) -> Any:
-        # Return a minimal valid instance of whatever model is requested.
-        # This is only used for tests that need complete_json (not nodes themselves).
-        return response_model.model_validate({})
+    def with_structured_output(self, response_model: type) -> _MockStructuredLLM:
+        return _MockStructuredLLM(response_model)
 
 
 class _MockQuestionReadinessLLMClient:
@@ -710,16 +706,12 @@ class _MockQuestionReadinessLLMClient:
         self._ready = ready
         self._cq = clarifying_question
 
-    def complete_json(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        response_model: type,
-        temperature: float = 0.0,
-        user_question: Optional[str] = None,
-        **_kwargs: Any,
-    ) -> Any:
-        return response_model(ready=self._ready, clarifying_question=self._cq)
+    def invoke(self, messages: list) -> _MockAIMessage:
+        return _MockAIMessage("")
+
+    def with_structured_output(self, response_model: type) -> _MockStructuredLLM:
+        result = response_model(ready=self._ready, clarifying_question=self._cq)
+        return _MockStructuredLLM(response_model, fixed_result=result)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

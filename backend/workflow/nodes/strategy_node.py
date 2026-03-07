@@ -5,10 +5,12 @@ import logging
 from typing import Any
 
 from backend.config import Settings
-from backend.infra.llm_logging_client import LoggedLanguageModelClient
+from backend.llm import get_llm
+from langchain_openai import AzureChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.workflow.models import StrategyPayload, StrategyNodeOutput
-from backend.workflow.services.knowledge_formatter import KnowledgeFormatter
+from backend.workflow.services.knowledge_formatter import knowledge_formatter
 
 _logger = logging.getLogger("strategy_node")
 
@@ -155,13 +157,18 @@ Retrieved cases for context:
     def __init__(
         self,
         hybrid_retriever: HybridRetriever,
-        llm_client: LoggedLanguageModelClient,
+        llm_client: AzureChatOpenAI,
         settings: Settings,
     ) -> None:
         self._hybrid_retriever = hybrid_retriever
         self._llm_client = llm_client
         self._settings = settings
-        self._formatter = KnowledgeFormatter()
+
+    def _resolve_llm(self, model_name: str | None) -> AzureChatOpenAI:
+        """Return a deployment-specific LLM when model_name is given (escalation path)."""
+        if model_name:
+            return get_llm(deployment=model_name, temperature=self._llm_client.temperature)
+        return self._llm_client
 
     def run(
         self,
@@ -170,6 +177,7 @@ Retrieved cases for context:
         model_name: str | None = None,
         state: dict[str, Any] | None = None,
     ) -> StrategyNodeOutput:
+        llm = self._resolve_llm(model_name)
         # Escalation path: rewrite only the failing section using premium model
         if state:
             strategy_escalated = bool(state.get("strategy_escalated"))
@@ -281,16 +289,13 @@ Retrieved cases for context:
                 f"{formatted_knowledge}"
             )
 
-        response_text = self._llm_client.complete_text(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            temperature=0.2,
-            user_question=question,
-            model_name=model_name,
-        )
+        response_text = llm.invoke([
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=user_prompt),
+        ]).content
         response_text = self._ensure_general_advice_prefix(response_text)
         if knowledge_docs:
-            refs = self._formatter.build_refs_block(knowledge_docs)
+            refs = knowledge_formatter.build_refs_block(knowledge_docs)
             knowledge_section = "\n\n[KNOWLEDGE REFERENCES]\n" + refs
             explore_marker = "[WHAT TO EXPLORE NEXT]"
             if explore_marker in response_text:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -12,6 +13,7 @@ from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
 from backend.entry.entry_handler import EntryEnvelope, EntryHandler
+from backend.utils.text import normalize_action
 from backend.infra.blob_storage import BlobStorageClient, CaseRepository
 from backend.infra.case_search_client import CaseSearchClient
 from backend.infra.knowledge_search_client import KnowledgeSearchClient
@@ -90,9 +92,10 @@ class ApiRoutes:
         router.add_api_route(
             "/entry/suggestions", self.handle_suggestions, methods=["POST"]
         )
-        router.add_api_route(
-            "/entry/reasoning/debug", self.debug_reasoning, methods=["POST"]
-        )
+        if os.getenv("COSOLVE_ENV", "production") == "development":
+            router.add_api_route(
+                "/entry/reasoning/debug", self.debug_reasoning, methods=["POST"]
+            )
         # Case read/search routes
         router.add_api_route("/cases/kpi", self.get_kpi, methods=["GET"])
         router.add_api_route("/cases/kpi/assessment", self.get_kpi_assessment, methods=["GET"])
@@ -116,27 +119,30 @@ class ApiRoutes:
         router.add_api_route(
             "/knowledge/{filename}", self.delete_knowledge_document, methods=["DELETE"]
         )
-        # LLM stats
+        # LLM stats — DEPRECATED: reads from llm_calls.jsonl which is no longer
+        # written to (old custom client removed). UI still calls this endpoint.
+        # TODO: replace with Langfuse API queries or remove.
         router.add_api_route("/llm/stats", self.get_llm_stats, methods=["GET"])
         # Admin flow visualizer
         router.add_api_route("/admin/flow", self.get_flow_graph, methods=["GET"])
-        # Temporary diagnostic routes — remove after debugging
-        router.add_api_route(
-            "/cases/debug/index-count", self.debug_index_count, methods=["GET"]
-        )
-        router.add_api_route(
-            "/knowledge/debug/search", self.debug_knowledge_search, methods=["GET"]
-        )
-        router.add_api_route(
-            "/cases/debug/search-by-id/{case_id}",
-            self.debug_search_by_id,
-            methods=["GET"],
-        )
-        router.add_api_route(
-            "/cases/debug/reindex/{case_id}",
-            self.debug_reindex_case,
-            methods=["GET"],
-        )
+        # Debug/diagnostic routes — only registered in development
+        if os.getenv("COSOLVE_ENV", "production") == "development":
+            router.add_api_route(
+                "/cases/debug/index-count", self.debug_index_count, methods=["GET"]
+            )
+            router.add_api_route(
+                "/knowledge/debug/search", self.debug_knowledge_search, methods=["GET"]
+            )
+            router.add_api_route(
+                "/cases/debug/search-by-id/{case_id}",
+                self.debug_search_by_id,
+                methods=["GET"],
+            )
+            router.add_api_route(
+                "/cases/debug/reindex/{case_id}",
+                self.debug_reindex_case,
+                methods=["GET"],
+            )
         return router
 
     # ------------------------------------------------------------------ #
@@ -614,14 +620,12 @@ class ApiRoutes:
         return self._dispatch_entry_handler(envelope)
 
     def handle_reasoning_entry(self, envelope: EntryEnvelope):
-        print(f"[DEBUG ROUTE] envelope raw={envelope.model_dump()!r}")
         if (envelope.intent or "").upper() != "AI_REASONING":
             raise HTTPException(status_code=400, detail="intent must be AI_REASONING")
         return self._dispatch_entry_handler(envelope)
 
     async def debug_reasoning(self, request: Request):
         body = await request.body()
-        print(f"[DEBUG RAW BODY] {body.decode()!r}")
         return {"received": body.decode()}
 
     async def handle_knowledge_upload(self, file: UploadFile = File(...)):
@@ -764,8 +768,7 @@ class ApiRoutes:
             raise HTTPException(status_code=500, detail=str(exc))
 
     def _normalize_action(self, action: str | None) -> str:
-        value = (action or "").strip().upper()
-        return value.replace("-", "_").replace(" ", "_")
+        return normalize_action(action)
 
 
 __all__ = ["ApiRoutes"]

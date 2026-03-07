@@ -4,7 +4,9 @@ import json
 from typing import Any
 
 from backend.config import Settings
-from backend.infra.llm_logging_client import LoggedLanguageModelClient
+from backend.llm import get_llm
+from langchain_openai import AzureChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.workflow.models import (
     OperationalPayload,
@@ -17,7 +19,7 @@ from backend.workflow.nodes.node_parsing_utils import (
     is_new_problem_question,
     normalize_d_states,
 )
-from backend.workflow.services.knowledge_formatter import KnowledgeFormatter
+from backend.workflow.services.knowledge_formatter import knowledge_formatter
 
 
 class OperationalNode:
@@ -247,13 +249,18 @@ references must appear only in the [KNOWLEDGE REFERENCES] block at the end.
     def __init__(
         self,
         hybrid_retriever: HybridRetriever,
-        llm_client: LoggedLanguageModelClient,
+        llm_client: AzureChatOpenAI,
         settings: Settings,
     ) -> None:
         self._hybrid_retriever = hybrid_retriever
         self._llm_client = llm_client
         self._settings = settings
-        self._formatter = KnowledgeFormatter()
+
+    def _resolve_llm(self, model_name: str | None) -> AzureChatOpenAI:
+        """Return a deployment-specific LLM when model_name is given (escalation path)."""
+        if model_name:
+            return get_llm(deployment=model_name, temperature=self._llm_client.temperature)
+        return self._llm_client
 
     def run(
         self,
@@ -264,6 +271,7 @@ references must appear only in the [KNOWLEDGE REFERENCES] block at the end.
         model_name: str | None = None,
         case_status: str | None = None,
     ) -> OperationalNodeOutput:
+        llm = self._resolve_llm(model_name)
         op_phase = "root_cause" if case_status == "open" else "general"
         knowledge_docs = self._hybrid_retriever.retrieve_knowledge(
             query=question,
@@ -287,15 +295,12 @@ references must appear only in the [KNOWLEDGE REFERENCES] block at the end.
             user_prompt = (
                 user_prompt + "\n--- KNOWLEDGE BASE REFERENCES ---\n" + knowledge_block
             )
-            response_text = self._llm_client.complete_text(
-                system_prompt=OperationalNode._NEW_PROBLEM_SYSTEM_PROMPT,
-                user_prompt=user_prompt,
-                temperature=0.2,
-                user_question=question,
-                model_name=model_name,
-            )
+            response_text = llm.invoke([
+                SystemMessage(content=OperationalNode._NEW_PROBLEM_SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ]).content
             if knowledge_docs:
-                refs = self._formatter.build_refs_block(knowledge_docs)
+                refs = knowledge_formatter.build_refs_block(knowledge_docs)
                 knowledge_section = "\n\n[KNOWLEDGE REFERENCES]\n" + refs
                 explore_marker = "[WHAT TO EXPLORE NEXT]"
                 if explore_marker in response_text:
@@ -344,15 +349,12 @@ references must appear only in the [KNOWLEDGE REFERENCES] block at the end.
             user_prompt = (
                 user_prompt + "\n--- KNOWLEDGE BASE REFERENCES ---\n" + knowledge_block
             )
-            response_text = self._llm_client.complete_text(
-                system_prompt=OperationalNode._CLOSED_CASE_SYSTEM_PROMPT,
-                user_prompt=user_prompt,
-                temperature=0.2,
-                user_question=question,
-                model_name=model_name,
-            )
+            response_text = llm.invoke([
+                SystemMessage(content=OperationalNode._CLOSED_CASE_SYSTEM_PROMPT),
+                HumanMessage(content=user_prompt),
+            ]).content
             if knowledge_docs:
-                refs = self._formatter.build_refs_block(knowledge_docs)
+                refs = knowledge_formatter.build_refs_block(knowledge_docs)
                 knowledge_section = "\n\n[KNOWLEDGE REFERENCES]\n" + refs
                 explore_marker = "[WHAT TO EXPLORE NEXT]"
                 if explore_marker in response_text:
@@ -399,15 +401,12 @@ references must appear only in the [KNOWLEDGE REFERENCES] block at the end.
             user_prompt + "\n--- KNOWLEDGE BASE REFERENCES ---\n" + knowledge_block
         )
 
-        response_text = self._llm_client.complete_text(
-            system_prompt=OperationalNode._OPERATIONAL_SYSTEM_PROMPT,
-            user_prompt=user_prompt,
-            temperature=0.2,
-            user_question=question,
-            model_name=model_name,
-        )
+        response_text = llm.invoke([
+            SystemMessage(content=OperationalNode._OPERATIONAL_SYSTEM_PROMPT),
+            HumanMessage(content=user_prompt),
+        ]).content
         if knowledge_docs:
-            refs = self._formatter.build_refs_block(knowledge_docs)
+            refs = knowledge_formatter.build_refs_block(knowledge_docs)
             knowledge_section = "\n\n[KNOWLEDGE REFERENCES]\n" + refs
             explore_marker = "[WHAT TO EXPLORE NEXT]"
             if explore_marker in response_text:

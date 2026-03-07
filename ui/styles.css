@@ -1069,6 +1069,148 @@ th, td { padding: 6px; vertical-align: top; }
 .fish-row { display: grid; grid-template-columns: 1fr; align-items: start; gap: 10px; }
 .fish-row input { min-height: 36px; font-size: 14px; }
 
+/* ── D5 PCA QUAD GRID ─────────────────────────────────────────── */
+.pca-quad-wrapper {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg, #f0f2f5);
+}
+
+.pca-quad-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.pca-quad-panel {
+  background: var(--cell-bg, #f7f9fb);
+  border: 1px solid var(--border, #d1d9e0);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Inputs and textareas inside panels stay white */
+.pca-quad-panel input,
+.pca-quad-panel textarea {
+  background: #ffffff;
+}
+
+/* Table header slightly darker than panel bg */
+.pca-quad-panel thead th {
+  background: var(--header-bg, #eef0f3);
+}
+
+.pca-quad-panel table {
+  font-size: 13px;
+}
+
+.pca-quad-panel .two-col-d5 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  flex: 1;
+}
+
+.pca-quad-panel .two-col-d5 > div {
+  padding: 10px 12px;
+  border-right: 1px solid var(--border-light, #eaecf0);
+}
+
+.pca-quad-panel .two-col-d5 > div:last-child {
+  border-right: none;
+}
+
+@media (max-width: 900px) {
+  .pca-quad-row {
+    grid-template-columns: 1fr;
+  }
+}
+/* ────────────────────────────────────────────────────────────────── */
+
+/* Fishbone cell add-row button */
+.fish-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border, #d1d9e0);
+  background: white;
+  color: var(--accent, #2563eb);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  margin: 6px auto 4px;
+  transition: background .15s, border-color .15s;
+}
+.fish-add-btn:hover {
+  background: var(--accent-light, #eff6ff);
+  border-color: var(--accent, #2563eb);
+}
+
+/* Fishbone key factor highlight — toggled by double-click */
+.fish-row input.fish-key-factor {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  box-shadow: 0 0 0 2px #fde68a;
+  font-weight: 600;
+  color: #92400e;
+}
+
+/* ── Expandable textarea for table fields ─────────────────────── */
+.field-textarea {
+  width: 100%;
+  min-height: 28px;
+  padding: 4px 7px;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--border-light, #eaecf0);
+  border-radius: 4px;
+  resize: vertical;
+  overflow: hidden;
+  line-height: 1.45;
+  box-sizing: border-box;
+  transition: border-color .15s, background .15s;
+}
+
+.field-textarea:focus {
+  outline: none;
+  border-color: var(--accent, #2563eb);
+  background: #fff;
+  overflow: auto;
+}
+
+.field-textarea:hover:not(:focus) {
+  border-color: var(--border, #d1d9e0);
+}
+
+/* Overdue date highlight */
+input.date-overdue {
+  color: #dc2626;
+  border-color: #fca5a5;
+  background: #fff5f5;
+}
+
+/* Investigation Tasks + Factor Tree panels grow with content */
+.pca-quad-panel.panel-tasks,
+.pca-quad-panel.panel-factors {
+  height: auto;
+  overflow: visible;
+}
+
+/* Row 2 panels take their own natural height */
+.pca-quad-row.row-bottom {
+  align-items: start;
+}
+
 .col-left, .col-middle, .col-right { width: 100%; }
 
 .muted { color: #6b7280; }

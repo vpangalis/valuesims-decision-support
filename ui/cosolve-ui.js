@@ -315,6 +315,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Auto-expand .field-textarea height on input
+  document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('field-textarea')) {
+      e.target.style.height = 'auto';
+      e.target.style.height = e.target.scrollHeight + 'px';
+    }
+  });
+
   workspaceColumn?.addEventListener("click", () => {
     setColumnFocus("workspace");
   });
@@ -2483,10 +2491,18 @@ document.addEventListener("DOMContentLoaded", () => {
       ensureRows(arrayPath, templateId, desired);
     });
 
+    ensureFishboneRows();
+
     document.querySelectorAll("[data-json-path]").forEach((el) => {
       const value = getByPath(caseState, parsePath(el.dataset.jsonPath));
       // Always call setElementValue — pass "" when field absent so stale values are cleared
       setElementValue(el, value !== undefined ? value : "");
+    });
+
+    // Auto-size pre-filled textareas after hydration
+    document.querySelectorAll('.field-textarea').forEach((ta) => {
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
     });
 
     Object.keys(PHASE_META).forEach((phase) => {
@@ -2500,6 +2516,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("input[type='date'][data-json-path*='due_date'], input[type='date'][data-field='due_date']")
       .forEach(checkDueDateOverdue);
     updateWfDurations();
+    refreshOverdueDates();
   }
 
   function setElementValue(el, value) {
@@ -2859,6 +2876,87 @@ document.addEventListener("DOMContentLoaded", () => {
     for (let i = current; i < desiredCount; i += 1) {
       addRowByConfig(templateId, arrayPath, false);
     }
+  }
+
+  // ── Fishbone: dynamic add-row (called from onclick in HTML) ──────
+  function addFishboneRow(btn) {
+    const category = btn.dataset.category;
+    const cell = btn.closest('.fish');
+    if (!cell || !category) return;
+    const inputs = cell.querySelectorAll('.fish-row input');
+    const nextIndex = inputs.length;
+    const path = `d_states.D5.data.fishbone.${category}[${nextIndex}]`;
+    const newRow = document.createElement('div');
+    newRow.className = 'fish-row';
+    const inp = document.createElement('input');
+    inp.placeholder = ' ';
+    inp.dataset.jsonPath = path;
+    bindJsonField(inp);
+    newRow.appendChild(inp);
+    cell.insertBefore(newRow, btn);
+  }
+  window.addFishboneRow = addFishboneRow;
+
+  // Fishbone key-factor double-click toggle
+  document.addEventListener('dblclick', function(e) {
+    const input = e.target;
+    if (
+      input.tagName === 'INPUT' &&
+      input.closest('.fish-row') &&
+      input.value.trim() !== ''
+    ) {
+      input.classList.toggle('fish-key-factor');
+    }
+  });
+
+  // ── D5 overdue date check ───────────────────────────────────────
+  function refreshOverdueDates() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    document.querySelectorAll(
+      '.phase-card[data-phase="D5"] input[type="date"]'
+    ).forEach(input => {
+      if (!input.value) {
+        input.classList.remove('date-overdue');
+        return;
+      }
+      const d = new Date(input.value);
+      d < today
+        ? input.classList.add('date-overdue')
+        : input.classList.remove('date-overdue');
+    });
+  }
+
+  document.addEventListener('change', function(e) {
+    if (e.target.type === 'date') refreshOverdueDates();
+  });
+
+  // ── Fishbone: ensure rows from data (variable-length arrays) ─────
+  function ensureFishboneRows() {
+    if (!caseState || !caseState.d_states || !caseState.d_states.D5) return;
+    const fb = (caseState.d_states.D5.data || {}).fishbone;
+    if (!fb || typeof fb !== 'object') return;
+    document.querySelectorAll('.fish[data-fish-category]').forEach((cell) => {
+      const category = cell.dataset.fishCategory;
+      const arr = fb[category];
+      if (!Array.isArray(arr)) return;
+      const existingInputs = cell.querySelectorAll('.fish-row input');
+      const existing = existingInputs.length;
+      if (arr.length <= existing) return;
+      const btn = cell.querySelector('.fish-add-btn');
+      for (let i = existing; i < arr.length; i++) {
+        const path = `d_states.D5.data.fishbone.${category}[${i}]`;
+        const newRow = document.createElement('div');
+        newRow.className = 'fish-row';
+        const inp = document.createElement('input');
+        inp.placeholder = ' ';
+        inp.dataset.jsonPath = path;
+        bindJsonField(inp);
+        newRow.appendChild(inp);
+        if (btn) cell.insertBefore(newRow, btn);
+        else cell.appendChild(newRow);
+      }
+    });
   }
 
   function addRowByConfig(templateId, arrayPath, isDisabled) {

@@ -129,6 +129,21 @@ class Settings(BaseSettings):
         env="APPLICATIONINSIGHTS_CONNECTION_STRING",
         description="Azure Monitor Application Insights connection string for distributed tracing.",
     )
+    LANGFUSE_SECRET_KEY: Optional[str] = Field(
+        None,
+        env="LANGFUSE_SECRET_KEY",
+        description="Langfuse secret key for LLM observability tracing.",
+    )
+    LANGFUSE_PUBLIC_KEY: Optional[str] = Field(
+        None,
+        env="LANGFUSE_PUBLIC_KEY",
+        description="Langfuse public key for LLM observability tracing.",
+    )
+    LANGFUSE_HOST: str = Field(
+        "https://cloud.langfuse.com",
+        env="LANGFUSE_HOST",
+        description="Langfuse host URL (cloud or self-hosted).",
+    )
 
     class Config(BaseSettings.Config):
         env_file = ".env"
