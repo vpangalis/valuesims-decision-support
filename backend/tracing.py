@@ -109,7 +109,7 @@ def get_langfuse_handler(
         return None
 
     try:
-        from langfuse.langchain import CallbackHandler
+        from langfuse.callback import CallbackHandler
 
         handler = CallbackHandler()
 
