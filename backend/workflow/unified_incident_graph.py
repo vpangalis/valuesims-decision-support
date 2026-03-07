@@ -201,25 +201,18 @@ class UnifiedIncidentGraph:
         self._graph = graph.compile()
 
     def invoke(self, initial_state: IncidentGraphState) -> IncidentGraphState:
-        # ── Tracing diagnostic ──────────────────────────────────────────
-        import os, logging as _logging
-        _dbg = _logging.getLogger("cosolve.tracing_debug")
+        import os, sys
         _sk = os.getenv("LANGFUSE_SECRET_KEY", "")
         _pk = os.getenv("LANGFUSE_PUBLIC_KEY", "")
-        _dbg.warning(
-            "TRACING_DEBUG sk_set=%s pk_set=%s sk_prefix=%s pk_prefix=%s",
-            bool(_sk), bool(_pk), _sk[:10] if _sk else "MISSING", _pk[:10] if _pk else "MISSING",
-        )
-        # ── Direct trace test — bypasses @observe entirely ─────────────
+        print(f"[TRACING] sk_set={bool(_sk)} pk_set={bool(_pk)} sk={_sk[:10] if _sk else 'MISSING'} pk={_pk[:10] if _pk else 'MISSING'}", flush=True)
         try:
             from langfuse import Langfuse
             _lf = Langfuse()
             _t = _lf.trace(name="cosolve-agent-direct-test")
             _lf.flush()
-            _dbg.warning("TRACING_DEBUG direct trace sent, id=%s", _t.id)
+            print(f"[TRACING] direct trace OK id={_t.id}", flush=True)
         except Exception as _e:
-            _dbg.warning("TRACING_DEBUG direct trace FAILED: %s", _e)
-        # ── Normal execution ────────────────────────────────────────────
+            print(f"[TRACING] direct trace FAILED: {_e}", flush=True)
         from backend.tracing import flush_langfuse
         result = self._observe_invoke(initial_state)
         flush_langfuse()
