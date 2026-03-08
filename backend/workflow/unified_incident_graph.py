@@ -9,6 +9,7 @@ from opentelemetry import trace
 _graph_logger = logging.getLogger("unified_incident_graph")
 _tracer = trace.get_tracer("cosolve.langgraph")
 
+from backend.state import IncidentGraphState
 from backend.ai.escalation_controller import EscalationController
 from backend.workflow.models import (
     ContextNodeOutput,
@@ -40,37 +41,6 @@ from backend.workflow.nodes.start_node import StartNode
 from backend.workflow.nodes.strategy_node import StrategyNode
 from backend.workflow.nodes.strategy_escalation_node import StrategyEscalationNode
 from backend.workflow.nodes.strategy_reflection_node import StrategyReflectionNode
-
-
-class IncidentGraphState(TypedDict, total=False):
-    case_id: str | None
-    question: str
-    case_context: dict | None
-    case_status: str | None
-    current_d_state: str | None
-    classification: IntentClassificationResult | None
-    route: str | None
-    operational_draft: OperationalPayload | None
-    operational_result: OperationalPayload | None
-    operational_reflection: ReflectionResult | None
-    operational_escalated: bool
-    similarity_draft: SimilarityPayload | None
-    similarity_result: SimilarityPayload | None
-    similarity_reflection: SimilarityReflectionAssessment | None
-    similarity_escalated: bool
-    strategy_draft: StrategyPayload | None
-    strategy_result: StrategyPayload | None
-    strategy_reflection: ReflectionResult | None
-    strategy_escalated: bool
-    strategy_fail_section: str | None
-    strategy_fail_reason: str | None
-    strategy_response: str | None
-    kpi_metrics: KPIResult | None
-    kpi_interpretation: KPIInterpretation | None
-    final_response: dict | None
-    question_ready: bool
-    clarifying_question: str
-    _last_node: str
 
 
 class UnifiedIncidentGraph:
