@@ -4,15 +4,11 @@ from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from backend.workflow.models import IntentNodeOutput
 from backend.workflow.nodes.intent_coercion import _RawClassification, coerce_raw
+from backend.prompts import INTENT_CLASSIFICATION_SYSTEM_PROMPT
 
 
 class IntentClassificationNode:
-    # Promote module-level prompt to class attribute.
-    _SYSTEM_PROMPT = (
-        "You are the routing classifier for an industrial incident decision-support system. "
-        "Your only job is to read the user's question plus context and return a single routing intent. "
-        "Return strict JSON only \u2014 no explanation, no markdown."
-    )
+    _SYSTEM_PROMPT = INTENT_CLASSIFICATION_SYSTEM_PROMPT
 
     def __init__(self, llm_client: AzureChatOpenAI) -> None:
         self._llm_client = llm_client

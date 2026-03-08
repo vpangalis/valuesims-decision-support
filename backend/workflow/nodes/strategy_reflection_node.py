@@ -11,73 +11,16 @@ from backend.workflow.models import (
     StrategyReflectionAssessment,
     StrategyReflectionOutput,
 )
+from backend.prompts import STRATEGY_REFLECTION_SYSTEM_PROMPT, STRATEGY_REGENERATION_SYSTEM_PROMPT
 
 _debug_logger = logging.getLogger(__name__)
 
 
 class StrategyReflectionNode:
-    _REFLECTION_SYSTEM_PROMPT = """\
-You are a quality auditor reviewing a strategic portfolio analysis response.
-Your job is to catch reasoning failures, not check JSON schema.
-
-Evaluate the draft response against these five criteria:
-
-1. PORTFOLIO BREADTH
-   Does the response reason across 2+ distinct cases with named case IDs?
-   PASS: response mentions 2 or more distinct case IDs (e.g. TRM-xxx, TRM-yyy).
-   FAIL: only one case ID is named, or no case IDs appear anywhere.
-
-2. PATTERN SPECIFICITY
-   Does [SYSTEMIC PATTERNS IDENTIFIED] name each pattern explicitly and back
-   it with at least one specific case ID?
-   PASS: each named pattern cites a case ID.
-   FAIL: patterns are generic descriptions with no evidence from named cases.
-
-3. WEAKNESS STRENGTH
-   Does [ORGANISATIONAL WEAKNESSES] state weaknesses confidently when 2+ cases
-   support them? Or does it hedge everything regardless of evidence?
-   PASS: clear, confident statements when evidence (2+ cases) is present.
-   FAIL: every weakness is hedged with "possibly" or "might" even when 2+ cases
-         are cited, OR weaknesses are listed without any case evidence.
-
-4. KNOWLEDGE GROUNDING
-   Is at least one knowledge document referenced in the response?
-   PASS if at least one knowledge doc is referenced.
-   PASS also if no knowledge docs were available (retrieved list was empty).
-   FAIL only if knowledge documents were present in context but completely ignored
-   and the response makes no reference to any knowledge source.
-   When evaluating, also check that any citation uses the correct inline format:
-   Per [Document Name]: [relevant point]. A response that references knowledge in
-   vague terms without naming the document should be treated as FAIL.
-
-5. EXPLORE NEXT QUALITY
-   Does [WHAT TO EXPLORE NEXT] contain exactly 6 items with TEAM: and COSOLVE:
-   prefix format, and are the questions at portfolio/fleet/org scope?
-   PASS: 6 items, 3 starting with TEAM: and 3 starting with COSOLVE:, all at
-         portfolio/fleet/org scope.
-   FAIL: fewer than 6 items, incorrect prefix format, or questions are about a
-         single incident rather than the portfolio.
-
-Return ONLY this JSON object — no other keys, no prose:
-{
-  "portfolio_breadth": "PASS or FAIL",
-  "pattern_specificity": "PASS or FAIL",
-  "weakness_strength": "PASS or FAIL",
-  "knowledge_grounding": "PASS or FAIL",
-  "explore_next_quality": "PASS or FAIL",
-  "overall": "PASS or FAIL",
-  "fail_section": "exact section label such as [SYSTEMIC PATTERNS IDENTIFIED] or NONE",
-  "fail_reason": "one sentence explaining the most important failure, or NONE"
-}
-
-overall must be FAIL if any individual criterion is FAIL.
-overall must be PASS only if all five criteria are PASS.
-fail_section: the first failing section label (using the exact bracket format), or NONE.
-fail_reason: one sentence, or NONE.\
-"""
+    _REFLECTION_SYSTEM_PROMPT = STRATEGY_REFLECTION_SYSTEM_PROMPT
 
     # No regeneration prompt — strategy reflection does not regenerate.
-    _REGENERATION_SYSTEM_PROMPT = ""
+    _REGENERATION_SYSTEM_PROMPT = STRATEGY_REGENERATION_SYSTEM_PROMPT
 
     def __init__(
         self,

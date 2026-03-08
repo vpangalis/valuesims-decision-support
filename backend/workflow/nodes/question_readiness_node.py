@@ -5,41 +5,15 @@ import logging
 from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from backend.workflow.models import QuestionReadinessNodeOutput, QuestionReadinessResult
+from backend.prompts import QUESTION_READINESS_SYSTEM_PROMPT, QUESTION_READINESS_USER_PROMPT_TEMPLATE
 
 _logger = logging.getLogger(__name__)
 
 
 class QuestionReadinessNode:
-    _SYSTEM_PROMPT = (
-        "You are a readiness checker for an industrial incident decision-support assistant. "
-        "Decide whether the user's question is specific enough to answer given the context. "
-        "Return strict JSON only — no explanation, no markdown."
-    )
+    _SYSTEM_PROMPT = QUESTION_READINESS_SYSTEM_PROMPT
 
-    _USER_PROMPT_TEMPLATE = (
-        "case_loaded: {case_loaded}\nintent: {intent}\nquestion: {question}\n\n"
-        "Return ONLY this JSON:\n"
-        '{{"ready": true, "clarifying_question": ""}} or\n'
-        '{{"ready": false, "clarifying_question": "<one plain sentence asking for clarification>"}}\n\n'
-        "Rules:\n"
-        "- Portfolio-level questions about overall performance, trends, recurring problems, "
-        "organisational patterns, metrics, and KPIs are always answerable without a loaded case — "
-        "return ready=true regardless of whether a case is loaded.\n"
-        "- Questions asking whether a similar problem has occurred before, whether the organisation "
-        "has seen this type of failure, or whether there are precedents for a specific component or "
-        "failure type — are always ready regardless of case status; the question itself provides "
-        "sufficient context for a similarity search — return ready=true.\n"
-        "- Only questions explicitly about a specific ongoing investigation — asking what to do next, "
-        "what gaps exist, what the root cause is, or what actions to take — require a loaded case.\n"
-        "- If the question is clear and answerable with the available context, return ready=true.\n"
-        "- If a case is not loaded and the question requires specific case data, return ready=false.\n"
-        "- If the question is too vague to answer, return ready=false.\n"
-        "- If the question involves investigating, analysing, or reviewing the progress or status of work — "
-        "such as identifying gaps, determining next steps, finding root causes, or deciding what to focus on — "
-        "and no case is loaded, the clarifying_question must always invite the user to load a case first, "
-        "not ask them to rephrase or provide more detail.\n"
-        "- The clarifying_question must be written in plain, friendly language only."
-    )
+    _USER_PROMPT_TEMPLATE = QUESTION_READINESS_USER_PROMPT_TEMPLATE
 
     _ALWAYS_READY_INTENTS: frozenset[str] = frozenset(
         {"KPI_ANALYSIS", "STRATEGY_ANALYSIS"}

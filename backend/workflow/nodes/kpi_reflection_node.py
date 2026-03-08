@@ -24,6 +24,10 @@ from pydantic import BaseModel
 
 from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
+from backend.prompts import (
+    KPI_REFLECTION_STEP1_PROMPT,
+    KPI_REFLECTION_STEP2_PROMPT,
+)
 from backend.workflow.models import (
     KPIInterpretation,
     KPIResult,
@@ -136,23 +140,7 @@ class KPIReflectionNode:
             f"\nYou must address these quality issues: {issues}" if issues else ""
         )
         return client.with_structured_output(KPIInterpretationDraft).invoke([
-            SystemMessage(content=(
-                "You are a performance analytics advisor for operations leadership. "
-                "Your audience is plant managers and quality directors — never expose "
-                "technical system names, database terms, or internal codes.\n\n"
-                "RULES:\n"
-                "- Never mention D1, D2, D3 … D8 codes. Use stage names only "
-                "(e.g. 'Root Cause Analysis', 'Containment Actions').\n"
-                "- Never use the words: Azure, LangGraph, index, node, vector.\n"
-                "- Write in plain business language.\n"
-                "- summary: one paragraph, ≤80 words.\n"
-                "- insights: 2–4 concise bullet strings.\n\n"
-                "Respond with ONLY this JSON — no other keys:\n"
-                "{\n"
-                '  "summary": "<concise KPI summary>",\n'
-                '  "insights": ["insight 1", "insight 2"]\n'
-                "}" + issues_text
-            )),
+            SystemMessage(content=KPI_REFLECTION_STEP1_PROMPT + issues_text),
             HumanMessage(content=(
                 f"Scope: {metrics.scope_label}\n"
                 f"Question: {question}\n"
@@ -172,41 +160,7 @@ class KPIReflectionNode:
         )
 
         return self._llm_client.with_structured_output(KPISemanticAudit).invoke([
-            SystemMessage(content=(
-                "You are a strict quality auditor for KPI analysis outputs. "
-                "Respond with ONLY this JSON — no other keys:\n"
-                "{\n"
-                '  "scope_correct": true,\n'
-                '  "scope_feedback": "<why scope is/is not correct>",\n'
-                '  "render_hint_correct": true,\n'
-                '  "render_hint_feedback": "<why render_hint is/is not appropriate>",\n'
-                '  "suggestions_quality": "GOOD",\n'
-                '  "suggestions_feedback": "<feedback on suggestions>",\n'
-                '  "data_grounded": true,\n'
-                '  "grounding_feedback": "<feedback on data grounding>",\n'
-                '  "banned_terms_found": [],\n'
-                '  "should_regenerate": false,\n'
-                '  "issues": []\n'
-                "}\n\n"
-                "AUDIT RULES:\n"
-                "scope_correct: true if the scope (global/country/case) matches what "
-                "the user's question is asking for. E.g. a question about one country "
-                "should use 'country' scope, not 'global'.\n"
-                "render_hint_correct: 'gauge' for single-case elapsed time; "
-                "'bar_chart' for country comparisons; 'table' for multi-metric "
-                "global views; 'summary_text' for very sparse data. "
-                "A single number should NOT be 'bar_chart'.\n"
-                "suggestions_quality: 'GOOD' if the 3 suggestions guide the user "
-                "toward a logical next scope (global → country → case). "
-                "'NEEDS_IMPROVEMENT' if they are generic or repeat the same scope.\n"
-                "data_grounded: true if responsible_leader and department are None "
-                "(case not loaded) OR are non-empty strings. False if they appear "
-                "hallucinated (e.g. contain technical jargon or clearly wrong data).\n"
-                "banned_terms_found: list any of these that appear in the summary or "
-                "insights: D1, D2, D3, D4, D5, D6, D7, D8, Azure, LangGraph, "
-                "'index', 'node'.\n"
-                "should_regenerate: true only if banned_terms_found is non-empty."
-            )),
+            SystemMessage(content=KPI_REFLECTION_STEP2_PROMPT),
             HumanMessage(content=(
                 f"User question: {question}\n"
                 f"Scope used: {metrics.scope}\n"

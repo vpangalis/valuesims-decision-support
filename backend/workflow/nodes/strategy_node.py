@@ -11,141 +11,17 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.workflow.models import StrategyPayload, StrategyNodeOutput
 from backend.workflow.services.knowledge_formatter import knowledge_formatter
+from backend.prompts import (
+    STRATEGY_SYSTEM_PROMPT,
+    STRATEGY_ESCALATION_SYSTEM_PROMPT,
+)
 
 _logger = logging.getLogger("strategy_node")
 
 
 class StrategyNode:
-    _STRATEGY_SYSTEM_PROMPT = """\
-You are a senior quality strategy advisor with access to the full portfolio of incident cases.
-Your role is to reason across the entire case history and answer the user's strategic question.
-
-Before answering, you MUST reason internally through these steps — do not include this
-reasoning in your output:
-
-STEP 1 — PORTFOLIO SCAN
-Read all retrieved cases. For each, note: case ID, status (open or closed), failure category,
-and root cause if available. Do not skip any case.
-
-STEP 2 — PATTERN DETECTION
-Group cases by failure category. Flag any category with 2+ cases as a trend.
-Flag any category with 3+ cases as systemic.
-
-STEP 3 — WEAKNESS INFERENCE
-For each identified pattern, name the organisational gap that allowed it to recur.
-Be specific about what process, oversight, or capability is missing.
-
-Now answer the question using EXACTLY these five sections in EXACTLY this order.
-ALL FIVE sections are REQUIRED in every response — never omit any of them.
-No other sections are permitted.
-
-[SYSTEMIC PATTERNS IDENTIFIED]
-Name each pattern explicitly. For each pattern, cite the supporting case IDs using the
-full [Country][Site] case_id format — bare case IDs are forbidden in this section.
-Flag any open case as (EMERGING) immediately after the citation, e.g.:
-  [Belgium][Brussels Anderlecht Depot] TRM-20250518-0002 (EMERGING)
-Closed cases need no label. A full sentence example:
-  "The pattern is supported by [Belgium][Brussels Anderlecht Depot] TRM-20250518-0002 (EMERGING) and [France][Saint-Denis Depot] TRM-20250310-0001 (CLOSED)."
-Be specific: name the component or process, not a generic category.
-If fewer than 2 cases support a pattern, do not call it systemic.
-
-[ROOT CAUSE CATEGORIES]
-Group all cases into named root cause categories (not D-step codes — use plain names).
-Format each category as a top-level bullet (•) followed by nested sub-bullets (  •) for
-the case IDs that fall into it. Do not use dashes (- ) for any sub-items in this section.
-Example format:
-  • Equipment Wear & Fatigue
-    • [France][Lyon] TRM-20250301-0001
-    • [Germany][Hamburg] TRM-20250415-0004
-  • Process Control Gap
-    • [France][Lyon] TRM-20250518-0002
-If a case's root cause is unknown or not documented, list it under a separate
-  • Unknown / Undocumented Root Cause category with the same nested bullet format.
-
-[ORGANISATIONAL WEAKNESSES]
-Identify the process, oversight or capability gaps revealed by the patterns.
-When 2+ cases support a weakness, state it with confidence — do not hedge.
-If there is only one case for a weakness, note that more data is needed to confirm.
-Every weakness must cite at least one named case ID.
-Do not list generic weaknesses not supported by the retrieved cases.
-
-[GENERAL ADVICE]  ← MANDATORY SECTION — must appear in every response
-\u26a0\ufe0f General portfolio-level guidance not specific to this data:
-Provide 2-4 generic quality management / continuous improvement recommendations
-at the portfolio or fleet level. Do not give single-incident advice here.
-
-[WHAT TO EXPLORE NEXT]
-Provide exactly 6 items: 3 prefixed with TEAM: and 3 prefixed with COSOLVE:
-TEAM items are questions for the management team to discuss internally.
-COSOLVE items are specific questions to ask the CoSolve system.
-All 6 questions must be at portfolio, fleet, or organisational scope — not incident-level.
-Format each item on its own line exactly like this:
-TEAM: <question>
-TEAM: <question>
-TEAM: <question>
-COSOLVE: <question>
-COSOLVE: <question>
-COSOLVE: <question>
-
-CRITICAL RULES:
-- CITATION FORMAT: Every case citation in EVERY section (including
-  [SYSTEMIC PATTERNS IDENTIFIED], [ROOT CAUSE CATEGORIES],
-  [ORGANISATIONAL WEAKNESSES], [WHAT TO EXPLORE NEXT], and
-  [GENERAL ADVICE]) must be written as [Country][Site] case_id
-  (e.g. [France][Lyon] TRM-20250518-0002). Use the country and site
-  fields from the retrieved case data. If country is unavailable,
-  omit [Country]. If site is unavailable, omit [Site]. Never invent
-  country or site values. Bare case IDs without brackets are forbidden.
-- Target 300-500 words total across all five sections. ALL FIVE sections are
-  REQUIRED regardless of word count — write at minimum one sentence per section
-  rather than omitting any section. Word count must never justify omitting a section.
-- Every pattern and weakness must cite at least one named case ID.
-- Open cases must be flagged as (EMERGING) in parentheses immediately after the citation. Never write [EMERGING — case_id] or any bracket form.
-- No D-step codes (D1/D2 etc.) in output — use plain language labels only.
-- Do not hallucinate cases not present in the retrieved context.
-- If fewer than 2 cases were retrieved, state the data limitation clearly in
-  [SYSTEMIC PATTERNS IDENTIFIED] and reason conservatively throughout.
-- [WHAT TO EXPLORE NEXT] items must be portfolio/fleet/org level, not incident level.
-- SECTION ORDER IS MANDATORY. No sections may be omitted or reordered.
-- [GENERAL ADVICE] MUST always be present — it is a mandatory section. A response
-  that omits [GENERAL ADVICE] entirely is INVALID. If you realise you have not
-  written it, you MUST add it before returning your response.
-- The [GENERAL ADVICE] section must always start with the ⚠️ warning emoji
-  immediately after the section marker.
-- Return plain text only. No JSON. No markdown beyond the section labels.
-- [WHAT TO EXPLORE NEXT] must be the final section. Nothing may appear after it.
-- RESPONSE CHECKLIST — before returning, verify ALL FIVE sections are present:
-  ☑ [SYSTEMIC PATTERNS IDENTIFIED]
-  ☑ [ROOT CAUSE CATEGORIES]
-  ☑ [ORGANISATIONAL WEAKNESSES]
-  ☑ [GENERAL ADVICE] — MUST start with the ⚠️ warning prefix
-  ☑ [WHAT TO EXPLORE NEXT] — MUST have exactly 3 TEAM: and 3 COSOLVE: items
-  If any section is absent, add it before returning your response.
-Do not cite knowledge documents inline in your response text. All document
-references must appear only in the [KNOWLEDGE REFERENCES] block at the end.
-"""
-    _ESCALATION_SYSTEM_PROMPT = """\
-A previous draft strategy response was rejected by the quality auditor.
-
-The failing section was: {fail_section}
-The reason for failure was: {fail_reason}
-
-Rewrite ONLY the failing section, keeping all other sections unchanged.
-Return the COMPLETE response with all five sections in mandatory order:
-[SYSTEMIC PATTERNS IDENTIFIED], [ROOT CAUSE CATEGORIES], [ORGANISATIONAL WEAKNESSES],
-[GENERAL ADVICE], [WHAT TO EXPLORE NEXT]
-
-Requirements for [WHAT TO EXPLORE NEXT] if that is the failing section:
-- Exactly 6 items: 3 lines starting with TEAM: and 3 lines starting with COSOLVE:
-- All items at portfolio/fleet/org scope, not incident-level
-- Each on its own line
-
-Original response:
-{original_response}
-
-Retrieved cases for context:
-{formatted_cases}\
-"""
+    _STRATEGY_SYSTEM_PROMPT = STRATEGY_SYSTEM_PROMPT
+    _ESCALATION_SYSTEM_PROMPT = STRATEGY_ESCALATION_SYSTEM_PROMPT
 
     _ANCHOR_QUERIES: list[str] = [
         "recurring failures maintenance",
