@@ -1,3 +1,4 @@
+# DEPRECATED: replaced by backend/graph.py in Phase 6
 from __future__ import annotations
 
 import logging

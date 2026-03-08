@@ -37,7 +37,10 @@ _blob_client = BlobStorageClient(
     _settings.AZURE_STORAGE_CONNECTION_STRING,
     _settings.AZURE_STORAGE_CONTAINER,
 )
-_case_repo = CaseReadRepository(_blob_client)
+_case_repo = CaseReadRepository(
+    _settings.AZURE_STORAGE_CONNECTION_STRING,
+    _settings.AZURE_STORAGE_CONTAINER,
+)
 _kpi_tool = KPITool(
     hybrid_retriever=_retriever,
     settings=_settings,
