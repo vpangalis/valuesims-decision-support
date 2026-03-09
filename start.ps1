@@ -1,5 +1,4 @@
 # CoSolve startup script
-
 Write-Host "Activating virtual environment..." -ForegroundColor Cyan
 .venv\Scripts\activate
 
@@ -12,18 +11,21 @@ Get-Process -Name "python", "uvicorn" -ErrorAction SilentlyContinue | ForEach-Ob
 Start-Sleep -Seconds 2
 Write-Host "All processes cleared." -ForegroundColor Green
 
-# Always sync with origin before starting — prevents running stale local code
-Write-Host "Syncing with origin/architecture-refactor..." -ForegroundColor Cyan
+# Always sync with origin/main before starting
+Write-Host "Syncing with origin/main..." -ForegroundColor Cyan
 $dirty = git status --porcelain
 if ($dirty) {
     Write-Host "WARNING: uncommitted local changes detected:" -ForegroundColor Yellow
     Write-Host $dirty -ForegroundColor Yellow
-    Write-Host "Fetching and hard-resetting to origin/architecture-refactor..." -ForegroundColor Yellow
-    git fetch origin architecture-refactor
-    git reset --hard origin/architecture-refactor
+    Write-Host "Fetching and hard-resetting to origin/main..." -ForegroundColor Yellow
+    git fetch origin main
+    git reset --hard origin/main
 } else {
-    git pull origin architecture-refactor
+    git pull origin main
 }
 
 Write-Host "Starting CoSolve server on port 8010..." -ForegroundColor Cyan
-uvicorn backend.app:app --workers 4 --port 8010 --log-level info
+# NOTE: Windows does not support uvicorn multiprocessing socket sharing reliably.
+# Single worker is correct for local dev/demo. For production, use a Linux host
+# with gunicorn or a process manager.
+uvicorn backend.app:app --port 8010 --log-level info
