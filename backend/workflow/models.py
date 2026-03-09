@@ -19,6 +19,7 @@ class IntentClassificationResult(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class OperationalPayload(BaseModel):
     current_state: str
     current_state_recommendations: str
@@ -28,6 +29,7 @@ class OperationalPayload(BaseModel):
     suggestions: list[dict[str, Any]] = Field(default_factory=list)
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class ScopeContext(BaseModel):
     country: Optional[str] = None
 
@@ -96,6 +98,7 @@ class KPIResult(BaseModel):
 
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class ReflectionVerdict(BaseModel):
     schema_valid: bool
     completeness_score: float = Field(ge=0.0, le=1.0)
@@ -104,23 +107,27 @@ class ReflectionVerdict(BaseModel):
     issues: list[str] = Field(default_factory=list)
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class ReflectionResult(BaseModel):
     quality_score: float = Field(ge=0.0, le=1.0)
     needs_escalation: bool
     reasoning_feedback: str
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class ContextNodeOutput(BaseModel):
     case_context: dict[str, Any] | None
     current_d_state: str | None
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class IntentNodeOutput(BaseModel):
     classification: IntentClassificationResult
     classification_low_confidence: bool = False
 
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class RouterNodeOutput(BaseModel):
     route: Literal[
         "OPERATIONAL_CASE",
@@ -130,6 +137,7 @@ class RouterNodeOutput(BaseModel):
     ]
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class OperationalNodeOutput(BaseModel):
     operational_draft: OperationalPayload
 
@@ -144,17 +152,20 @@ class OperationalReflectionAssessment(BaseModel):
     issues: list[str]
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class OperationalReflectionOutput(BaseModel):
     operational_result: OperationalPayload
     operational_reflection: ReflectionResult
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class SimilarityPayload(BaseModel):
     summary: str
     supporting_cases: list[CaseSummary] = Field(default_factory=list)
     suggestions: list[dict[str, Any]] = Field(default_factory=list)
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class SimilarityNodeOutput(BaseModel):
     similarity_draft: SimilarityPayload
 
@@ -169,11 +180,13 @@ class SimilarityReflectionAssessment(BaseModel):
     regeneration_focus: str | None = None
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class SimilarityReflectionOutput(BaseModel):
     similarity_result: SimilarityPayload
     similarity_reflection: SimilarityReflectionAssessment
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class StrategyPayload(BaseModel):
     summary: str
     strategic_recommendations: list[str] = Field(default_factory=list)
@@ -182,6 +195,7 @@ class StrategyPayload(BaseModel):
     suggestions: list[dict[str, Any]] = Field(default_factory=list)
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class StrategyNodeOutput(BaseModel):
     strategy_draft: StrategyPayload
 
@@ -197,6 +211,7 @@ class StrategyReflectionAssessment(BaseModel):
     fail_reason: str  # one sentence or NONE
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class StrategyReflectionOutput(BaseModel):
     strategy_result: StrategyPayload
     strategy_reflection: ReflectionResult
@@ -204,10 +219,12 @@ class StrategyReflectionOutput(BaseModel):
     strategy_fail_reason: str = ""
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class KPINodeOutput(BaseModel):
     kpi_metrics: KPIResult
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class KPIInterpretation(BaseModel):
     summary: str
     insights: list[str] = Field(default_factory=list)
@@ -218,6 +235,7 @@ class KPIInterpretation(BaseModel):
     suggestions: list[str] = Field(default_factory=list)
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class KPIReflectionOutput(BaseModel):
     kpi_interpretation: KPIInterpretation
     kpi_reflection: ReflectionVerdict
@@ -228,17 +246,20 @@ class QuestionReadinessResult(BaseModel):
     clarifying_question: str = ""
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class QuestionReadinessNodeOutput(BaseModel):
     question_ready: bool
     clarifying_question: str = ""
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class FinalResponsePayload(BaseModel):
     timestamp: str
     classification: IntentClassificationResult | None
     result: dict[str, Any]
 
 
+# DEPRECATED: not imported by any live node — superseded by plain dict returns.
 class ResponseFormatterOutput(BaseModel):
     final_response: FinalResponsePayload
 
