@@ -1,0 +1,80 @@
+﻿
+============================================================
+CoSolve Node Automated Check Report
+LIVE_MODE = True
+============================================================
+
+OperationalNode                 PASS
+------------------------------------------------------------
+  Ô£à no module-level functions
+  Ô£à no del statements
+  Ô£à prompts are class-level attributes
+  Ô£à required methods exist
+  Ô£à output model type
+  Ô£à I/O contract (case loaded)
+  Ô£à I/O contract (no case)
+  Ô£à suggestions extracted
+  Ô£à quality gate (case loaded)
+  Ô£à quality gate (mock response structure)
+  Ô£à banned term detection
+  Ô£à new-problem detection logic
+
+SimilarityNode                  PASS
+------------------------------------------------------------
+  Ô£à no module-level functions
+  Ô£à no del statements
+  Ô£à prompts are class-level attributes
+  Ô£à required methods exist
+  Ô£à output model type
+  Ô£à I/O contract (case loaded)
+  Ô£à I/O contract (no case)
+  Ô£à supporting cases forwarded
+  Ô£à quality gate (live)
+  Ô£à quality gate (mock response structure)
+  Ô£à banned term detection
+
+StrategyNode                    PASS
+------------------------------------------------------------
+  Ô£à no module-level functions
+  Ô£à no del statements
+  Ô£à prompts are class-level attributes
+  Ô£à required methods exist
+  Ô£à output model type
+  Ô£à I/O contract (global)
+  Ô£à I/O contract (country filter)
+  Ô£à suggestions extracted
+  Ô£à quality gate (live)
+  Ô£à quality gate (mock response structure)
+  Ô£à banned term detection
+  Ô£à module-level _logger allowed
+
+KPINode                         PASS
+------------------------------------------------------------
+  Ô£à no module-level functions
+  Ô£à no del statements
+  Ô£à required methods exist
+  Ô£à output model type
+  Ô£à I/O contract (global scope)
+  Ô£à I/O contract (country scope)
+  Ô£à I/O contract (case scope)
+  Ô£à render_hint gauge for case scope
+  Ô£à LOCAL without case falls back to global
+  Ô£à scope_label format
+  Ô£à suggestion chips progress logically
+  Ô£à quality gate ÔÇö no D-codes in output
+  Ô£à quality gate ÔÇö no tech terms in suggestions
+  Ô£à quality gate ÔÇö responsible_leader grounded
+  Ô£à banned term detection
+  Ô£à scope resolution logic
+  Ô£à country extraction from question
+
+QuestionReadinessNode           PASS
+------------------------------------------------------------
+  Ô£à ready when case loaded
+  Ô£à not ready when no case loaded
+  Ô£à no jargon in clarifying question
+
+============================================================
+Overall: 55/55 checks passed
+============================================================
+
