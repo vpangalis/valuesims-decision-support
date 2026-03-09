@@ -26,3 +26,14 @@ class CoSolveResponse(BaseModel):
     sources: list[Source] = []
     suggested_questions: SuggestedQuestions | None = None
     warning: str | None = None
+
+
+class CaseSearchRequest(BaseModel):
+    query: str
+    search_type: str = "text"  # 'case_id' | 'site_or_country' | 'text'
+    limit: int = 10
+
+
+class SuggestionsRequest(BaseModel):
+    case_id: str
+    case_context: dict = {}
