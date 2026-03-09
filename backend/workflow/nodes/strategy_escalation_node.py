@@ -7,7 +7,6 @@ from backend.config import Settings
 from backend.ai.model_policy import ModelPolicy
 from backend.workflow.nodes.strategy_node import _run_strategy
 from backend.workflow.models import StrategyNodeOutput
-from backend.workflow.nodes.strategy_node import StrategyNode
 
 _model_policy = ModelPolicy(Settings())
 

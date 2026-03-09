@@ -7,7 +7,6 @@ from backend.config import Settings
 from backend.ai.model_policy import ModelPolicy
 from backend.workflow.nodes.operational_node import _run_operational
 from backend.workflow.models import OperationalNodeOutput
-from backend.workflow.nodes.operational_node import OperationalNode
 
 _model_policy = ModelPolicy(Settings())
 
