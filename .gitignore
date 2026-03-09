@@ -13,3 +13,12 @@ Thumbs.db
 # LLM evaluation logs
 logs/
 *.jsonl
+
+# Local working files — not part of the repo
+ARTIFACTS/
+PROMPT_AUDIT.md
+quick_test_langfuse.py
+uvicorn_err.txt
+uvicorn_out.txt
+.claude/
+docs/CLAUDE.md
