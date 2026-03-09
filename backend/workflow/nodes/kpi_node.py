@@ -8,7 +8,7 @@ from backend.config import Settings
 from backend.infra.case_search_client import CaseSearchClient
 from backend.infra.blob_storage import CaseReadRepository
 from backend.tools.kpi_tool import KPITool
-from backend.workflow.models import KPINodeOutput, KPIResult
+from backend.workflow.models import KPIResult
 
 
 @lru_cache(maxsize=1)
