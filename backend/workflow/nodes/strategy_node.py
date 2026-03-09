@@ -10,7 +10,6 @@ from backend.llm import get_llm
 from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from backend.tools import search_cases_for_pattern_analysis, search_knowledge_base
-from backend.workflow.models import StrategyPayload, StrategyNodeOutput
 from backend.workflow.services.knowledge_formatter import build_refs_block
 from backend.prompts import (
     STRATEGY_SYSTEM_PROMPT,

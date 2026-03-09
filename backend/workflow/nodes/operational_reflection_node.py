@@ -14,12 +14,7 @@ from backend.prompts import (
     OPERATIONAL_REFLECTION_SYSTEM_PROMPT,
     OPERATIONAL_REGENERATION_SYSTEM_PROMPT,
 )
-from backend.workflow.models import (
-    OperationalPayload,
-    OperationalReflectionAssessment,
-    OperationalReflectionOutput,
-    ReflectionResult,
-)
+from backend.workflow.models import OperationalReflectionAssessment
 
 _logger = logging.getLogger(__name__)
 _REGENERATION_THRESHOLD: float = 0.65

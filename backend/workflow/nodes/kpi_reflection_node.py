@@ -32,12 +32,7 @@ from backend.prompts import (
     KPI_REFLECTION_STEP1_PROMPT,
     KPI_REFLECTION_STEP2_PROMPT,
 )
-from backend.workflow.models import (
-    KPIInterpretation,
-    KPIResult,
-    KPIReflectionOutput,
-    ReflectionVerdict,
-)
+from backend.workflow.models import KPIResult
 
 _logger = logging.getLogger(__name__)
 

@@ -8,11 +8,7 @@ from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from backend.prompts import SIMILARITY_REFLECTION_SYSTEM_PROMPT, SIMILARITY_REGENERATION_SYSTEM_PROMPT
 from backend.workflow.nodes.node_parsing_utils import extract_similarity_suggestions
-from backend.workflow.models import (
-    SimilarityPayload,
-    SimilarityReflectionAssessment,
-    SimilarityReflectionOutput,
-)
+from backend.workflow.models import SimilarityReflectionAssessment
 
 _logger = logging.getLogger(__name__)
 _REGENERATION_THRESHOLD: float = 0.65

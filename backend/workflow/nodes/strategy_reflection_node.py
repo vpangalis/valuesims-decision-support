@@ -7,12 +7,7 @@ from backend.state import IncidentGraphState
 from backend.llm import get_llm
 from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
-from backend.workflow.models import (
-    ReflectionResult,
-    StrategyPayload,
-    StrategyReflectionAssessment,
-    StrategyReflectionOutput,
-)
+from backend.workflow.models import StrategyReflectionAssessment
 from backend.prompts import STRATEGY_REFLECTION_SYSTEM_PROMPT, STRATEGY_REGENERATION_SYSTEM_PROMPT
 
 _logger = logging.getLogger(__name__)
@@ -42,7 +37,7 @@ def strategy_reflection_node(state: IncidentGraphState) -> dict:
                 f"draft_response:\n{draft_text}"
             )),
         ])
-        _logger.info("STRATEGY_REFLECTION: %s", assessment.model_dump())
+        _logger.info("STRATEGY_REFLECTION: %s", str(assessment))
 
         overall_pass = assessment.overall.upper() == "PASS"
         score = _score(assessment)

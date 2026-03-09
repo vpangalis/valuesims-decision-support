@@ -4,7 +4,6 @@ from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from backend.state import IncidentGraphState
 from backend.llm import get_llm
-from backend.workflow.models import IntentNodeOutput
 from backend.workflow.nodes.intent_coercion import _RawClassification, coerce_raw
 from backend.prompts import INTENT_CLASSIFICATION_SYSTEM_PROMPT
 

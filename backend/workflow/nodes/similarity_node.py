@@ -9,7 +9,6 @@ from backend.llm import get_llm
 from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from backend.tools import search_similar_cases, search_knowledge_base
-from backend.workflow.models import SimilarityPayload, SimilarityNodeOutput
 from backend.workflow.nodes.node_parsing_utils import (
     extract_similarity_suggestions,
     format_d_states,

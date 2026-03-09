@@ -13,10 +13,6 @@ from backend.tools import (
     search_knowledge_base,
     search_similar_cases,
 )
-from backend.workflow.models import (
-    OperationalPayload,
-    OperationalNodeOutput,
-)
 from backend.workflow.nodes.node_parsing_utils import (
     NEW_PROBLEM_KEYWORDS,
     extract_suggestions,
