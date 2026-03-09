@@ -9,7 +9,6 @@ from backend.llm import get_llm
 from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from backend.tools import search_similar_cases, search_knowledge_base
-from backend.retrieval.hybrid_retriever import HybridRetriever
 from backend.workflow.models import SimilarityPayload, SimilarityNodeOutput
 from backend.workflow.nodes.node_parsing_utils import (
     extract_similarity_suggestions,
@@ -111,9 +110,10 @@ def _to_dict(obj: Any) -> dict:
     """Convert a Pydantic model or dict to a plain dict."""
     if isinstance(obj, dict):
         return obj
-    if hasattr(obj, "model_dump"):
-        return obj.model_dump(mode="json")
-    return dict(obj)
+    try:
+        return dict(obj)
+    except Exception:
+        return vars(obj)
 
 
 def _resolve_country(state: IncidentGraphState) -> str | None:
