@@ -12,7 +12,10 @@ from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
+from backend.api.schemas import CoSolveRequest, CoSolveResponse, Source, SuggestedQuestions
 from backend.entry.entry_handler import EntryEnvelope, EntryHandler
+from backend.graph import compiled_graph
+from backend.state import IncidentGraphState
 from backend.utils.text import normalize_action
 from backend.infra.blob_storage import BlobStorageClient, CaseRepository
 from backend.infra.case_search_client import CaseSearchClient
@@ -79,8 +82,28 @@ class ApiRoutes:
             "UPLOAD_KNOWLEDGE",
         }
 
+    # ------------------------------------------------------------------ #
+    # /ask — CoSolve envelope endpoint                                     #
+    # ------------------------------------------------------------------ #
+
+    def ask(self, request: CoSolveRequest) -> CoSolveResponse:
+        """Accept CoSolveRequest, run graph, return CoSolveResponse."""
+        state: IncidentGraphState = {
+            "question": request.question,
+            "case_id": request.case_id,
+            "session_id": request.session_id,
+        }
+        try:
+            result = compiled_graph.invoke(state)
+        except Exception as exc:
+            logger.exception("[ASK] graph invocation failed")
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+        return _build_response(result)
+
     def router(self) -> APIRouter:
         router = APIRouter()
+        # CoSolve envelope endpoint
+        router.add_api_route("/ask", self.ask, methods=["POST"], response_model=CoSolveResponse)
         # Existing entry routes
         router.add_api_route("/entry/case", self.handle_case_entry, methods=["POST"])
         router.add_api_route(
@@ -768,6 +791,55 @@ class ApiRoutes:
 
     def _normalize_action(self, action: str | None) -> str:
         return normalize_action(action)
+
+
+def _build_response(state: IncidentGraphState) -> CoSolveResponse:
+    """Translate graph result state → CoSolveResponse envelope."""
+    final = state.get("final_response") or {}
+    classification = final.get("classification") or {}
+    result = final.get("result") or {}
+    intent = str(classification.get("intent") or state.get("route") or "")
+
+    # Extract answer text — operational uses a different key
+    if intent == "OPERATIONAL_CASE":
+        answer = str(result.get("current_state_recommendations", ""))
+    else:
+        answer = str(result.get("summary", ""))
+
+    # Extract sources from supporting_cases
+    sources: list[Source] = []
+    for s in result.get("supporting_cases", []):
+        if isinstance(s, dict) and s.get("case_id"):
+            sources.append(Source(
+                case_id=s["case_id"],
+                title=s.get("problem_description") or s.get("title") or "",
+                relevance=s.get("@search.score"),
+            ))
+
+    # Map suggestions [{label, question, type}, ...] → SuggestedQuestions
+    raw_suggestions = result.get("suggestions") or []
+    ask_team: list[str] = []
+    ask_cosolve: list[str] = []
+    for sg in raw_suggestions:
+        if isinstance(sg, dict):
+            q = sg.get("question", "")
+            if not q:
+                continue
+            if sg.get("type") == "team":
+                ask_team.append(q)
+            else:
+                ask_cosolve.append(q)
+    suggested_questions = (
+        SuggestedQuestions(ask_your_team=ask_team, ask_cosolve=ask_cosolve)
+        if (ask_team or ask_cosolve) else None
+    )
+
+    return CoSolveResponse(
+        answer=answer,
+        intent=intent,
+        sources=sources,
+        suggested_questions=suggested_questions,
+    )
 
 
 __all__ = ["ApiRoutes"]
