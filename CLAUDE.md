@@ -1,98 +1,76 @@
 # CLAUDE.md — CoSolve Hard Rules for Claude Code
-# Version: 3.0 — 2026-03-09
-# Changes from v2.0: LLM roles replace Azure deployment names in node code
 
-READ THIS COMPLETELY BEFORE WRITING ANY CODE.
-Every rule is non-negotiable. Violation = reject output, start again.
-
----
-
-## BEFORE ANY CHANGE
-
-1. Read ARCHITECTURE.md
-2. Read REFERENCE.py
-3. Read the file you are about to change
-4. State what you will change and what you will NOT touch
+Read this file completely before writing any code. These rules are non-negotiable.
+Violation of any rule = reject the output and start again.
 
 ---
 
 ## HARD RULES
 
 ### Nodes
-- Nodes are module-level functions — NEVER classes
-- One node per file. Filename = function name = graph node name
-- Signature: `def node_name(state: IncidentGraphState) -> dict`
-- Return a dict slice — only the keys this node produces
-- NEVER return a Pydantic model from a node
-- NEVER call `.model_dump()` in a node
-- NEVER call `cast()` anywhere
-- NEVER define a prompt string inside a node file — import from prompts.py
-- Reflection nodes follow the exact same pattern — no base class, no inheritance
-
-### LLM — ROLE NAMES ONLY
-- NEVER pass an Azure deployment name directly to `get_llm()`
-- NEVER write `get_llm("gpt-4o", ...)` or `get_llm("gpt-4o-mini", ...)` or `get_llm("operational-premium", ...)`
-- ALWAYS use a logical role name: `get_llm("intent", ...)` or `get_llm("reasoning", ...)`
-- Role-to-deployment mapping lives ONLY in config.py (`LLM_INTENT_DEPLOYMENT`, `LLM_REASONING_DEPLOYMENT`)
-- Each node declares its own role and temperature explicitly
+- Nodes are **module-level functions**, never classes
+- One node per file. File name = function name = graph node name
+- Every node function signature is: `def node_name(state: IncidentGraphState) -> dict`
+- Nodes return a **dict slice** — only the keys they update, nothing else
+- Never return a Pydantic model from a node. Never call `.model_dump()` in a node. Never call `cast()` in a node
 
 ### State
-- ONE state class: `IncidentGraphState` in `backend/state/__init__.py`
-- NEVER create a new TypedDict, dataclass, or Pydantic output model for nodes
-- Node outputs are plain dicts stored as state fields
-- State NEVER crosses the wire to the UI
+- There is **exactly one state class**: `IncidentGraphState` in `backend/state.py`
+- Never create a new TypedDict or dataclass for state
+- Never create a Pydantic output model for a node — collapse it into state fields instead
+- State never crosses the wire to the UI — it is internal to the graph
+
+### LLM
+- Never instantiate `AzureChatOpenAI` directly in a node
+- Always use `get_llm(deployment, temperature)` from `backend/llm.py`
+- Each node declares its own deployment and temperature explicitly
 
 ### Tools
-- ALL retrieval is done through @tool functions in `backend/tools/__init__.py`
-- NEVER call CaseSearchClient, EvidenceSearchClient, KnowledgeSearchClient directly from a node
-- NEVER create a new search client class
+- Search indexes are exposed as `@tool` decorated functions in `backend/tools.py`
+- Never create a custom search client class
+- Never call Azure Search SDK directly from a node — always go through a tool
 - Tool docstrings are mandatory — they are what the LLM reads to decide which tool to use
 
-### Prompts
-- ALL prompts live in `backend/prompts.py` as module-level string constants
-- NEVER define a prompt inline inside a node function
-- Prompt content is NOT changed during refactor — only moved to prompts.py
-
 ### API Contract
-- ONLY `CoSolveRequest` and `CoSolveResponse` cross the UI/backend wire
-- `routes.py` is the only place that translates state ↔ envelope
-- NEVER expose IncidentGraphState fields directly in an API response
+- The only objects that cross the UI/backend wire are `CoSolveRequest` and `CoSolveResponse` in `backend/api/schemas.py`
+- `routes.py` is the only place where state is converted to/from the envelope
+- Never expose `IncidentGraphState` fields directly in an API response
 
 ### Files
-- Do NOT create new files without explicit instruction
-- Do NOT modify files outside the scope of the current phase
-- Files marked STAYS UNTOUCHED in ARCHITECTURE.md are never modified
-- Do NOT delete any code — mark deprecated code with `# DEPRECATED:` comment
+- Do not create new files without explicit instruction
+- Do not modify files outside the scope of the current task
+- Do not delete tested code — mark it with `# DEPRECATED` if it needs to be removed and ask first
 
 ### Classes
-- Node files: no classes
-- tools/__init__.py: no classes — only @tool functions and client singletons
-- Permitted classes: `LLMProvider` in llm.py, Pydantic models in schemas.py,
-  `IncidentGraphState` in state/__init__.py
+- Node files contain no classes
+- `tools.py` contains no classes — only `@tool` functions and retriever singletons
+- The only permitted classes are: `LLMProvider` in `llm.py`, `LangfuseTracer` in `tracing.py` (if re-enabled), Pydantic models in `schemas.py`, and `IncidentGraphState` in `state.py`
 
 ### Minimum Footprint
-- Smallest possible change that solves the problem
+- Make the smallest possible change that solves the problem
 - Audit existing code before writing anything new
+- Run 4 checks after every change:
+  1. `py_compile` on every modified file
+  2. No new standalone functions outside permitted locations
+  3. No new classes outside permitted locations
+  4. API contract unchanged unless explicitly instructed
 
 ---
 
-## 4 POST-CHANGE CHECKS (run after EVERY change)
+## REFERENCE FILES — READ BEFORE CODING
 
-1. `python -m py_compile <modified_file>` — must pass
-2. No new standalone functions outside permitted locations
-3. No new classes outside permitted locations
-4. No Azure deployment name strings in any node file
+- `ARCHITECTURE.md` — structural decisions and rationale
+- `REFERENCE.py` — canonical code patterns to follow exactly
+- `API_CONTRACT.md` — UI/backend envelope definition
 
 ---
 
 ## NO-GO LIST
 
-- `cast()` anywhere in the codebase
-- `.model_dump()` in any node file
-- `__init__` in any node file
-- `from backend.infra.* import` inside a node file
-- `from backend.retrieval.hybrid_retriever import` inside a node file
+- `cast()` anywhere
+- `.model_dump()` in nodes
+- `__init__` in node files
+- Direct Azure Search SDK calls in nodes
 - New Pydantic output models for nodes
-- Azure deployment name strings inside node files (e.g. `"gpt-4o"`, `"operational-premium"`)
-- `AzureChatOpenAI(...)` instantiated directly in a node
-- Prompts defined inline inside node functions
+- Passing objects through node constructors
+- Module-level singletons outside `llm.py` and `tools.py`

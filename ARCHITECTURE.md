@@ -1,9 +1,4 @@
 # ARCHITECTURE.md — CoSolve Structural Decisions
-# Version: 3.0 — 2026-03-09
-# Changes from v2.0:
-# - LLM roles replace Azure deployment names (decouples nodes from infra)
-# - state.py → state/__init__.py (package conflict resolved)
-# - tools.py → tools/__init__.py (package conflict resolved)
 
 ---
 
@@ -15,146 +10,211 @@ Do not fight the framework — use it.
 
 ---
 
-## What Changes vs What Stays
-
-### STAYS COMPLETELY UNTOUCHED
-- `backend/infra/blob_storage.py`
-- `backend/infra/embeddings.py`
-- `backend/infra/case_search_client.py`
-- `backend/infra/evidence_search_client.py`
-- `backend/infra/knowledge_search_client.py`
-- `backend/ingestion/` — all ingestion pipelines
-- `backend/utils/text.py`
-- `backend/retrieval/models.py` — CaseSummary, EvidenceSummary, KnowledgeSummary
-- Azure indexes — no changes in Azure portal
-- Graph topology — edges, conditional edges, routing logic, escalation rules
-- Prompt CONTENT inside each node — reasoning stays, container changes
-- The UI entirely
-
----
-
 ## Directory Structure
 
 ```
 backend/
-    state/
-        __init__.py             ← ONE TypedDict: IncidentGraphState
-    tools/
-        __init__.py             ← ALL @tool functions + client singletons
-    prompts.py                  ← ALL prompts as module-level string constants
-    llm.py                      ← get_llm(role, temperature) with lru_cache
+    state.py                    ← ONE file, ONE TypedDict: IncidentGraphState
+    prompts.py                  ← ALL prompts in one place, as constants
+    tools.py                    ← ALL @tool functions, retriever singletons
+    llm.py                      ← get_llm() factory with lru_cache
     graph.py                    ← compiles and wires the graph, nothing else
-    tracing.py                  ← LangSmith placeholder
-    config.py                   ← Settings including LLM role → deployment mapping
-    app.py                      ← FastAPI startup only, no node wiring
+    tracing.py                  ← LangSmith config placeholder
+    config.py                   ← settings
+    app.py                      ← FastAPI app, startup, shutdown
     api/
-        schemas.py              ← CoSolveRequest, CoSolveResponse
-        routes.py               ← /ask only, envelope translation
+        schemas.py              ← CoSolveRequest, CoSolveResponse, Source, SuggestedQuestions
+        routes.py               ← /ask endpoint ONLY, envelope translation
     workflow/
-        nodes/                  ← 17 files, one function each
-        routing.py              ← all conditional edge functions
-        services/               ← unchanged
-        node_parsing_utils.py   ← unchanged
-    retrieval/
-        models.py               ← unchanged
-    infra/                      ← unchanged entirely
+        nodes/
+            similarity_node.py
+            similarity_reflection_node.py
+            operational_node.py
+            operational_reflection_node.py
+            strategy_node.py
+            strategy_reflection_node.py
+            strategy_escalation_node.py
+            operational_escalation_node.py
+            kpi_node.py
+            kpi_reflection_node.py
+            intent_classification_node.py
+            question_readiness_node.py
+            context_node.py
+            router_node.py
+            start_node.py
+            response_formatter_node.py
+            end_node.py
+        routing.py              ← ALL conditional edge functions
+    infra/
+        embeddings.py           ← embedding model singleton
+        blob_storage.py         ← unchanged
     ingestion/                  ← unchanged entirely
-    utils/                      ← unchanged
-```
-
----
-
-## LLM Role Design
-
-Nodes express a LOGICAL ROLE — never an Azure deployment name.
-The mapping from role → Azure deployment lives only in config.py.
-This means Azure infrastructure can change without touching node code.
-
-### Roles
-
-| Role | Purpose | Azure deployment (config) |
-|------|---------|---------------------------|
-| `"intent"` | Fast, cheap classification and routing | `LLM_INTENT_DEPLOYMENT = "intent-model"` |
-| `"reasoning"` | Powerful analysis, reflection, formatting | `LLM_REASONING_DEPLOYMENT = "operational-premium"` |
-
-### Node role assignments
-
-| Node | Role | Temperature | Reason |
-|------|------|-------------|--------|
-| intent_classification_node | `"intent"` | 0.0 | Deterministic classification |
-| question_readiness_node | `"intent"` | 0.0 | Deterministic classification |
-| router_node | `"intent"` | 0.0 | Deterministic routing |
-| start_node | `"intent"` | 0.0 | Trivial |
-| end_node | `"intent"` | 0.0 | Trivial |
-| context_node | `"reasoning"` | 0.3 | Case loading and formatting |
-| response_formatter_node | `"reasoning"` | 0.3 | Readable output |
-| operational_node | `"reasoning"` | 0.2 | Balanced reasoning |
-| similarity_node | `"reasoning"` | 0.2 | Balanced reasoning |
-| strategy_node | `"reasoning"` | 0.2 | Balanced reasoning |
-| kpi_node | `"reasoning"` | 0.2 | Balanced reasoning |
-| operational_reflection_node | `"reasoning"` | 0.0 | Strict, critical |
-| similarity_reflection_node | `"reasoning"` | 0.0 | Strict, critical |
-| strategy_reflection_node | `"reasoning"` | 0.0 | Strict, critical |
-| kpi_reflection_node | `"reasoning"` | 0.0 | Strict, critical |
-| operational_escalation_node | `"reasoning"` | 0.4 | Creative alternatives |
-| strategy_escalation_node | `"reasoning"` | 0.4 | Creative alternatives |
-
-### get_llm() contract
-
-```python
-# backend/llm.py
-# get_llm() accepts a role name, resolves it to an Azure deployment via config
-def get_llm(role: str, temperature: float) -> AzureChatOpenAI:
-    deployment = _resolve_role(role)  # looks up LLM_INTENT_DEPLOYMENT etc.
-    return _get_cached_llm(deployment, temperature)
-
-# Nodes call it like this — no Azure names visible:
-llm = get_llm("intent", 0.0)
-llm = get_llm("reasoning", 0.2)
-```
-
-### config.py additions
-
-```python
-# Role → Azure deployment name mapping — only place Azure names appear
-LLM_INTENT_DEPLOYMENT: str = "intent-model"
-LLM_REASONING_DEPLOYMENT: str = "operational-premium"
+    utils/
+        text.py                 ← unchanged
 ```
 
 ---
 
 ## State
 
-One class. One file. `backend/state/__init__.py`.
-Nodes return dict slices — only the keys they update.
-No Pydantic output models. No `.model_dump()`. No `cast()`.
+One state class. One file. All graph fields live here.
+
+```python
+# backend/state.py
+class IncidentGraphState(TypedDict, total=False):
+    # Request fields — set at entry from CoSolveRequest
+    case_id: str | None
+    question: str
+    session_id: str | None
+
+    # Context fields — set by context_node
+    case_context: dict | None
+    case_status: str | None
+    current_d_state: str | None
+
+    # Reasoning fields — set by nodes
+    classification: dict | None
+    route: str | None
+    question_ready: bool
+    clarifying_question: str | None
+
+    # Draft and result fields — set by nodes
+    operational_draft: dict | None
+    operational_result: dict | None
+    operational_reflection: dict | None
+    operational_escalated: bool
+    similarity_draft: dict | None
+    similarity_result: dict | None
+    similarity_reflection: dict | None
+    similarity_escalated: bool
+    strategy_draft: dict | None
+    strategy_result: dict | None
+    strategy_reflection: dict | None
+    strategy_escalated: bool
+    kpi_metrics: dict | None
+    kpi_interpretation: dict | None
+
+    # Output field — set by response_formatter_node
+    final_response: dict | None
+
+    # Internal tracking
+    _last_node: str
+```
+
+---
+
+## Nodes
+
+Each node is a module-level function in its own file.
+The function receives state, calls an LLM (optionally with tools), returns a dict slice.
+
+```python
+# Pattern every node follows
+def node_name(state: IncidentGraphState) -> dict:
+    llm = get_llm(deployment="gpt-4o", temperature=0.2)
+    response = llm.invoke(PROMPT.format(**state))
+    return {"field_name": parse(response)}
+```
+
+Reflection nodes follow the same pattern — they are NOT special.
+They just receive a draft field and return a reflection field.
 
 ---
 
 ## Tools
 
-`backend/tools/__init__.py` — 7 @tool functions + `_map_case_summary` helper.
-Module-level client singletons. No classes.
-HybridRetriever logic preserved inside the tool functions.
-`KNOWLEDGE_MIN_SCORE = 0.5` preserved.
+All search indexes are exposed as @tool functions.
+The LLM reads the docstring to decide when to use each tool.
+Docstrings are part of the architecture — they are mandatory and precise.
+
+```python
+# Pattern every tool follows
+@tool
+def search_similar_cases(query: str) -> list[dict]:
+    """Search historical incident cases by semantic similarity.
+    Use when the question asks about past incidents, patterns, or precedents.
+    Returns a list of matching cases with metadata."""
+    return case_retriever.get_relevant_documents(query)
+```
+
+Tools live in `backend/tools.py`. Retrievers are module-level singletons.
+Nodes import the tools they need — never the retriever directly.
+
+---
+
+## LLM Selection Per Node
+
+Each node declares its own LLM. This is intentional and explicit.
+
+| Node type | Deployment | Temperature | Reason |
+|---|---|---|---|
+| Classification, routing | gpt-4o-mini | 0.0 | Fast, deterministic |
+| Operational, similarity, strategy, kpi | gpt-4o | 0.2 | Balanced reasoning |
+| Reflection nodes | gpt-4o | 0.0 | Strict, critical |
+| Escalation nodes | gpt-4o | 0.4 | Creative alternatives |
+| Response formatter | gpt-4o | 0.3 | Readable output |
+
+---
+
+## Graph
+
+`graph.py` does one thing: compile the graph.
+No business logic. No LLM calls. No instantiation of anything except the graph builder.
+
+```python
+# graph.py
+from langgraph.graph import StateGraph
+from backend.state import IncidentGraphState
+from backend.workflow.nodes.similarity_node import similarity_node
+# ... all node imports
+
+def build_graph():
+    graph = StateGraph(IncidentGraphState)
+    graph.add_node("similarity_node", similarity_node)
+    # ... all nodes
+    # ... all edges
+    return graph.compile()
+
+compiled_graph = build_graph()
+```
 
 ---
 
 ## API Contract
 
-routes.py only: validate → translate to state → run graph → translate to response.
-IncidentGraphState never leaves the backend.
-CoSolveRequest/CoSolveResponse never enter the graph.
+`routes.py` is the only place where the envelope meets the graph.
+It does three things only:
+
+1. Validate incoming `CoSolveRequest`
+2. Convert it to `IncidentGraphState`
+3. Run the graph
+4. Convert `IncidentGraphState` to `CoSolveResponse`
+
+Nothing from `IncidentGraphState` leaks to the UI directly.
+Nothing from `CoSolveRequest` enters the graph directly.
 
 ---
 
-## Memory Model (2 workers recommended)
+## Memory Model
 
-Startup per worker:
-- compiled_graph — 1 instance
-- LLM instances — 1 per (deployment, temperature) via lru_cache
-- Tool singletons — 1 per search client, module-level in tools/__init__.py
+At startup per worker:
+- `compiled_graph` — one instance, shared
+- `get_llm()` instances — one per (deployment, temperature) pair, cached
+- Retriever instances — one per index, module-level singletons in `tools.py`
 
 Per request:
-- IncidentGraphState — 1 dict, lives for graph invocation, then GC'd
-- Zero node objects — functions have no instance cost
+- `IncidentGraphState` — one dict, lives for duration of graph invocation, then GC'd
+
+---
+
+## What Does NOT Change
+
+- `backend/infra/blob_storage.py` — untouched
+- `backend/infra/embeddings.py` — untouched
+- `backend/ingestion/` — untouched entirely
+- `backend/utils/text.py` — untouched
+- `backend/config.py` — untouched
+- Azure indexes — untouched
+- UI — untouched
+- Graph topology — edges, conditional edges, routing logic all stay identical
+- Prompt content — the reasoning inside each prompt stays, only the container changes
