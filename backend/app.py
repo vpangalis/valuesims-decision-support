@@ -26,7 +26,7 @@ from backend.infra.knowledge_search_client import KnowledgeSearchClient
 from backend.ingestion.case_ingestion import CaseEntryService, CaseIngestionService, CaseSearchIndex
 from backend.ingestion.evidence_ingestion import EvidenceIngestionService, EvidenceSearchIndex
 from backend.ingestion.knowledge_ingestion import KnowledgeIngestionService, KnowledgeSearchIndex
-from backend.tools.kpi_tool import KPITool
+from backend.tools import KPITool
 
 logger = logging.getLogger(__name__)
 

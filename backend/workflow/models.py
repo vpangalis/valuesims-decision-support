@@ -5,7 +5,7 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from backend.retrieval.models import CaseSummary, EvidenceSummary, KnowledgeSummary
+from backend.infra.models import CaseSummary, EvidenceSummary, KnowledgeSummary
 
 
 class IntentClassificationResult(BaseModel):

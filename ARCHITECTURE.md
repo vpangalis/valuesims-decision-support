@@ -45,9 +45,15 @@ backend/
             response_formatter_node.py
             end_node.py
         routing.py              ← ALL conditional edge functions
+        escalation_controller.py ← DEPRECATED escalation logic (retained for reference)
+        model_policy.py         ← DEPRECATED model selection (retained for reference)
     infra/
+        models.py               ← CaseSummary, KnowledgeSummary, EvidenceSummary
         embeddings.py           ← embedding model singleton
         blob_storage.py         ← unchanged
+        case_search_client.py   ← Azure case search client
+        evidence_search_client.py ← Azure evidence search client
+        knowledge_search_client.py ← Azure knowledge search client
     ingestion/                  ← unchanged entirely
     utils/
         text.py                 ← unchanged

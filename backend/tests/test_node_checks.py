@@ -37,8 +37,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 
-from backend.retrieval.models import CaseSummary, EvidenceSummary, KnowledgeSummary
-from backend.tools.kpi_tool import KPITool
+from backend.infra.models import CaseSummary, EvidenceSummary, KnowledgeSummary
+from backend.tools import KPITool
 from backend.workflow.models import (
     KPINodeOutput,
     KPIResult,
@@ -550,7 +550,6 @@ root causes compared to internally-caused cases, across the full portfolio?
             from backend.infra.case_search_client import CaseSearchClient
             from backend.infra.evidence_search_client import EvidenceSearchClient
             from backend.infra.knowledge_search_client import KnowledgeSearchClient
-            from backend.retrieval.hybrid_retriever import HybridRetriever
 
             llm_client = get_llm()
             embedding_client = EmbeddingClient(settings_module=_settings)

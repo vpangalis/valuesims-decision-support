@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import List
 
-from backend.retrieval.models import KnowledgeSummary
+from backend.infra.models import KnowledgeSummary
 
 
 def build_refs_block(knowledge_docs: List[KnowledgeSummary]) -> str:

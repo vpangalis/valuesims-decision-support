@@ -7,7 +7,7 @@ from backend.state import IncidentGraphState
 from backend.config import Settings
 from backend.infra.case_search_client import CaseSearchClient
 from backend.infra.blob_storage import CaseReadRepository
-from backend.tools.kpi_tool import KPITool
+from backend.tools import KPITool
 from backend.workflow.models import KPIResult
 
 
