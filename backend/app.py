@@ -18,15 +18,10 @@ from backend.gateway.api.support_routes import build_support_router
 from backend.gateway.entry_handler import EntryHandler
 from backend.core.graph import compiled_graph
 from backend.storage.blob_storage import BlobStorageClient, CaseRepository, CaseReadRepository
-from backend.knowledge.embeddings import EmbeddingClient
-from backend.knowledge.case_search_client import CaseSearchClient
-from backend.knowledge.evidence_search_client import EvidenceSearchClient
 from backend.core.llm import get_llm
-from backend.knowledge.knowledge_search_client import KnowledgeSearchClient
 from backend.storage.ingestion.case_ingestion import CaseEntryService, CaseIngestionService, CaseSearchIndex
 from backend.storage.ingestion.evidence_ingestion import EvidenceIngestionService, EvidenceSearchIndex
 from backend.storage.ingestion.knowledge_ingestion import KnowledgeIngestionService, KnowledgeSearchIndex
-from backend.knowledge.tools import KPITool
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +52,6 @@ _case_read_repository = CaseReadRepository(
     settings.AZURE_STORAGE_CONNECTION_STRING,
     settings.AZURE_STORAGE_CONTAINER,
 )
-_embedding_client = EmbeddingClient()
 
 _search_index = CaseSearchIndex(
     endpoint=settings.AZURE_SEARCH_ENDPOINT,
@@ -97,34 +91,13 @@ _validate_search_indexes_exist()
 _case_ingestion = CaseIngestionService(
     search_index=_search_index,
     case_repository=_case_read_repository,
-    embedding_client=_embedding_client,
 )
 _case_entry = CaseEntryService(_case_repository)
 _evidence_ingestion = EvidenceIngestionService(
-    _case_repository, _embedding_client, _evidence_search_index
+    _case_repository, _evidence_search_index
 )
 _knowledge_ingestion = KnowledgeIngestionService(
-    _blob_client, _embedding_client, _knowledge_search_index
-)
-_case_search_client = CaseSearchClient(
-    endpoint=settings.AZURE_SEARCH_ENDPOINT,
-    index_name=settings.CASE_INDEX_NAME,
-    admin_key=settings.AZURE_SEARCH_ADMIN_KEY,
-)
-_evidence_search_client = EvidenceSearchClient(
-    endpoint=settings.AZURE_SEARCH_ENDPOINT,
-    index_name=settings.EVIDENCE_INDEX_NAME,
-    admin_key=settings.AZURE_SEARCH_ADMIN_KEY,
-)
-_knowledge_search_client = KnowledgeSearchClient(
-    endpoint=settings.AZURE_SEARCH_ENDPOINT,
-    index_name=settings.KNOWLEDGE_INDEX_NAME,
-    admin_key=settings.AZURE_SEARCH_ADMIN_KEY,
-)
-_kpi_tool = KPITool(
-    case_search_client=_case_search_client,
-    settings=settings,
-    case_repo=_case_read_repository,
+    _blob_client, _knowledge_search_index
 )
 _entry_handler = EntryHandler(
     case_entry=_case_entry,
@@ -157,10 +130,7 @@ app.include_router(
     build_support_router(
         entry_handler=_entry_handler,
         case_repository=_case_repository,
-        case_search_client=_case_search_client,
-        knowledge_search_client=_knowledge_search_client,
         blob_client=_blob_client,
-        kpi_tool=_kpi_tool,
     )
 )
 

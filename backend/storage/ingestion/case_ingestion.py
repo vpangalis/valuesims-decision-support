@@ -18,7 +18,7 @@ from backend.storage.incident_models import (
     LegacyCaseModel,
     IncidentStateAdapter,
 )
-from backend.knowledge.embeddings import EmbeddingClient
+from backend.knowledge.embeddings import generate_embedding
 from backend.storage.blob_storage import CaseReadRepository, CaseRepository
 
 
@@ -225,12 +225,10 @@ class CaseIngestionService:
         self,
         search_index: CaseSearchIndex,
         case_repository: CaseReadRepository,
-        embedding_client: EmbeddingClient,
         logger: logging.Logger | None = None,
     ) -> None:
         self._search_index = search_index
         self._case_repository = case_repository
-        self._embedding_client = embedding_client
         self._logger = logger or logging.getLogger("case_ingestion")
 
     def ingest_all_closed_cases(self) -> None:
@@ -288,7 +286,7 @@ class CaseIngestionService:
             return
 
         try:
-            embedding = self._embedding_client.generate_embedding(embedding_input)
+            embedding = generate_embedding(embedding_input)
         except Exception as exc:
             self._log_outcome("FAILED", case_id, f"embedding_failed: {exc}")
             return
@@ -353,7 +351,7 @@ class CaseIngestionService:
             bm25_text = self._build_flattened_embedding_text(case_model.model_dump())
         if bm25_text:
             try:
-                document["content_vector"] = self._embedding_client.generate_embedding(
+                document["content_vector"] = generate_embedding(
                     bm25_text
                 )
                 self._logger.info("[INDEX_OPEN] embedding generated for %s", case_id)

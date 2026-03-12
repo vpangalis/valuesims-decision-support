@@ -1,90 +1,84 @@
+"""Knowledge search — module-level functions wrapping AzureSearch VectorStore.
+
+Searches directly on 'section' chunks which already contain the full
+content_text, source, section_title, cosolve_phase, and their own embedding.
+"""
 from __future__ import annotations
 
 import logging
+from functools import lru_cache
 from typing import Optional
 
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
-from azure.search.documents.models import VectorizedQuery
+from langchain_community.vectorstores.azuresearch import AzureSearch
+
+from backend.core.config import Settings
+from backend.knowledge.embeddings import get_embeddings
+
+logger = logging.getLogger("knowledge_search_client")
 
 
-class KnowledgeSearchClient:
-    def __init__(self, endpoint: str, index_name: str, admin_key: str) -> None:
-        self._logger = logging.getLogger("knowledge_search_client")
-        self._search_client = SearchClient(
-            endpoint=endpoint,
-            index_name=index_name,
-            credential=AzureKeyCredential(admin_key),
-            connection_timeout=10,
-            read_timeout=10,
-        )
-
-    def hybrid_search(
-        self,
-        search_text: str,
-        embedding: list[float],
-        top_k: int,
-        cosolve_phase: Optional[str] = None,
-    ) -> list[dict]:
-        """Two-stage retrieval: score on small_chunks, fetch parent sections."""
-
-        # STAGE 1 — Score on small_chunk entries only
-        # Filter to small_chunk type so BM25 + vector scoring is precise
-        small_chunk_filter = "chunk_type eq 'small_chunk'"
-
-        vector_query = VectorizedQuery(
-            vector=embedding,
-            fields="embedding",
-            k_nearest_neighbors=top_k * 3,
-        )
-        raw_results = self._search_client.search(
-            search_text=search_text or "*",
-            vector_queries=[vector_query],
-            filter=small_chunk_filter,
-            select=[
-                "doc_id",
-                "parent_section_id",
-                "source",
-                "section_title",
-                "cosolve_phase",
-            ],
-            top=top_k * 3,
-        )
-
-        # Collect unique parent_section_ids, preserving rank order
-        seen_sources: set[str] = set()
-        parent_ids: list[tuple[str, float]] = []
-        for r in raw_results:
-            r_dict = dict(r)
-            pid = r_dict.get("parent_section_id")
-            source = r_dict.get("source")
-            if not pid:
-                continue
-            # Deduplicate: one section per source document
-            if source in seen_sources:
-                continue
-            seen_sources.add(source)
-            score = r_dict.get("@search.score") or 0.0
-            parent_ids.append((pid, score))
-            if len(parent_ids) >= top_k:
-                break
-
-        if not parent_ids:
-            return []
-
-        # STAGE 2 — Fetch parent section documents by ID
-        sections: list[dict] = []
-        for pid, score in parent_ids:
-            try:
-                doc = self._search_client.get_document(key=pid)
-                if doc:
-                    d = dict(doc)
-                    d["@search.score"] = score
-                    sections.append(d)
-            except Exception:
-                continue
-
-        return sections
+@lru_cache(maxsize=1)
+def _get_settings() -> Settings:
+    return Settings()
 
 
-__all__ = ["KnowledgeSearchClient"]
+@lru_cache(maxsize=1)
+def _get_knowledge_vectorstore() -> AzureSearch:
+    s = _get_settings()
+    return AzureSearch(
+        azure_search_endpoint=s.AZURE_SEARCH_ENDPOINT,
+        azure_search_key=s.AZURE_SEARCH_ADMIN_KEY,
+        index_name=s.KNOWLEDGE_INDEX_NAME,
+        embedding_function=get_embeddings().embed_query,
+    )
+
+
+def hybrid_search_knowledge(
+    query: str,
+    top_k: int = 10,
+    cosolve_phase: Optional[str] = None,
+) -> list[dict]:
+    """Hybrid BM25 + vector search on section chunks.
+
+    Searches directly on chunk_type='section' documents which contain the full
+    content_text, source filename, section_title, page range, and cosolve_phase.
+    """
+    logger.info("[KNOWLEDGE] hybrid_search query=%r top_k=%d phase=%r", query, top_k, cosolve_phase)
+
+    filters = ["chunk_type eq 'section'"]
+    if cosolve_phase:
+        safe_phase = cosolve_phase.replace("'", "''")
+        filters.append(f"cosolve_phase eq '{safe_phase}'")
+    filter_expression = " and ".join(filters)
+
+    docs_with_scores = _get_knowledge_vectorstore().similarity_search_with_relevance_scores(
+        query,
+        k=top_k,
+        filters=filter_expression,
+    )
+
+    results = []
+    for doc, score in docs_with_scores:
+        item = dict(doc.metadata)
+        item["content_text"] = item.get("content_text") or doc.page_content
+        item["@search.score"] = score
+        results.append(item)
+
+    logger.info("[KNOWLEDGE] hybrid_search returned %d hits", len(results))
+    return results
+
+
+@lru_cache(maxsize=1)
+def _get_knowledge_search_client() -> SearchClient:
+    """Raw SDK client for admin operations (listing, deleting chunks)."""
+    s = _get_settings()
+    return SearchClient(
+        endpoint=s.AZURE_SEARCH_ENDPOINT,
+        index_name=s.KNOWLEDGE_INDEX_NAME,
+        credential=AzureKeyCredential(s.AZURE_SEARCH_ADMIN_KEY),
+    )
+
+
+__all__ = ["hybrid_search_knowledge"]

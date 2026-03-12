@@ -16,7 +16,7 @@ from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
 
 from backend.storage.blob_storage import BlobStorageClient
-from backend.knowledge.embeddings import EmbeddingClient
+from backend.knowledge.embeddings import generate_embedding
 
 
 class KnowledgeSearchIndex:
@@ -50,13 +50,11 @@ class KnowledgeIngestionService:
     def __init__(
         self,
         blob_client: BlobStorageClient,
-        embedding_client: EmbeddingClient,
         search_index: KnowledgeSearchIndex,
         prefix: str = "knowledge/",
     ) -> None:
         self._blob_client = blob_client
         self._prefix = prefix
-        self._embedding_client = embedding_client
         self._search_index = search_index
         self._logger = logging.getLogger("knowledge_ingestion")
 
@@ -104,7 +102,7 @@ class KnowledgeIngestionService:
         # STEP 1 — Build document_summary entry
         summary_text = text.strip()[:500]
         summary_id = base_doc_id + "_summary"
-        summary_embedding = self._embedding_client.generate_embedding(summary_text)
+        summary_embedding = generate_embedding(summary_text)
         if not isinstance(summary_embedding, list) or len(summary_embedding) != 3072:
             raise ValueError(
                 f"Invalid embedding length for summary of '{filename}': "
@@ -138,7 +136,7 @@ class KnowledgeIngestionService:
             section_id = f"{base_doc_id}_sec_{idx}"
             cosolve_phase = self._detect_cosolve_phase(section["content"])
 
-            section_embedding = self._embedding_client.generate_embedding(
+            section_embedding = generate_embedding(
                 section["content"]
             )
             if (
@@ -179,7 +177,7 @@ class KnowledgeIngestionService:
                 created_at,
             )
             for sc in small_chunk_dicts:
-                sc_embedding = self._embedding_client.generate_embedding(
+                sc_embedding = generate_embedding(
                     sc["content_text"]
                 )
                 if not isinstance(sc_embedding, list) or len(sc_embedding) != 3072:

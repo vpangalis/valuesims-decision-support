@@ -1,29 +1,10 @@
 from __future__ import annotations
 
-from functools import lru_cache
 from typing import Literal, Optional
 
 from backend.core.state import IncidentGraphState
-from backend.core.config import Settings
-from backend.knowledge.case_search_client import CaseSearchClient
-from backend.storage.blob_storage import CaseReadRepository
-from backend.knowledge.tools import KPITool
 from backend.core.models import KPIResult
-
-
-@lru_cache(maxsize=1)
-def _get_kpi_tool() -> KPITool:
-    s = Settings()
-    repo = CaseReadRepository(
-        s.AZURE_STORAGE_CONNECTION_STRING,
-        s.AZURE_STORAGE_CONTAINER,
-    )
-    client = CaseSearchClient(
-        endpoint=s.AZURE_SEARCH_ENDPOINT,
-        index_name=s.CASE_INDEX_NAME,
-        admin_key=s.AZURE_SEARCH_ADMIN_KEY,
-    )
-    return KPITool(case_search_client=client, settings=s, case_repo=repo)
+from backend.knowledge.tools import get_kpis
 
 
 def kpi_node(state: IncidentGraphState) -> dict:
@@ -40,7 +21,7 @@ def kpi_node(state: IncidentGraphState) -> dict:
 
     scope = _resolve_scope(classification_scope, case_id)
 
-    kpi_result: KPIResult = _get_kpi_tool().get_kpis(
+    kpi_result: KPIResult = get_kpis(
         scope=scope,
         country=country,
         case_id=case_id if scope == "case" else None,

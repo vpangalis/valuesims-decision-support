@@ -14,6 +14,9 @@ from fastapi.responses import Response, StreamingResponse
 
 from backend.gateway.api.schemas import CaseSearchRequest, SuggestionsRequest
 from backend.gateway.entry_handler import EntryEnvelope
+from backend.knowledge.case_search_client import filtered_search_cases, text_search_cases, _get_case_search_client
+from backend.knowledge.knowledge_search_client import _get_knowledge_search_client
+from backend.knowledge.tools import get_kpis
 from backend.utils.text import normalize_action
 from backend.reasoning.nodes.kpi_reflection_node import kpi_reflection_node as _kpi_reflection_fn
 
@@ -44,10 +47,7 @@ def _normalize_hit(hit: dict) -> dict:
 def build_support_router(
     entry_handler,
     case_repository,
-    case_search_client,
-    knowledge_search_client,
     blob_client,
-    kpi_tool,
 ) -> APIRouter:
     router = APIRouter()
 
@@ -144,8 +144,8 @@ def build_support_router(
     ):
         """Return KPI metrics only (no LLM reflection)."""
         try:
-            kpi_result = kpi_tool.get_kpis(
-                scope=scope,  # type: ignore[arg-type]
+            kpi_result = get_kpis(
+                scope=scope,
                 country=country if scope == "country" else None,
                 case_id=case_id if scope == "case" else None,
             )
@@ -163,8 +163,8 @@ def build_support_router(
     ):
         """Return AI narrative (summary + insights) for KPI scope."""
         try:
-            kpi_result = kpi_tool.get_kpis(
-                scope=scope,  # type: ignore[arg-type]
+            kpi_result = get_kpis(
+                scope=scope,
                 country=country if scope == "country" else None,
                 case_id=case_id if scope == "case" else None,
             )
@@ -222,7 +222,7 @@ def build_support_router(
                 safe = _sanitize(query).upper()
                 filter_expr = f"case_id eq '{safe}'"
                 logger.info("[SEARCH] Running exact case_id filter: %r", filter_expr)
-                hits = case_search_client.filtered_search(
+                hits = filtered_search_cases(
                     filter_expression=filter_expr,
                     top_k=1,
                 )
@@ -235,14 +235,14 @@ def build_support_router(
                     f"organization_unit eq '{safe}' or organization_unit eq '{safe_lower}'"
                 )
                 logger.info("[SEARCH] Running location filter: %r", filter_expr)
-                hits = case_search_client.filtered_search(
+                hits = filtered_search_cases(
                     filter_expression=filter_expr,
                     top_k=request.limit,
                 )
             else:
                 logger.info("[SEARCH] Running text search for: %r", query)
-                hits = case_search_client.text_search(
-                    search_text=query,
+                hits = text_search_cases(
+                    query=query,
                     top_k=request.limit,
                 )
         except Exception as exc:
@@ -312,7 +312,7 @@ def build_support_router(
             # Fetch metadata only — intentionally excludes content_text (large body field).
             # Requesting content_text × top=1000 produces a multi-MB Azure response that
             # causes a read timeout and makes the browser panel hang indefinitely.
-            raw = knowledge_search_client._search_client.search(
+            raw = _get_knowledge_search_client().search(
                 search_text="*",
                 top=1000,
                 select=["doc_id", "title", "source", "created_at"],
@@ -336,7 +336,7 @@ def build_support_router(
             # filter query (returns only doc_ids of no-text chunks — very small).
             no_text_sources: set[str] = set()
             try:
-                no_text_raw = knowledge_search_client._search_client.search(
+                no_text_raw = _get_knowledge_search_client().search(
                     search_text="*",
                     filter="content_text eq '[No extractable text]'",
                     top=1000,
@@ -410,7 +410,7 @@ def build_support_router(
         safe = filename.replace("'", "''")
         try:
             raw = list(
-                knowledge_search_client._search_client.search(
+                _get_knowledge_search_client().search(
                     search_text="*",
                     filter=f"source eq '{safe}'",
                     top=1000,
@@ -440,7 +440,7 @@ def build_support_router(
 
         # 3. Batch-delete all chunks from the search index.
         try:
-            knowledge_search_client._search_client.delete_documents(
+            _get_knowledge_search_client().delete_documents(
                 documents=[{"doc_id": did} for did in doc_ids]
             )
             logger.info(
@@ -592,7 +592,7 @@ def build_support_router(
         def debug_index_count():
             """Return up to 5 documents from the case index. Temporary diagnostic."""
             try:
-                raw = case_search_client._search_client.search(
+                raw = _get_case_search_client().search(
                     search_text="*",
                     top=5,
                     select=["case_id", "doc_id", "status", "opening_date"],
@@ -606,7 +606,7 @@ def build_support_router(
         def debug_knowledge_search(q: str = "test"):
             """Text search against the knowledge index. Temporary diagnostic."""
             try:
-                raw = knowledge_search_client._search_client.search(
+                raw = _get_knowledge_search_client().search(
                     search_text=q,
                     top=3,
                     select=["doc_id", "title", "source", "doc_type", "created_at"],
@@ -621,7 +621,7 @@ def build_support_router(
         @router.get("/cases/debug/search-by-id/{case_id}")
         def debug_search_by_id(case_id: str):
             """Test three query strategies for a given case_id. Temporary diagnostic."""
-            client = case_search_client._search_client
+            client = _get_case_search_client()
             out: dict = {}
 
             # Test 1: OData filter on case_id field

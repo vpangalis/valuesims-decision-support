@@ -10,7 +10,7 @@ from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
 
 from backend.storage.blob_storage import CaseRepository
-from backend.knowledge.embeddings import EmbeddingClient
+from backend.knowledge.embeddings import generate_embedding
 
 
 class EvidenceSearchIndex:
@@ -47,11 +47,9 @@ class EvidenceIngestionService:
     def __init__(
         self,
         repository: CaseRepository,
-        embedding_client: EmbeddingClient,
         search_index: EvidenceSearchIndex,
     ) -> None:
         self.repo = repository
-        self._embedding_client = embedding_client
         self._search_index = search_index
         self._logger = logging.getLogger("evidence_ingestion")
 
@@ -60,7 +58,7 @@ class EvidenceIngestionService:
         self.repo.add_evidence(case_id, filename, data, content_type)
         text = self._extract_text(data, content_type, filename)
         try:
-            embedding = self._embedding_client.generate_embedding(text)
+            embedding = generate_embedding(text)
         except Exception as e:
             self._logger.warning(f"[EVIDENCE] embedding skipped (non-fatal): {e}")
             embedding = None
