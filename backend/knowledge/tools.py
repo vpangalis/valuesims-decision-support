@@ -323,13 +323,15 @@ def search_knowledge_base(
 @tool
 def search_evidence(
     query: str,
-    case_id: str,
+    case_id: str | None = None,
     top_k: Optional[int] = None,
 ) -> list[EvidenceSummary]:
     """Retrieve evidence documents attached to a specific incident case.
     Use when the question asks for technical reports, photos, lab results,
     or findings from a specific case.
     Returns case_id, filename, content_type, created_at."""
+    if not case_id:
+        return []
     effective_top_k = (
         top_k if top_k is not None else _get_settings().RETRIEVAL_EVIDENCE_TOP_K
     )
