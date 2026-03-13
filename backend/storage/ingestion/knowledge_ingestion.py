@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from functools import lru_cache
 import hashlib
 import os
 import re
@@ -13,49 +14,40 @@ from PyPDF2 import PdfReader
 
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
-from azure.search.documents.indexes import SearchIndexClient
 
+from langchain_community.vectorstores.azuresearch import AzureSearch
+
+from backend.core.config import settings
 from backend.storage.blob_storage import BlobStorageClient
-from backend.knowledge.embeddings import generate_embedding
+from backend.knowledge.embeddings import get_embeddings
 
 
-class KnowledgeSearchIndex:
-    def __init__(self, endpoint: str, index_name: str, admin_key: str) -> None:
-        self._endpoint = endpoint
-        self._index_name = index_name
-        self._credential = AzureKeyCredential(admin_key)
-        self._search_client = SearchClient(
-            endpoint=endpoint,
-            index_name=index_name,
-            credential=self._credential,
-        )
-        self._index_client = SearchIndexClient(
-            endpoint=endpoint,
-            credential=self._credential,
-        )
-
-    @property
-    def index_name(self) -> str:
-        return self._index_name
-
-    def upload_documents(self, documents: list[dict[str, Any]]) -> list:
-        if not isinstance(documents, list):
-            raise TypeError(
-                f"upload_documents expects list[dict], got {type(documents).__name__}"
-            )
-        return self._search_client.upload_documents(documents=documents)
+@lru_cache(maxsize=1)
+def _get_knowledge_store() -> AzureSearch:
+    return AzureSearch(
+        azure_search_endpoint=settings.AZURE_SEARCH_ENDPOINT,
+        azure_search_key=settings.AZURE_SEARCH_ADMIN_KEY,
+        index_name=settings.KNOWLEDGE_INDEX_NAME,
+        embedding_function=get_embeddings(),
+        search_type="hybrid",
+    )
 
 
 class KnowledgeIngestionService:
     def __init__(
         self,
         blob_client: BlobStorageClient,
-        search_index: KnowledgeSearchIndex,
         prefix: str = "knowledge/",
     ) -> None:
         self._blob_client = blob_client
         self._prefix = prefix
-        self._search_index = search_index
+        self._vector_store = _get_knowledge_store()
+        # Raw SearchClient kept for delete_by_source (no LangChain equivalent)
+        self._search_client = SearchClient(
+            endpoint=settings.AZURE_SEARCH_ENDPOINT,
+            index_name=settings.KNOWLEDGE_INDEX_NAME,
+            credential=AzureKeyCredential(settings.AZURE_SEARCH_ADMIN_KEY),
+        )
         self._logger = logging.getLogger("knowledge_ingestion")
 
     def delete_by_source(self, filename: str) -> int:
@@ -65,7 +57,7 @@ class KnowledgeIngestionService:
         """
         deleted = 0
         try:
-            results = self._search_index._search_client.search(
+            results = self._search_client.search(
                 search_text="*",
                 filter=f"source eq '{filename}'",
                 select=["doc_id"],
@@ -74,7 +66,7 @@ class KnowledgeIngestionService:
             doc_ids = [r["doc_id"] for r in results if r.get("doc_id")]
             if doc_ids:
                 delete_batch = [{"doc_id": doc_id} for doc_id in doc_ids]
-                self._search_index._search_client.delete_documents(
+                self._search_client.delete_documents(
                     documents=delete_batch
                 )
                 deleted = len(doc_ids)
@@ -102,13 +94,6 @@ class KnowledgeIngestionService:
         # STEP 1 — Build document_summary entry
         summary_text = text.strip()[:500]
         summary_id = base_doc_id + "_summary"
-        summary_embedding = generate_embedding(summary_text)
-        if not isinstance(summary_embedding, list) or len(summary_embedding) != 3072:
-            raise ValueError(
-                f"Invalid embedding length for summary of '{filename}': "
-                f"expected 3072, got "
-                f"{len(summary_embedding) if isinstance(summary_embedding, list) else 'non-list'}"
-            )
         summary_doc: dict = {
             "doc_id": summary_id,
             "doc_type": "knowledge",
@@ -124,7 +109,6 @@ class KnowledgeIngestionService:
             "page_end": 0,
             "cosolve_phase": self._detect_cosolve_phase(text),
             "char_count": len(summary_text),
-            "embedding": summary_embedding,
         }
 
         # STEP 2 — Split into sections
@@ -136,18 +120,6 @@ class KnowledgeIngestionService:
             section_id = f"{base_doc_id}_sec_{idx}"
             cosolve_phase = self._detect_cosolve_phase(section["content"])
 
-            section_embedding = generate_embedding(
-                section["content"]
-            )
-            if (
-                not isinstance(section_embedding, list)
-                or len(section_embedding) != 3072
-            ):
-                raise ValueError(
-                    f"Invalid embedding length for section {idx} of '{filename}': "
-                    f"expected 3072, got "
-                    f"{len(section_embedding) if isinstance(section_embedding, list) else 'non-list'}"
-                )
             section_docs.append(
                 {
                     "doc_id": section_id,
@@ -164,7 +136,6 @@ class KnowledgeIngestionService:
                     "page_end": section["page_end"],
                     "cosolve_phase": cosolve_phase,
                     "char_count": len(section["content"]),
-                    "embedding": section_embedding,
                 }
             )
 
@@ -176,22 +147,19 @@ class KnowledgeIngestionService:
                 cosolve_phase,
                 created_at,
             )
-            for sc in small_chunk_dicts:
-                sc_embedding = generate_embedding(
-                    sc["content_text"]
-                )
-                if not isinstance(sc_embedding, list) or len(sc_embedding) != 3072:
-                    raise ValueError(
-                        f"Invalid embedding length for small chunk of '{filename}': "
-                        f"expected 3072, got "
-                        f"{len(sc_embedding) if isinstance(sc_embedding, list) else 'non-list'}"
-                    )
-                sc["embedding"] = sc_embedding
-                all_small_chunk_docs.append(sc)
+            all_small_chunk_docs.extend(small_chunk_dicts)
 
-        # STEP 3 — Collect all documents and upload in one batch
-        documents_to_upload = [summary_doc] + section_docs + all_small_chunk_docs
-        self._search_index.upload_documents(documents_to_upload)
+        # STEP 3 — Batch upload via LangChain add_texts (embedding computed internally)
+        all_docs = [summary_doc] + section_docs + all_small_chunk_docs
+        self._vector_store.add_texts(
+            texts=[d["content_text"] for d in all_docs],
+            metadatas=[
+                {k: v for k, v in d.items()
+                 if k not in ("doc_id", "content_text", "embedding")}
+                for d in all_docs
+            ],
+            ids=[d["doc_id"] for d in all_docs],
+        )
 
         # STEP 4 — Log summary
         total_small_chunks = len(all_small_chunk_docs)
@@ -504,7 +472,6 @@ class KnowledgeIngestionService:
                             "page_end": 0,
                             "cosolve_phase": cosolve_phase,
                             "char_count": len(chunk_text),
-                            "embedding": None,
                         }
                     )
                 break
@@ -678,5 +645,4 @@ class KnowledgeIngestionService:
 
 __all__ = [
     "KnowledgeIngestionService",
-    "KnowledgeSearchIndex",
 ]

@@ -5,6 +5,7 @@ import hashlib
 import json
 import logging
 from datetime import datetime, timezone
+from functools import lru_cache
 from typing import Any, Iterable
 
 from azure.core.credentials import AzureKeyCredential
@@ -13,13 +14,27 @@ from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import SearchIndex
 
+from langchain_community.vectorstores.azuresearch import AzureSearch
+
+from backend.core.config import settings
 from backend.storage.incident_models import (
     IncidentFactory,
     LegacyCaseModel,
     IncidentStateAdapter,
 )
-from backend.knowledge.embeddings import generate_embedding
+from backend.knowledge.embeddings import generate_embedding, get_embeddings
 from backend.storage.blob_storage import CaseReadRepository, CaseRepository
+
+
+@lru_cache(maxsize=1)
+def _get_case_vector_store() -> AzureSearch:
+    return AzureSearch(
+        azure_search_endpoint=settings.AZURE_SEARCH_ENDPOINT,
+        azure_search_key=settings.AZURE_SEARCH_ADMIN_KEY,
+        index_name=settings.CASE_INDEX_NAME,
+        embedding_function=get_embeddings(),
+        search_type="hybrid",
+    )
 
 
 class CaseSearchIndex:
@@ -229,6 +244,7 @@ class CaseIngestionService:
     ) -> None:
         self._search_index = search_index
         self._case_repository = case_repository
+        self._vector_store = _get_case_vector_store()
         self._logger = logger or logging.getLogger("case_ingestion")
 
     def ingest_all_closed_cases(self) -> None:
@@ -285,20 +301,17 @@ class CaseIngestionService:
             self._log_outcome("FAILED", case_id, "empty_embedding_input")
             return
 
-        try:
-            embedding = generate_embedding(embedding_input)
-        except Exception as exc:
-            self._log_outcome("FAILED", case_id, f"embedding_failed: {exc}")
-            return
-
         document = self._build_index_document(case_model.model_dump(), doc_id)
-        # searchable_hash is used for the hash comparison above but is NOT a
-        # field in the Azure Search index schema — remove it before uploading.
         document.pop("searchable_hash", None)
-        document["embedding"] = embedding
+        metadata = {k: v for k, v in document.items()
+                    if k not in ("doc_id", "content_text", "embedding")}
 
         try:
-            self._search_index.upload_documents([document])
+            self._vector_store.add_texts(
+                texts=[document["content_text"]],
+                metadatas=[metadata],
+                ids=[document["doc_id"]],
+            )
         except Exception as exc:
             self._log_outcome("FAILED", case_id, f"index_upsert_failed: {exc}")
             return

@@ -20,8 +20,8 @@ from backend.core.graph import compiled_graph
 from backend.storage.blob_storage import BlobStorageClient, CaseRepository, CaseReadRepository
 from backend.core.llm import get_llm
 from backend.storage.ingestion.case_ingestion import CaseEntryService, CaseIngestionService, CaseSearchIndex
-from backend.storage.ingestion.evidence_ingestion import EvidenceIngestionService, EvidenceSearchIndex
-from backend.storage.ingestion.knowledge_ingestion import KnowledgeIngestionService, KnowledgeSearchIndex
+from backend.storage.ingestion.evidence_ingestion import EvidenceIngestionService
+from backend.storage.ingestion.knowledge_ingestion import KnowledgeIngestionService
 
 logger = logging.getLogger(__name__)
 
@@ -58,16 +58,6 @@ _search_index = CaseSearchIndex(
     index_name=settings.CASE_INDEX_NAME,
     admin_key=settings.AZURE_SEARCH_ADMIN_KEY,
 )
-_evidence_search_index = EvidenceSearchIndex(
-    endpoint=settings.AZURE_SEARCH_ENDPOINT,
-    index_name=settings.EVIDENCE_INDEX_NAME,
-    admin_key=settings.AZURE_SEARCH_ADMIN_KEY,
-)
-_knowledge_search_index = KnowledgeSearchIndex(
-    endpoint=settings.AZURE_SEARCH_ENDPOINT,
-    index_name=settings.KNOWLEDGE_INDEX_NAME,
-    admin_key=settings.AZURE_SEARCH_ADMIN_KEY,
-)
 
 
 def _validate_search_indexes_exist() -> None:
@@ -94,10 +84,10 @@ _case_ingestion = CaseIngestionService(
 )
 _case_entry = CaseEntryService(_case_repository)
 _evidence_ingestion = EvidenceIngestionService(
-    _case_repository, _evidence_search_index
+    _case_repository,
 )
 _knowledge_ingestion = KnowledgeIngestionService(
-    _blob_client, _knowledge_search_index
+    _blob_client,
 )
 _entry_handler = EntryHandler(
     case_entry=_case_entry,
