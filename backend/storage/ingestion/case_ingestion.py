@@ -295,7 +295,7 @@ class CaseIngestionService:
         # searchable_hash is used for the hash comparison above but is NOT a
         # field in the Azure Search index schema — remove it before uploading.
         document.pop("searchable_hash", None)
-        document["content_vector"] = embedding
+        document["embedding"] = embedding
 
         try:
             self._search_index.upload_documents([document])
@@ -351,7 +351,7 @@ class CaseIngestionService:
             bm25_text = self._build_flattened_embedding_text(case_model.model_dump())
         if bm25_text:
             try:
-                document["content_vector"] = generate_embedding(
+                document["embedding"] = generate_embedding(
                     bm25_text
                 )
                 self._logger.info("[INDEX_OPEN] embedding generated for %s", case_id)
@@ -820,6 +820,20 @@ class CaseIngestionService:
             "evidence_descriptions": self._normalize_evidence_descriptions(evidence),
             "evidence_tags": self._normalize_evidence_tags(evidence),
             "ai_summary": self._safe_get(case_doc, "ai", "summary", default=""),
+            "content_text": " ".join(filter(None, [
+                self._safe_get(phases, "D1_D2", "data", "problem_description")
+                or self._safe_get(phases, "D1_2", "data", "problem_description")
+                or case_doc.get("problem_description"),
+                self._safe_get(phases, "D3", "data", "what_happened"),
+                self._safe_get(phases, "D3", "data", "why_problem"),
+                self._safe_get(phases, "D3", "data", "factors_summary"),
+                self._join_action_texts(
+                    self._safe_get(phases, "D5", "data", "factors", default=[])
+                ),
+                self._join_action_texts(
+                    self._safe_get(phases, "D6", "data", "actions", default=[])
+                ),
+            ])),
         }
         document["searchable_hash"] = self._searchable_hash(document)
         return document

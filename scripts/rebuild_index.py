@@ -41,7 +41,6 @@ from azure.search.documents.indexes.models import (
 
 from backend.core.config import settings
 from backend.storage.blob_storage import CaseReadRepository
-from backend.knowledge.embeddings import EmbeddingClient
 from backend.storage.ingestion.case_ingestion import CaseIngestionService, CaseSearchIndex
 
 logging.basicConfig(
@@ -181,9 +180,11 @@ def build_index_schema() -> SearchIndex:
         SearchableField(name="five_whys_text", type=SearchFieldDataType.String),
         SearchableField(name="evidence_descriptions", type=SearchFieldDataType.String),
         SearchableField(name="ai_summary", type=SearchFieldDataType.String),
+        # ── Rich text for LangChain VectorStore ─────────────────────────────
+        SearchableField(name="content_text", type=SearchFieldDataType.String),
         # ── Vector ────────────────────────────────────────────────────────────
         SearchField(
-            name="content_vector",
+            name="embedding",
             type=Coll(SearchFieldDataType.Single),
             searchable=True,
             vector_search_dimensions=EMBEDDING_DIM,
@@ -240,11 +241,9 @@ def rebuild() -> None:
         index_name=INDEX_NAME,
         admin_key=settings.AZURE_SEARCH_ADMIN_KEY,
     )
-    embedding_client = EmbeddingClient()
     case_ingestion = CaseIngestionService(
         search_index=search_index,
         case_repository=case_read_repo,
-        embedding_client=embedding_client,
     )
 
     paths = case_read_repo.list_case_paths()
