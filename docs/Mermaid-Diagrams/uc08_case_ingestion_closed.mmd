@@ -1,0 +1,66 @@
+sequenceDiagram
+    autonumber
+    actor Admin
+    participant UI as UI
+    participant SR as support_routes.py
+    participant EH as entry_handler.py
+    participant CI as case_ingestion.py
+    participant BL as blob_storage.py
+    participant AZB as Azure Blob
+    participant EM as embeddings.py
+    participant AZE as Azure OpenAI
+    participant VS as AzureSearch VectorStore
+    participant AZS as Azure AI Search
+
+    Admin->>UI: close case action
+    UI->>SR: POST /entry/case
+    Note over SR: intent=CASE_INGESTION
+    Note over SR: action=CLOSE_CASE
+    Note over SR: handle_case_entry() L96
+    Note over SR: validate action L100-104
+    SR->>SR: _dispatch_entry_handler() L82
+    SR->>EH: handle_entry(envelope) L84
+    Note over EH: intent == CASE_INGESTION L65
+    EH->>EH: _handle_case_ingestion() L66
+    Note over EH: action = CLOSE_CASE L74
+
+    EH->>CI: CaseEntryService.get_case(case_id) L107
+    CI->>BL: CaseRepository.load(case_id) L102
+    Note over BL: download_json("{case_id}.json") L20
+    BL->>AZB: get_blob_client().download_blob()
+    AZB-->>BL: raw JSON bytes
+    BL-->>CI: case_doc dict
+
+    CI->>CI: IncidentFactory.from_blob_doc()
+    Note over CI: d_states (not phases)
+    Note over CI: D1_2 (not D1_D2)
+    Note over CI: status (not header.completed)
+    Note over CI: opened_at (not opening_date)
+
+    CI->>CI: build document_text
+    CI->>CI: _build_doc_id() L509
+
+    CI->>EM: generate_embedding(document_text) L52
+    Note over EM: get_embeddings() lru_cache L19
+    Note over EM: text-embedding-3-large
+    EM->>AZE: embeddings.create()
+    AZE-->>EM: vector list[float] dim=3072
+    EM-->>CI: embedding vector
+
+    CI->>CI: build metadata dict
+    CI->>VS: _get_case_vector_store() L30
+    Note over VS: AzureSearch(case_index_v3)
+
+    CI->>AZS: add_texts([content_text], metadatas, ids)
+    AZS-->>CI: [doc_id]
+
+    CI->>BL: CaseRepository.save(case_id) L107
+    Note over BL: upload_json("{case_id}.json") L17
+    BL->>AZB: upload_blob(data, overwrite=True)
+    AZB-->>BL: ok
+    BL-->>CI: saved
+
+    CI-->>EH: indexed=True
+    EH-->>SR: EntryResponseEnvelope status=accepted
+    SR-->>UI: EntryResponseEnvelope
+    UI-->>Admin: success

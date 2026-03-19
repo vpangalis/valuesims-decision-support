@@ -1,0 +1,43 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as UI
+    participant SR as support_routes.py
+    participant EH as entry_handler.py
+    participant RH as reasoning_handler.py
+    participant G as graph
+    participant IC as intent_class_node
+    participant LLM as Azure OpenAI
+    participant RF as response_formatter
+
+    User->>UI: ambiguous question
+    UI->>SR: POST /entry/reasoning
+    Note over SR: handle_reasoning_entry() L108
+    SR->>SR: _dispatch_entry_handler() L82
+    SR->>EH: handle_entry(envelope) L84
+    EH->>RH: handle_ai_reasoning() L68
+    RH->>G: graph.invoke(initial_state) L66
+    Note over G: start_node -> context_node
+
+    G->>IC: intent_classification_node(state) L11
+    Note over IC: get_llm("intent", 0.0)
+    IC->>LLM: llm.with_structured_output(_RawClass)
+    LLM-->>IC: intent, confidence=0.25
+    Note over IC: coerce_raw() -> low_confidence=True
+    IC-->>G: classification_low_confidence=True
+
+    Note over G: question_readiness -> router
+    Note over G: domain node -> response_formatter
+    G->>RF: response_formatter_node(state) L9
+    RF-->>G: final_response
+
+    G-->>RH: graph_result
+    Note over RH: classification_low_confidence==True L71
+    RH->>RH: build_clarifying_response() L75
+    Note over RH: status=accepted L109
+    Note over RH: summary=_CLARIFYING_TEXT L102
+    Note over RH: suggestions=_CLARIFYING_SUGGESTIONS L104
+    RH-->>SR: EntryResponseEnvelope status=accepted
+
+    SR-->>UI: EntryResponseEnvelope
+    UI-->>User: clarifying message + 4 suggestion chips

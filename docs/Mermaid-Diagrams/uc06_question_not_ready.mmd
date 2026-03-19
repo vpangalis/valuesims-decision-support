@@ -1,0 +1,64 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as UI
+    participant SR as support_routes.py
+    participant EH as entry_handler.py
+    participant RH as reasoning_handler.py
+    participant G as graph
+    participant SN as start_node
+    participant CN as context_node
+    participant IC as intent_class_node
+    participant QR as question_readiness_node
+    participant RO as routing
+    participant RF as response_formatter
+
+    User->>UI: vague question, no case_id
+    UI->>SR: POST /entry/reasoning
+    Note over SR: handle_reasoning_entry() L108
+    Note over SR: validate intent==AI_REASONING L109
+    SR->>SR: _dispatch_entry_handler() L82
+    SR->>EH: handle_entry(envelope) L84
+    Note over EH: intent == AI_REASONING L67
+    EH->>RH: handle_ai_reasoning() L68
+    Note over RH: case_id = None L50
+    RH->>G: graph.invoke(initial_state) L66
+
+    G->>SN: start_node(state) L6
+    SN-->>G: escalated flags = False
+
+    G->>CN: context_node(state) L23
+    Note over CN: case_id is None -> skip blob
+    CN-->>G: case_context=None
+
+    G->>IC: intent_classification_node(state) L11
+    Note over IC: case_loaded = False L18
+    Note over IC: llm.with_structured_output(_RawClass)
+    IC-->>G: intent=OPERATIONAL, confidence=0.4
+
+    G->>QR: question_readiness_node(state) L18
+    Note over QR: OPERATIONAL not in ALWAYS_READY L13
+    Note over QR: case_loaded = False
+    Note over QR: get_llm("intent", 0.0)
+    Note over QR: llm.with_structured_output(QRResult)
+    QR-->>G: question_ready=False, clarifying_question
+
+    G->>RO: route_question_readiness() L15
+    Note over RO: not question_ready -> NOT_READY L16
+    RO-->>G: NOT_READY -> response_formatter
+    Note over G: skips router_node + all domain nodes
+
+    G->>RF: response_formatter_node(state) L9
+    Note over RF: question_ready=False path
+    RF-->>G: final_response{clarifying_question}
+
+    G-->>RH: graph_result
+
+    Note over RH: question_ready==False L77
+    RH->>RH: build_clarifying_question_response() L80
+    Note over RH: status="ok" L134
+    Note over RH: suggestions=_CLARIFYING_SUGGESTIONS
+    RH-->>SR: EntryResponseEnvelope status=ok
+
+    SR-->>UI: EntryResponseEnvelope
+    UI-->>User: clarifying question + suggestion chips

@@ -1,0 +1,40 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as UI Browser
+    participant SR as support_routes.py
+    participant EH as entry_handler.py
+    participant RH as reasoning_handler.py
+    participant G as compiled_graph
+    participant IC as intent_classification_node.py
+    participant LLM as Azure OpenAI
+    participant RF as response_formatter_node.py
+
+    User->>UI: ambiguous question e.g. "Tell me something"
+    UI->>SR: POST /entry/reasoning {intent:"AI_REASONING", payload:{question:"Tell me something"}}
+    Note over SR: handle_reasoning_entry() L108 | _dispatch_entry_handler() L82
+    SR->>EH: entry_handler.handle_entry(envelope) L84
+    Note over EH: EntryHandler.handle_entry() L63 | intent=="AI_REASONING" L67
+    EH->>RH: handle_ai_reasoning(envelope, self._unified_graph) L68
+    Note over RH: initial_state = IncidentGraphState{case_id:None, question} L60-63
+    RH->>G: graph.invoke(initial_state) L66
+
+    Note over G: [start_node → context_node]
+    G->>IC: intent_classification_node(state) L11
+    Note over IC: get_llm("intent", 0.0) | llm.with_structured_output(_RawClassification).invoke([...]) | coerce_raw(raw) -> {intent, scope, confidence:0.25}
+    IC-->>G: {classification:{intent:"SIMILARITY_SEARCH", scope:"GLOBAL", confidence:0.25}, classification_low_confidence:True}
+
+    Note over G: [question_readiness_node → router_node → domain node → response_formatter_node] | graph still runs to completion
+
+    G->>RF: response_formatter_node(state) L9
+    RF-->>G: {final_response:{...}}
+
+    G-->>RH: graph_result
+
+    Note over RH: graph_result.get("classification_low_confidence", False) L71 -> True
+    RH->>RH: build_clarifying_response(envelope) L75
+    Note over RH: build_clarifying_response() L90 | data = {timestamp, classification:{intent:"SIMILARITY_SEARCH", scope:"GLOBAL", confidence:0.3}, result:{summary:_CLARIFYING_TEXT, supporting_cases:[], suggestions:_CLARIFYING_SUGGESTIONS}} L94-106
+    RH-->>SR: EntryResponseEnvelope(intent, status="accepted", data=data) L107-111
+
+    SR-->>UI: EntryResponseEnvelope {status:"accepted", data:{summary:_CLARIFYING_TEXT, suggestions:[Overall performance, Recurring problems, ...]}}
+    UI-->>User: displays generic clarifying message + 4 suggestion chips

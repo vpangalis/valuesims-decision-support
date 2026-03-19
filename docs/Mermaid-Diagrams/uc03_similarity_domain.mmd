@@ -1,0 +1,77 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as UI
+    participant SR as support_routes.py
+    participant EH as entry_handler.py
+    participant RH as reasoning_handler.py
+    participant G as graph
+    participant SN as similarity_node
+    participant T as tools.py
+    participant CSC as case_search_client
+    participant KSC as knowledge_search_client
+    participant AZS as Azure AI Search
+    participant LLM as Azure OpenAI
+    participant SRN as similarity_reflection_node
+    participant RF as response_formatter
+
+    User->>UI: similar cases question
+    UI->>SR: POST /entry/reasoning
+    Note over SR: handle_reasoning_entry() L108
+    SR->>SR: _dispatch_entry_handler() L82
+    SR->>EH: handle_entry(envelope) L84
+    EH->>RH: handle_ai_reasoning() L68
+    RH->>G: graph.invoke(initial_state) L66
+    Note over G: start->context->intent->readiness->router
+    Note over G: route_intent() -> SIMILARITY_SEARCH
+
+    G->>SN: similarity_node(state) L20
+    Note over SN: get_llm("reasoning", 0.2) L27
+
+    SN->>T: search_similar_cases() L29
+    Note over T: hybrid_search_cases() top_k=10 L108
+    T->>CSC: hybrid_search_cases() L66
+    Note over CSC: _get_case_vectorstore() L43
+    CSC->>AZS: case_index_v3
+    AZS-->>CSC: List[Document]
+    CSC-->>T: List[Document]
+    T->>T: _map_case_summary() L48
+    T-->>SN: cases List[CaseSummary]
+
+    SN->>T: search_knowledge_base() L32
+    Note over T: hybrid_search_knowledge() top_k=5 L289
+    T->>KSC: hybrid_search_knowledge() L40
+    Note over KSC: _get_knowledge_vectorstore() L28
+    KSC->>AZS: knowledge_index_v2
+    AZS-->>KSC: List[Document]
+    KSC-->>T: List[Document]
+    T-->>SN: knowledge_docs
+
+    SN->>LLM: llm.invoke(SIMILARITY_PROMPT) L73
+    LLM-->>SN: response_text
+
+    SN->>SN: extract_similarity_suggestions() L108
+    SN-->>G: similarity_draft
+
+    G->>SRN: similarity_reflection_node(state) L17
+    Note over SRN: get_llm("reasoning", 0.0) L23
+    SRN->>LLM: llm.with_structured_output(Assessment) L27
+    LLM-->>SRN: SimilarityReflectionAssessment
+    SRN->>SRN: _score(assessment) L81
+
+    alt score >= 0.65
+        SRN-->>G: similarity_result=draft
+    else score < 0.65
+        SRN->>LLM: regen_llm.invoke(REGEN_PROMPT) L40
+        LLM-->>SRN: improved response
+        SRN-->>G: similarity_result=regenerated
+    end
+
+    G->>RF: response_formatter_node(state) L9
+    Note over RF: SIMILARITY -> similarity_result L19
+    RF-->>G: final_response
+
+    G-->>RH: graph_result
+    RH-->>SR: EntryResponseEnvelope L83
+    SR-->>UI: EntryResponseEnvelope
+    UI-->>User: answer + chips

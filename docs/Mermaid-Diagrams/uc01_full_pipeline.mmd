@@ -1,0 +1,102 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as UI
+    participant SR as support_routes.py
+    participant EH as entry_handler.py
+    participant RH as reasoning_handler.py
+    participant G as graph
+    participant SN as start_node
+    participant CN as context_node
+    participant BL as blob_storage
+    participant IC as intent_class_node
+    participant QR as question_readiness_node
+    participant RO as routing
+    participant RN as router_node
+    participant DN as domain_node
+    participant RF as response_formatter
+
+    User->>UI: question + optional case_id
+    UI->>SR: POST /entry/reasoning
+    Note over SR: handle_reasoning_entry() L108
+    Note over SR: validate intent==AI_REASONING L109
+    SR->>SR: _dispatch_entry_handler() L82
+    SR->>EH: handle_entry(envelope) L84
+    Note over EH: intent == AI_REASONING L67
+    EH->>RH: handle_ai_reasoning() L68
+    Note over RH: question = payload.get("question") L49
+    Note over RH: case_id = payload.get("case_id") L50
+    alt question is empty
+        RH-->>UI: EntryResponseEnvelope L54-58
+    end
+    Note over RH: initial_state = IncidentGraphState L60
+    RH->>G: graph.invoke(initial_state) L66
+
+    G->>SN: start_node(state) L6
+    Note over SN: operational_escalated=False L9
+    SN-->>G: _last_node=start_node
+
+    G->>CN: context_node(state) L23
+    alt case_id present
+        CN->>BL: CaseRepository.load() L102
+        Note over BL: download_json("{case_id}.json") L20
+        BL-->>CN: case_doc dict
+        CN-->>G: case_context, case_status
+    else no case_id
+        CN-->>G: case_context=None
+    end
+
+    G->>IC: intent_classification_node(state) L11
+    Note over IC: get_llm("intent", 0.0)
+    Note over IC: llm.with_structured_output(_RawClass)
+    Note over IC: coerce_raw(raw)
+    IC-->>G: classification{intent, scope, confidence}
+
+    G->>QR: question_readiness_node(state) L18
+    alt KPI or STRATEGY or case_loaded
+        Note over QR: _ALWAYS_READY_INTENTS L13
+        QR-->>G: question_ready=True
+    else
+        Note over QR: get_llm("intent", 0.0)
+        Note over QR: llm.with_structured_output(QRResult)
+        QR-->>G: question_ready, clarifying_question
+    end
+
+    G->>RO: route_question_readiness() L15
+    alt not question_ready
+        RO-->>G: NOT_READY -> response_formatter
+    else
+        RO-->>G: READY -> router_node
+    end
+
+    G->>RN: router_node(state) L6
+    Note over RN: classification.get("intent") L8
+    RN-->>G: route=OPERATIONAL/SIMILARITY/STRATEGY/KPI
+
+    G->>RO: route_intent(state) L24
+    RO-->>G: dispatch to domain node
+
+    G->>DN: domain_node(state)
+    DN-->>G: domain_draft, domain_result
+
+    G->>RF: response_formatter_node(state) L9
+    Note over RF: OPERATIONAL -> operational_result L17
+    Note over RF: SIMILARITY -> similarity_result L19
+    Note over RF: STRATEGY -> strategy_result L21
+    Note over RF: KPI -> kpi_interpretation L23
+    RF-->>G: final_response
+
+    G-->>RH: graph_result
+
+    alt low_confidence==True L71
+        RH->>RH: build_clarifying_response() L75
+        RH-->>SR: EntryResponseEnvelope status=accepted
+    else not question_ready L77
+        RH->>RH: build_clarifying_question_response() L80
+        RH-->>SR: EntryResponseEnvelope status=ok
+    else success
+        RH-->>SR: EntryResponseEnvelope status=accepted L83
+    end
+
+    SR-->>UI: EntryResponseEnvelope
+    UI-->>User: answer + suggestion chips

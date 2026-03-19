@@ -1,0 +1,90 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as UI
+    participant SR as support_routes.py
+    participant EH as entry_handler.py
+    participant RH as reasoning_handler.py
+    participant G as graph
+    participant KN as kpi_node
+    participant T as tools.py
+    participant CSC as case_search_client
+    participant AZS as Azure AI Search
+    participant LLM as Azure OpenAI
+    participant KRN as kpi_reflection_node
+    participant RF as response_formatter
+
+    User->>UI: KPI or metrics question
+    UI->>SR: POST /entry/reasoning
+    Note over SR: handle_reasoning_entry() L108
+    SR->>SR: _dispatch_entry_handler() L82
+    SR->>EH: handle_entry(envelope) L84
+    EH->>RH: handle_ai_reasoning() L68
+    RH->>G: graph.invoke(initial_state) L66
+    Note over G: start->context->intent->readiness->router
+    Note over G: KPI in _ALWAYS_READY_INTENTS
+    Note over G: route_intent() -> KPI_ANALYSIS
+
+    G->>KN: kpi_node(state) L10
+    Note over KN: _resolve_scope() L44
+    Note over KN: _resolve_country() L55
+    Note over KN: _extract_country_from_question() L71
+
+    KN->>T: get_kpis(scope, country, case_id) L24
+
+    alt scope == case L908
+        T->>T: _case_scope(case_id) L815
+        T->>CSC: _get_case_search_client() L56
+        CSC->>AZS: case_index_v3 filter=case_id
+        AZS-->>CSC: single case
+        CSC-->>T: SearchResult
+    else scope == country L910
+        T->>T: _country_scope(country) L765
+        T->>CSC: _get_case_search_client() L56
+        CSC->>AZS: case_index_v3 filter=country
+        AZS-->>CSC: List[SearchResult]
+        CSC-->>T: List[SearchResult]
+    else scope == global L912
+        T->>T: _global_scope() L715
+        T->>CSC: _get_case_search_client() L56
+        CSC->>AZS: case_index_v3 top=1000
+        AZS-->>CSC: all cases
+        CSC-->>T: List[SearchResult]
+    end
+
+    T->>T: aggregate metrics
+    T-->>KN: KPIResult
+    KN->>KN: _kpi_result_to_dict() L39
+    KN-->>G: kpi_metrics dict
+
+    G->>KRN: kpi_reflection_node(state) L59
+    Note over KRN: get_llm("reasoning", 0.0) L67
+
+    KRN->>KRN: _generate_interpretation() L71
+    KRN->>LLM: llm.with_structured_output(KPIInterpretationDraft) L132
+    LLM-->>KRN: KPIInterpretationDraft
+
+    KRN->>KRN: _semantic_audit() L74
+    KRN->>LLM: llm.with_structured_output(KPISemanticAudit) L151
+    LLM-->>KRN: KPISemanticAudit
+
+    KRN->>KRN: _compute_completeness() L166
+    KRN->>KRN: _hallucination_risk() L189
+
+    alt score >= 0.65
+        KRN-->>G: kpi_interpretation
+    else score < 0.65
+        KRN->>KRN: _generate_interpretation(regen_llm) L78
+        KRN->>LLM: regen_llm.with_structured_output(...) L132
+        LLM-->>KRN: improved draft
+        KRN-->>G: kpi_interpretation
+    end
+
+    G->>RF: response_formatter_node(state) L9
+    Note over RF: KPI -> kpi_interpretation L23
+    RF-->>G: final_response
+
+    G-->>RH: graph_result
+    RH-->>SR: EntryResponseEnvelope L83
+    SR-->>UI: EntryResponseEnvelope
+    UI-->>User: answer + chips

@@ -1,0 +1,52 @@
+sequenceDiagram
+    autonumber
+    actor Admin
+    participant UI as UI
+    participant SR as support_routes.py
+    participant EH as entry_handler.py
+    participant CI as case_ingestion.py
+    participant BL as blob_storage.py
+    participant AZB as Azure Blob
+    participant SDK as CaseSearchIndex (raw SDK)
+    participant AZS as Azure AI Search
+
+    Admin->>UI: update D-state on open case
+    UI->>SR: POST /entry/case
+    Note over SR: intent=CASE_INGESTION
+    Note over SR: action=UPDATE_CASE
+    Note over SR: handle_case_entry() L96
+    SR->>SR: _dispatch_entry_handler() L82
+    SR->>EH: handle_entry(envelope) L84
+    Note over EH: _handle_case_ingestion() L66
+    Note over EH: action = UPDATE_CASE L74
+
+    EH->>CI: CaseEntryService.get_case(case_id) L107
+    CI->>BL: CaseRepository.load(case_id) L102
+    Note over BL: download_json("{case_id}.json") L20
+    BL->>AZB: get_blob_client().download_blob()
+    AZB-->>BL: raw JSON bytes
+    BL-->>CI: case_doc dict
+
+    CI->>CI: IncidentStateAdapter.from_blob()
+    CI->>CI: apply partial_update fields
+    Note over CI: embedding field omitted
+    Note over CI: preserves existing vector
+
+    CI->>SDK: CaseSearchIndex(case_index_v3) L43
+    Note over SDK: raw SearchClient (sanctioned)
+    Note over SDK: merge_or_upload_documents() L84
+    Note over SDK: merge: only supplied fields updated
+    CI->>AZS: merge_or_upload_documents([partial_doc]) L90
+    AZS-->>SDK: IndexDocumentsResult
+    SDK-->>CI: merge result
+
+    CI->>BL: CaseRepository.save(case_id) L107
+    Note over BL: upload_json("{case_id}.json") L17
+    BL->>AZB: upload_blob(data, overwrite=True)
+    AZB-->>BL: ok
+    BL-->>CI: saved
+
+    CI-->>EH: updated=True
+    EH-->>SR: EntryResponseEnvelope status=accepted
+    SR-->>UI: EntryResponseEnvelope
+    UI-->>Admin: success

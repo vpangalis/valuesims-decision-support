@@ -1,0 +1,58 @@
+sequenceDiagram
+    autonumber
+    actor Admin
+    participant UI as UI
+    participant SR as support_routes.py
+    participant EH as entry_handler.py
+    participant EI as evidence_ingestion.py
+    participant BL as blob_storage.py
+    participant AZB as Azure Blob
+    participant EM as embeddings.py
+    participant AZE as Azure OpenAI
+    participant VS as AzureSearch VectorStore
+    participant AZS as Azure AI Search
+
+    Admin->>UI: upload evidence for case
+    UI->>SR: POST /entry/case
+    Note over SR: intent=CASE_INGESTION
+    Note over SR: action=UPLOAD_EVIDENCE
+    Note over SR: handle_case_entry() L96
+    SR->>SR: _dispatch_entry_handler() L82
+    SR->>EH: handle_entry(envelope) L84
+    Note over EH: _handle_case_ingestion() L66
+    Note over EH: action = UPLOAD_EVIDENCE L74
+
+    EH->>EI: upload_evidence(case_id, filename, data) L36
+    Note over EI: _get_evidence_store() L16
+    Note over EI: AzureSearch(evidence_index_v1)
+
+    EI->>EI: _ensure_case_exists(case_id) L68
+    EI->>BL: CaseRepository.load(case_id) L102
+    BL->>AZB: get_blob_client().download_blob()
+    AZB-->>BL: raw JSON bytes
+    BL-->>EI: case exists confirmed
+
+    EI->>BL: upload_file("{case_id}/{filename}") L29
+    BL->>AZB: upload_blob(data, overwrite=True)
+    AZB-->>BL: ok
+    BL-->>EI: confirmed
+
+    EI->>EI: _extract_text(data, content_type) L75
+    EI->>EI: _build_doc_id(case_id, filename) L71
+    EI->>EI: build metadata{case_id, filename}
+
+    EI->>EM: get_embeddings() L19
+    Note over EM: lru_cache singleton
+    Note over EM: text-embedding-3-large
+
+    EI->>VS: _get_evidence_store() L16
+    EI->>AZS: add_texts([content_text], metadatas, ids) L45
+    Note over AZS: filter at search time:
+    Note over AZS: case_id eq case_id
+    AZE-->>AZS: embedding dim=3072
+    AZS-->>EI: [doc_id]
+
+    EI-->>EH: indexed=True
+    EH-->>SR: EntryResponseEnvelope status=accepted
+    SR-->>UI: EntryResponseEnvelope
+    UI-->>Admin: success

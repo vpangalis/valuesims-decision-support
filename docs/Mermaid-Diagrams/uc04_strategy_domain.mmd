@@ -1,0 +1,91 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as UI
+    participant SR as support_routes.py
+    participant EH as entry_handler.py
+    participant RH as reasoning_handler.py
+    participant G as graph
+    participant STN as strategy_node
+    participant T as tools.py
+    participant CSC as case_search_client
+    participant KSC as knowledge_search_client
+    participant AZS as Azure AI Search
+    participant LLM as Azure OpenAI
+    participant SRN as strategy_reflection_node
+    participant SEN as strategy_escalation_node
+    participant RF as response_formatter
+
+    User->>UI: portfolio-level pattern question
+    UI->>SR: POST /entry/reasoning
+    Note over SR: handle_reasoning_entry() L108
+    SR->>SR: _dispatch_entry_handler() L82
+    SR->>EH: handle_entry(envelope) L84
+    EH->>RH: handle_ai_reasoning() L68
+    RH->>G: graph.invoke(initial_state) L66
+    Note over G: start->context->intent->readiness->router
+    Note over G: STRATEGY in _ALWAYS_READY_INTENTS
+    Note over G: route_intent() -> STRATEGY_ANALYSIS
+
+    G->>STN: strategy_node(state) L28
+    Note over STN: _run_strategy(state) L33
+    STN->>STN: get_llm("reasoning", 0.2) L38
+
+    loop for each anchor_query in _ANCHOR_QUERIES
+        STN->>T: search_cases_for_pattern_analysis() L47
+        Note over T: hybrid_search_cases() top_k=20 L164
+        T->>CSC: hybrid_search_cases() L66
+        CSC->>AZS: case_index_v3
+        AZS-->>CSC: List[Document]
+        CSC-->>T: List[Document]
+        T-->>STN: anchor_cases
+    end
+
+    STN->>T: search_cases_for_pattern_analysis() L56
+    Note over T: query=question top_k=20 L164
+    T->>CSC: hybrid_search_cases() L66
+    CSC->>AZS: case_index_v3
+    AZS-->>CSC: List[Document]
+    CSC-->>T: List[Document]
+    T-->>STN: question_cases
+
+    STN->>T: search_knowledge_base() L62
+    Note over T: hybrid_search_knowledge() top_k=5 L289
+    T->>KSC: hybrid_search_knowledge() L40
+    KSC->>AZS: knowledge_index_v2
+    AZS-->>KSC: List[Document]
+    KSC-->>T: List[Document]
+    T-->>STN: knowledge_docs
+
+    STN->>STN: merge + deduplicate all_cases
+    STN->>STN: _to_dict() L146, _resolve_country() L156
+    STN->>LLM: llm.invoke(STRATEGY_PROMPT) L109
+    LLM-->>STN: response_text
+    STN->>STN: _extract_suggestions() L178
+    STN->>STN: _ensure_general_advice_prefix() L166
+    STN-->>G: strategy_draft
+
+    G->>SRN: strategy_reflection_node(state) L16
+    Note over SRN: get_llm("reasoning", 0.0) L28
+    SRN->>LLM: llm.with_structured_output(Assessment) L31
+    LLM-->>SRN: StrategyReflectionAssessment
+    SRN->>SRN: _score(assessment) L86
+
+    alt score >= 0.65
+        SRN-->>G: strategy_result=draft
+    else score < 0.65
+        SRN-->>G: strategy_result=draft
+        G->>SEN: strategy_escalation_node() L7
+        Note over SEN: _run_strategy(model=reasoning)
+        Note over SEN: strategy_escalated=True
+        SEN-->>G: strategy_result=premium
+    end
+
+    G->>RF: response_formatter_node(state) L9
+    Note over RF: STRATEGY -> strategy_result L21
+    RF-->>G: final_response
+
+    G-->>RH: graph_result
+    RH-->>SR: EntryResponseEnvelope L83
+    SR-->>UI: EntryResponseEnvelope
+    UI-->>User: answer + chips

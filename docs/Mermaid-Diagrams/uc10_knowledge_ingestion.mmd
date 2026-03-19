@@ -1,0 +1,64 @@
+sequenceDiagram
+    autonumber
+    actor Admin
+    participant UI as UI
+    participant SR as support_routes.py
+    participant EH as entry_handler.py
+    participant KI as knowledge_ingestion.py
+    participant BL as blob_storage.py
+    participant AZB as Azure Blob
+    participant EM as embeddings.py
+    participant AZE as Azure OpenAI
+    participant VS as AzureSearch VectorStore
+    participant AZS as Azure AI Search
+
+    Admin->>UI: upload .docx / .pptx / .pdf
+    UI->>SR: POST /entry/knowledge multipart/form-data
+    Note over SR: handle_knowledge_upload() L121
+    Note over SR: data = await file.read() L123
+    SR->>EH: upload_knowledge(filename, data) L126
+
+    EH->>KI: upload_document(filename, data) L84
+    Note over KI: _get_knowledge_store() L26
+    Note over KI: AzureSearch(knowledge_index_v2)
+
+    KI->>BL: upload_file(filename, data) L29
+    BL->>AZB: upload_blob(filename, data)
+    AZB-->>BL: ok
+    BL-->>KI: confirmed
+
+    KI->>KI: _extract_text(data, content_type) L513
+    alt .docx
+        Note over KI: Document(BytesIO(data))
+    else .pptx
+        Note over KI: Presentation(BytesIO(data))
+    else .pdf
+        KI->>KI: _extract_pdf_text() L563
+    end
+
+    KI->>KI: _split_into_sections() L188
+    Note over KI: _detect_cosolve_phase() L363
+    Note over KI: _build_small_chunks() L440
+
+    KI->>KI: delete_by_source(filename) L53
+    Note over KI: removes existing docs
+
+    loop for each chunk
+        KI->>KI: _build_doc_id() L509
+        KI->>KI: build metadata
+    end
+
+    KI->>EM: get_embeddings() L19
+    Note over EM: lru_cache singleton
+    Note over EM: text-embedding-3-large
+
+    CI->>VS: AzureSearch(knowledge_index_v2)
+    KI->>AZS: add_texts(texts, metadatas, ids) L154
+    Note over AZS: LangChain embeds via AZE
+    AZE-->>AZS: embeddings batch
+    AZS-->>KI: List[doc_id]
+
+    KI-->>EH: chunks_indexed=N
+    EH-->>SR: EntryResponseEnvelope status=accepted
+    SR-->>UI: EntryResponseEnvelope
+    UI-->>Admin: success

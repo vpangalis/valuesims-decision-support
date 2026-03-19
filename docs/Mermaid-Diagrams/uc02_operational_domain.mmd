@@ -1,0 +1,138 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI  as UI (cosolve-ui.js)
+    participant SR  as support_routes.py
+    participant EH  as entry_handler.py
+    participant RH  as reasoning_handler.py
+    participant G   as graph.py
+    participant ON  as operational_node.py
+    participant T   as tools.py
+    participant AZS as Azure AI Search
+    participant LLM as Azure OpenAI
+    participant ORN as operational_reflection_node.py
+    participant OEN as operational_escalation_node.py
+    participant RF  as response_formatter_node.py
+
+    %% ── 1. UI → Backend entry ───────────────────────────────────────────────
+    User->>UI: question + case_id
+    UI->>SR: POST /entry/reasoning [cosolve-ui.js L2094]
+    SR->>SR: handle_reasoning_entry(envelope) L108
+    Note over SR: guard — reject if intent != AI_REASONING L109
+    SR->>SR: _dispatch_entry_handler(envelope) L82
+    SR->>EH: entry_handler.handle_entry(envelope) L84
+    EH->>EH: if intent == AI_REASONING L67
+    EH->>RH: handle_ai_reasoning(envelope, graph) L68
+    Note over RH: extract question L49 + case_id L50
+    Note over RH: build initial_state = {case_id, question} L60
+    RH->>G: graph.invoke(initial_state) L66
+
+    %% ── 2. Graph common path (hard edges) ───────────────────────────────────
+    Note over G: start_node → context_node → intent_classification_node
+    Note over G: → question_readiness_node → router_node
+    Note over G: route_intent() returns OPERATIONAL_CASE
+
+    %% ── 3. operational_node — shared setup ──────────────────────────────────
+    G->>ON: operational_node(state) L31
+    Note over ON: _run_operational(state, model_name=None) L36
+    Note over ON: get_llm("reasoning", 0.2) L44
+
+    %% Knowledge search — runs for ALL three branches before split
+    ON->>T: search_knowledge_base.invoke({query, top_k:4, cosolve_phase}) L47
+    T->>AZS: hybrid search → knowledge_index_v2
+    AZS-->>T: List[Document]
+    T-->>ON: List[KnowledgeSummary] → knowledge_block L50
+
+    %% ── 4. Branch split ─────────────────────────────────────────────────────
+    alt Branch A — is_new_problem_question(question, case_id)==True L61
+        Note over ON: no case loaded — uses knowledge_block only, no case/evidence search
+        ON->>LLM: invoke(NEW_PROBLEM_SYSTEM_PROMPT, question + knowledge_block) L66
+        LLM-->>ON: response_text
+        ON->>ON: extract_suggestions(response_text) L72
+        ON-->>G: operational_draft {current_state:"No case loaded", suggestions} L73
+
+    else Branch B — case_status=="closed" and case_id L86
+        ON->>T: search_similar_cases.invoke({query, current_case_id, country}) L87
+        T->>AZS: hybrid search → case_index_v3
+        AZS-->>T: List[Document]
+        T-->>ON: List[CaseSummary] L87
+
+        ON->>T: search_evidence.invoke({query, case_id}) L90
+        T->>AZS: filter: case_id eq {case_id} → evidence_index_v1
+        AZS-->>T: List[Document]
+        T-->>ON: List[EvidenceSummary] L90
+
+        ON->>ON: format_d_states(case_context) L98
+        ON->>LLM: invoke(CLOSED_CASE_SYSTEM_PROMPT, case+history+cases+evidence+knowledge) L107
+        LLM-->>ON: response_text
+        ON->>ON: extract_suggestions(response_text) L113
+        ON-->>G: operational_draft {current_state:"closed", supporting_cases, referenced_evidence} L114
+
+    else Branch C — active/open case (fallthrough) L126
+        ON->>T: search_similar_cases.invoke({query, current_case_id, country}) L129
+        T->>AZS: hybrid search → case_index_v3
+        AZS-->>T: List[Document]
+        T-->>ON: List[CaseSummary] L129
+
+        ON->>T: search_evidence.invoke({query, case_id}) L132
+        T->>AZS: filter: case_id eq {case_id} → evidence_index_v1
+        AZS-->>T: List[Document]
+        T-->>ON: List[EvidenceSummary] L132
+
+        ON->>ON: format_d_states(case_context) L137
+        ON->>LLM: invoke(OPERATIONAL_SYSTEM_PROMPT, active_case+d_state+cases+evidence+knowledge) L159
+        LLM-->>ON: response_text
+        ON->>ON: extract_suggestions(response_text) L166
+        ON-->>G: operational_draft {current_state, supporting_cases, referenced_evidence} L167
+    end
+
+    %% ── 5. operational_reflection_node ─────────────────────────────────────
+    G->>ORN: operational_reflection_node(state) L27
+
+    alt _is_new_problem_bypass()==True L37 — no case OR new-problem markers in draft
+        Note over ORN: bypass — skip LLM assessment, needs_escalation=False L38
+        ORN-->>G: operational_result=draft, operational_reflection{needs_escalation:False}
+
+    else normal reflection path
+        Note over ORN: get_llm("reasoning", 0.0) L55
+        ORN->>LLM: with_structured_output(OperationalReflectionAssessment).invoke(REFLECTION_PROMPT+draft) L59
+        LLM-->>ORN: OperationalReflectionAssessment
+        ORN->>ORN: _score(assessment) L64 — 0.0-1.0 across 5 dimensions
+        Note over ORN: _REGENERATION_THRESHOLD = 0.65 L20
+
+        alt score < 0.65 — regen runs INSIDE node L67
+            ORN->>LLM: regen_llm.invoke(REGEN_PROMPT, question) L72
+            LLM-->>ORN: improved response_text
+        end
+
+        Note over ORN: needs_escalation = any of 5 assessment dims fail L77
+        ORN-->>G: operational_result + operational_reflection{needs_escalation} L86
+    end
+
+    %% ── 6. Conditional edge: route_operational_escalation() L41 ────────────
+    Note over G: route_operational_escalation() reads needs_escalation L41
+
+    alt CONTINUE — case=="closed" OR already_escalated OR needs_escalation==False L44-L51
+        G->>RF: response_formatter_node(state) L9
+
+    else ESCALATE — needs_escalation==True, open case, not yet escalated L52
+        G->>OEN: operational_escalation_node(state) L7
+        Note over OEN: _run_operational(state, model_name="reasoning") L9
+        Note over OEN: operational_escalated=True L10
+        OEN-->>G: operational_draft (premium model)
+        G->>ORN: operational_reflection_node (loop — once only, graph.py L94)
+        ORN-->>G: operational_result (final)
+        G->>RF: response_formatter_node(state) L9
+    end
+
+    %% ── 7. Format and return ────────────────────────────────────────────────
+    Note over RF: intent==OPERATIONAL_CASE → picks state["operational_result"] L16
+    RF-->>G: final_response {timestamp, classification, result} L25
+
+    G-->>RH: graph.invoke() returns graph_result L66
+    Note over RH: Gate 1 — classification_low_confidence? → clarifying response L71
+    Note over RH: Gate 2 — question_ready==False? → clarifying question L77
+    Note over RH: Gate 3 success — graph_result.get("final_response") L82
+    RH-->>SR: EntryResponseEnvelope(intent, status:"accepted", data:final_response) L83
+    SR-->>UI: JSON response
+    UI-->>User: answer text + suggestion chips
