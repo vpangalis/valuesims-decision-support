@@ -47,6 +47,7 @@ def context_node(state: IncidentGraphState) -> dict:
 
     return {
         "case_context": case_doc,
+        "case_status": case_doc.get("case_status"),
         "current_d_state": _detect_current_state(case_doc),
         "_last_node": "context_node",
     }
