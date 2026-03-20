@@ -2128,7 +2128,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("[AI] response envelope:", envelope);
 
       // envelope = { intent, status, data: FinalResponsePayload }
-      const output = formatAiResponse(envelope);
+      let output = formatAiResponse(envelope);
 
       // Determine node type for chip colouring
       const responseIntent = envelope?.data?.classification?.intent ?? "";
@@ -2148,6 +2148,22 @@ document.addEventListener("DOMContentLoaded", () => {
           question: s,
           type: "cosolve"
         }));
+      }
+
+      // If response is a clarifying question and the original question
+      // contains a case ID, inject a load-case button into the output
+      const caseIdMatch = question.match(/TRM-\d{8}-\d{4}/i);
+      if (envelope?.status === "ok" && caseIdMatch && !activeCaseId) {
+        const detectedId = caseIdMatch[0].toUpperCase();
+        const loadBtn =
+          `<div style="margin-top:12px;">` +
+          `<button onclick="(async()=>{ await window.loadCaseById('${detectedId}'); })()" ` +
+          `style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;` +
+          `background:#1a56db;color:#fff;border:none;border-radius:6px;` +
+          `cursor:pointer;font-size:0.92em;font-weight:500;">` +
+          `\uD83D\uDCC2 Load ${detectedId}` +
+          `</button></div>`;
+        output = output + loadBtn;
       }
 
       appendAiExchange(question, activeCaseId, output, false, suggestions, nodeType);
