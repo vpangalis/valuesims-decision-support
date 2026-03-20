@@ -3341,7 +3341,7 @@ function setPanelState(newState) {
   } else if (newState === 'kpi') {
     document.getElementById('kpi-panel')?.classList.add('open', 'fullscreen');
     document.getElementById('center')?.classList.add('hidden');
-    setTimeout(() => { renderTokenChart(); showKpiIdleState(); }, 150);
+    setTimeout(() => { showKpiIdleState(); }, 150);
   } else if (newState === 'admin') {
     document.getElementById('lp')?.classList.add('open', 'admin-mode');
     LP_GROUPS.forEach(gid => {
@@ -3483,9 +3483,7 @@ function setKPIScope(scope, btn) {
 
 // ── KPI STATE ─────────────────────────────────────────────────────────────────
 
-let perfChartInst = null, trendChartInst = null, tokenChartInst = null, stageChartInst = null;
-let llmStatsCache = null;
-let llmChartMode = 'YTD';
+let perfChartInst = null, trendChartInst = null, stageChartInst = null;
 let currentKpiData = null;    // last fetched KPIResult from /cases/kpi
 let currentKpiCountry = null; // null = global view, else country name string
 
@@ -3788,117 +3786,6 @@ function renderKpiChips(kpiData) {
   container.innerHTML = html;
 }
 
-function filterLlmMonths(monthly, mode) {
-  if (mode === 'YTD') {
-    const yearPrefix = new Date().getFullYear() + '-';
-    return monthly.filter(r => r.month.startsWith(yearPrefix));
-  }
-  // 6M: last 6 calendar months
-  const now = new Date();
-  const valid = new Set();
-  let y = now.getFullYear(), m = now.getMonth() + 1;
-  for (let i = 0; i < 6; i++) {
-    valid.add(`${y}-${String(m).padStart(2, '0')}`);
-    m--; if (m < 1) { m = 12; y--; }
-  }
-  return monthly.filter(r => valid.has(r.month));
-}
-
-function renderTokenChartFromCache(mode) {
-  if (!llmStatsCache) return;
-  llmChartMode = mode;
-  const data = llmStatsCache;
-  const filtered = filterLlmMonths(data.monthly, mode);
-
-  if (tokenChartInst) { tokenChartInst.destroy(); tokenChartInst = null; }
-  const ctx = document.getElementById('token-chart');
-  if (!ctx) return;
-
-  // Inject toggle above canvas
-  const block = ctx.closest('.kpi-chart-block');
-  if (block) {
-    let toggle = block.querySelector('.llm-range-toggle');
-    if (!toggle) {
-      toggle = document.createElement('div');
-      toggle.className = 'llm-range-toggle';
-      toggle.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;padding:0 2px 4px;font-size:9px;font-family:Geist,sans-serif;color:#8b93ad;';
-      block.insertBefore(toggle, ctx);
-    }
-    toggle.innerHTML = ['6M','YTD'].map(m =>
-      `<span style="cursor:pointer;${m === mode ? 'font-weight:700;text-decoration:underline;color:var(--accent)' : ''}" onclick="renderTokenChartFromCache('${m}')">${m}</span>`
-    ).join('<span style="color:#d0d3dc">·</span>');
-  }
-
-  const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const allMonths = [...new Set(filtered.map(r => r.month))].sort();
-  const labels = allMonths.map(m => { const p = m.split('-'); return MONTH_ABBR[parseInt(p[1], 10) - 1]; });
-  const MODEL_COLORS = ['rgba(114,158,220,0.8)', 'rgba(52,199,169,0.8)', 'rgba(245,166,80,0.8)', 'rgba(168,130,220,0.8)'];
-  const datasets = data.models.map((model, i) => {
-    const byMonth = {};
-    filtered.filter(r => r.model_name === model).forEach(r => { byMonth[r.month] = r.total_tokens; });
-    return {
-      label: model,
-      data: allMonths.map(m => byMonth[m] || 0),
-      backgroundColor: MODEL_COLORS[i % MODEL_COLORS.length],
-      borderRadius: 2,
-    };
-  });
-
-  tokenChartInst = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets },
-    options: {
-      ...CHART_DEFAULTS,
-      maintainAspectRatio: false,
-      plugins: { ...CHART_DEFAULTS.plugins, legend: { display: true, labels: { boxWidth: 8, font: { family: 'Geist', size: 8 }, color: '#8b93ad' } } },
-      scales: {
-        x: { stacked: true, ticks: { font: { family: 'Geist', size: 8 }, color: '#8b93ad' }, grid: { display: false } },
-        y: { stacked: true, ticks: { font: { family: 'Geist Mono', size: 8 }, color: '#8b93ad', callback: v => v >= 1000 ? (v/1000)+'k' : v }, grid: { color: '#eef0f7' }, beginAtZero: true }
-      }
-    }
-  });
-}
-
-function renderTokenChart() {
-  fetch(`${API_BASE}/llm/stats`)
-    .then(r => r.json())
-    .then(data => {
-      llmStatsCache = data;
-
-      // Update metric cells
-      const fmtTokens = n => {
-        if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M';
-        if (n >= 1_000) return (n / 1_000).toFixed(1) + 'k';
-        return String(n);
-      };
-      const tokCell = document.getElementById('llm-tokens-used');
-      if (tokCell) {
-        tokCell.querySelector('.kpi-cell-val').textContent = fmtTokens(data.totals.total_tokens);
-        const pct = Math.min(100, Math.round(data.totals.total_tokens / 5_000_000 * 100));
-        const fill = tokCell.querySelector('.kpi-cell-fill');
-        if (fill) fill.style.width = pct + '%';
-      }
-      const avgCell = document.getElementById('llm-avg-per-call');
-      if (avgCell) {
-        avgCell.querySelector('.kpi-cell-val').textContent = fmtTokens(data.totals.avg_tokens_per_call);
-        const pct = Math.min(100, Math.round(data.totals.avg_tokens_per_call / 5_000 * 100));
-        const fill = avgCell.querySelector('.kpi-cell-fill');
-        if (fill) fill.style.width = pct + '%';
-      }
-      const callCell = document.getElementById('llm-total-calls');
-      if (callCell) {
-        callCell.querySelector('.kpi-cell-val').textContent = data.totals.total_calls.toLocaleString();
-        const pct = Math.min(100, Math.round(data.totals.total_calls / 1_000 * 100));
-        const fill = callCell.querySelector('.kpi-cell-fill');
-        if (fill) fill.style.width = pct + '%';
-      }
-
-      renderTokenChartFromCache('YTD');
-    })
-    .catch(err => {
-      console.error('[LLM] stats fetch error', err);
-    });
-}
 
 function showKpiIdleState() {
   const sr  = document.getElementById('kpi-summary-row');
@@ -3956,7 +3843,6 @@ async function onPerfOpen() {
       currentKpiCountry = null;
       renderKpiChips(data);
       renderCaseKPIs(data);
-      renderTokenChart();
       if (dot) dot.classList.remove('active');
       if (lbl) lbl.innerHTML = '<strong>Reasoning agent</strong> — data loaded';
     })
