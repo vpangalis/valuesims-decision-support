@@ -14,7 +14,7 @@ def response_formatter_node(state: IncidentGraphState) -> dict:
     if isinstance(classification, dict):
         intent = classification.get("intent")
         if intent == "OPERATIONAL_CASE":
-            result_payload = state.get("operational_result") or {}
+            result_payload = state.get("operational_result") or state.get("operational_draft") or {}
         elif intent == "SIMILARITY_SEARCH":
             result_payload = state.get("similarity_result") or {}
         elif intent == "STRATEGY_ANALYSIS":
